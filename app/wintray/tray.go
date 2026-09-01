@@ -19,9 +19,9 @@ import (
 )
 
 const (
-	UpdateIconName = "tray_upgrade.ico"
-	IconName       = "tray.ico"
-	ClassName      = "OllamaClass"
+	UpdateIconName = "susan_tray_upgrade.ico"
+	IconName       = "susan_tray.ico"
+	ClassName      = "SusanClass"
 )
 
 func NewTray(app AppCallbacks) (TrayCallbacks, error) {
@@ -434,7 +434,7 @@ func (t *winTray) getVisibleItemIndex(parent, val uint32) int {
 func iconBytesToFilePath(iconBytes []byte) (string, error) {
 	bh := md5.Sum(iconBytes)
 	dataHash := hex.EncodeToString(bh[:])
-	iconFilePath := filepath.Join(os.TempDir(), "ollama_temp_icon_"+dataHash)
+	iconFilePath := filepath.Join(os.TempDir(), "susan_temp_icon_"+dataHash)
 
 	if _, err := os.Stat(iconFilePath); os.IsNotExist(err) {
 		if err := os.WriteFile(iconFilePath, iconBytes, 0o644); err != nil {
@@ -456,7 +456,7 @@ func (t *winTray) setIcon(src string) error {
 	defer t.muNID.Unlock()
 	t.nid.Icon = h
 	t.nid.Flags |= NIF_ICON | NIF_TIP
-	if toolTipUTF16, err := syscall.UTF16FromString("Ollama"); err == nil {
+	if toolTipUTF16, err := syscall.UTF16FromString("Susan"); err == nil {
 		copy(t.nid.Tip[:], toolTipUTF16)
 	} else {
 		return err

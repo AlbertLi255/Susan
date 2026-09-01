@@ -343,14 +343,14 @@ jobs:
         if: matrix.superbuild_target == 'ollama-local'
         run: |
           $ErrorActionPreference = "Stop"
-          & ".\ollama.exe" --version
+          & ".\susan.exe" --version
           & "${{ matrix.superbuild_dir }}\lib\ollama\llama-server.exe" --version
           if (!(Test-Path "${{ matrix.superbuild_dir }}\lib\ollama\llama-quantize.exe")) {
             throw "missing llama-quantize.exe"
           }
           $installPrefix = Join-Path $env:RUNNER_TEMP "ollama-local"
           cmake --install "${{ matrix.superbuild_dir }}" --component ollama-local --prefix "$installPrefix"
-          & "$installPrefix\bin\ollama.exe" --version
+          & "$installPrefix\bin\susan.exe" --version
           & "$installPrefix\lib\ollama\llama-server.exe" --version
           if (!(Test-Path "$installPrefix\lib\ollama\llama-quantize.exe")) {
             throw "missing installed llama-quantize.exe"

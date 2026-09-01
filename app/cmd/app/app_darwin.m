@@ -23,7 +23,7 @@ bool firstTimeRun,startHidden; // Set in run before initialization
 
 - (void)application:(NSApplication *)application openURLs:(NSArray<NSURL *> *)urls {
     for (NSURL *url in urls) {
-        if ([url.scheme isEqualToString:@"ollama"]) {
+        if ([url.scheme isEqualToString:@"susan"]) {
             NSString *path = url.path;
 
             if (path && ([path isEqualToString:@"/connect"] || [url.host isEqualToString:@"connect"])) {
@@ -57,7 +57,7 @@ bool firstTimeRun,startHidden; // Set in run before initialization
             stringByAppendingPathComponent:
                 [NSString
                     stringWithFormat:
-                        @"darwin/Ollama.app/Contents/Resources/icon.icns"]];
+                        @"darwin/Susan.app/Contents/Resources/icon.icns"]];
         NSImage *customIcon = [[NSImage alloc] initWithContentsOfFile:iconPath];
         [NSApp setApplicationIconImage:customIcon];
     }
@@ -65,7 +65,7 @@ bool firstTimeRun,startHidden; // Set in run before initialization
     // Create status item and menu
     NSMenu *menu = [[NSMenu alloc] init];
     NSMenuItem *openMenuItem =
-        [[NSMenuItem alloc] initWithTitle:@"Open Ollama"
+        [[NSMenuItem alloc] initWithTitle:@"Open Susan"
                                    action:@selector(openUI)
                             keyEquivalent:@""];
     [openMenuItem setTarget:self];
@@ -94,7 +94,7 @@ bool firstTimeRun,startHidden; // Set in run before initialization
 
     [menu addItem:[NSMenuItem separatorItem]];
 
-    [menu addItemWithTitle:@"Quit Ollama"
+    [menu addItemWithTitle:@"Quit Susan"
                     action:@selector(quit)
              keyEquivalent:@"q"];
 
@@ -110,7 +110,7 @@ bool firstTimeRun,startHidden; // Set in run before initialization
     [self showIcon];
 
     // Application menu
-    NSString *appName = @"Ollama";
+    NSString *appName = @"Susan";
 
     NSMenu *mainMenu = [[NSMenu alloc] init];
     NSMenuItem *appMenuItem = [[NSMenuItem alloc] initWithTitle:appName
@@ -121,7 +121,7 @@ bool firstTimeRun,startHidden; // Set in run before initialization
     [mainMenu addItem:appMenuItem];
 
     [appMenu addItemWithTitle:[NSString stringWithFormat:@"About %@", appName]
-                       action:@selector(aboutOllama)
+                       action:@selector(aboutSusan)
                 keyEquivalent:@""];
     [appMenu addItem:[NSMenuItem separatorItem]];
     [appMenu addItemWithTitle:@"Settings..."
@@ -316,7 +316,7 @@ bool firstTimeRun,startHidden; // Set in run before initialization
 - (void)showIcon {
     NSAppearance *appearance = self.statusItem.button.effectiveAppearance;
     NSString *appearanceName = (NSString *)(appearance.name);
-    NSString *iconName = @"ollama";
+    NSString *iconName = @"susan";
     if (self.updateAvailable) {
         iconName = [iconName stringByAppendingString:@"Update"];
     }
@@ -331,7 +331,7 @@ bool firstTimeRun,startHidden; // Set in run before initialization
             [[NSFileManager defaultManager] currentDirectoryPath];
         NSString *bundlePath =
             [cwdPath stringByAppendingPathComponent:
-                         [NSString stringWithFormat:@"darwin/Ollama.app"]];
+                         [NSString stringWithFormat:@"darwin/Susan.app"]];
         bundle = [NSBundle bundleWithPath:bundlePath];
     }
 
@@ -370,7 +370,7 @@ bool firstTimeRun,startHidden; // Set in run before initialization
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 - (void)registerSelfAsLoginItem:(BOOL)firstTimeRun {
     appLogInfo(@"using v13+ SMAppService for login registration");
-    // Maps to the file Ollama.app/Contents/Library/LaunchAgents/com.ollama.ollama.plist
+    // Maps to the file Susan.app/Contents/Library/LaunchAgents/com.ollama.ollama.plist
     SMAppService* service = [SMAppService agentServiceWithPlistName:@"com.ollama.ollama.plist"];
     if (!service) {
         appLogInfo(@"SMAppService failed to find service for com.ollama.ollama.plist");
@@ -403,7 +403,7 @@ bool firstTimeRun,startHidden; // Set in run before initialization
     return;
 }
 
-/// Remove ollama from the deprecated Login Items list as we now use LaunchAgents
+/// Remove susan from the deprecated Login Items list as we now use LaunchAgents
 - (void)unregisterSelfFromLoginItem {
     NSURL *bundleURL = NSBundle.mainBundle.bundleURL;
     NSString *bundlePrefix = [SystemWidePath stringByDeletingPathExtension];
@@ -422,7 +422,7 @@ bool firstTimeRun,startHidden; // Set in run before initialization
         if (LSSharedFileListItemResolve((LSSharedFileListItemRef)item, 0,
                                         &itemURL, NULL) == noErr) {
             CFStringRef loginPath = CFURLCopyFileSystemPath(itemURL, kCFURLPOSIXPathStyle);
-            // Compare the prefix to match against "keep existing" flow, e.g. // "/Applications/Ollama.app" vs "/Applications/Ollama 2.app"
+            // Compare the prefix to match against "keep existing" flow, e.g. // "/Applications/Susan.app" vs "/Applications/Susan 2.app"
             if (loginPath && [(NSString *)loginPath hasPrefix:bundlePrefix]) {
                 appLogInfo([NSString stringWithFormat:@"removing login item %@", loginPath]);
                 LSSharedFileListItemRemove(loginItems,
@@ -437,7 +437,7 @@ bool firstTimeRun,startHidden; // Set in run before initialization
             CFStringRef displayName = LSSharedFileListItemCopyDisplayName((LSSharedFileListItemRef)item);
             if (displayName) {
                 NSString *name = (__bridge NSString *)displayName;
-                if ([name hasPrefix:@"Ollama"]) {
+                if ([name hasPrefix:@"Susan"]) {
                     LSSharedFileListItemRemove(loginItems, (LSSharedFileListItemRef)item);
                     appLogInfo([NSString stringWithFormat:@"removing dangling login item %@", displayName]);
                 }
@@ -538,7 +538,7 @@ decidePolicyForNavigationAction:(WKNavigationAction *)action
     Class class = [WKWebView class];
 
     SEL originalSelector = @selector(willOpenMenu:withEvent:);
-    SEL swizzledSelector = @selector(ollama_willOpenMenu:withEvent:);
+    SEL swizzledSelector = @selector(susan_willOpenMenu:withEvent:);
 
     Method originalMethod = class_getInstanceMethod(class, originalSelector);
     Method swizzledMethod = class_getInstanceMethod(class, swizzledSelector);
@@ -558,9 +558,9 @@ decidePolicyForNavigationAction:(WKNavigationAction *)action
 
 @end
 
-@implementation WKWebView (OllamaContextMenu)
-- (void)ollama_willOpenMenu:(NSMenu *)menu withEvent:(NSEvent *)event {
-    [self ollama_willOpenMenu:menu withEvent:event];
+@implementation WKWebView (SusanContextMenu)
+- (void)susan_willOpenMenu:(NSMenu *)menu withEvent:(NSEvent *)event {
+    [self susan_willOpenMenu:menu withEvent:event];
     NSMutableArray *itemsToRemove = [NSMutableArray array];
     for (NSMenuItem *item in menu.itemArray) {
         if ([item.title containsString:@"Copy Link with Highlight"] ||
@@ -634,7 +634,7 @@ void run(bool ftr, bool sh) {
 
 // killOtherInstances kills all other instances of the app currently
 // running. This way we can ensure that only the most recently started
-// instance of Ollama is running
+// instance of Susan is running
 void killOtherInstances() {
     pid_t myPid = getpid();
     NSArray *apps = [[NSWorkspace sharedWorkspace] runningApplications];
@@ -653,7 +653,7 @@ void killOtherInstances() {
             
             pid_t pid = app.processIdentifier;
             if (pid != myPid && pid > 0) {
-                appLogInfo([NSString stringWithFormat:@"terminating other ollama instance %d", pid]);
+                appLogInfo([NSString stringWithFormat:@"terminating other susan instance %d", pid]);
                 kill(pid, SIGTERM);
             } else if (pid == -1) {
                 appLogInfo([NSString stringWithFormat:@"skipping app with invalid pid: %@", bundleId]);
@@ -719,7 +719,7 @@ bool moveToApplications(const char *src) {
 }
 
 AuthorizationRef getSymlinkAuthorization() {
-    return getAuthorization(@"Ollama is trying to install its command line "
+    return getAuthorization(@"Susan is trying to install its command line "
                             @"interface (CLI) tool.",
                             @"symlink");
 }
@@ -739,7 +739,7 @@ bool moveToApplicationsWithAuthorization(const char *src) {
         return NO;
     }
 
-    // Remove existing /Applications/Ollama.app (if any)
+    // Remove existing /Applications/Susan.app (if any)
     //    - We do this via /bin/rm with elevated privileges
     //
     const char *rmTool = "/bin/rm";

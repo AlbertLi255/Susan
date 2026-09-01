@@ -47,7 +47,7 @@ type InferenceInfo struct {
 }
 
 func New(s *store.Store, devMode bool) *Server {
-	p := resolvePath("ollama")
+	p := resolvePath("susan")
 	return &Server{store: s, bin: p, dev: devMode}
 }
 
@@ -89,7 +89,7 @@ func ollamaServeArgs(args []string) bool {
 	}
 
 	switch strings.Trim(filepath.Base(args[0]), `"`) {
-	case "ollama", "ollama.exe":
+	case "susan", "susan.exe":
 	default:
 		return false
 	}
@@ -136,7 +136,7 @@ func cleanup() error {
 		return nil
 	}
 
-	slog.Info("detected previous ollama process, cleaning up", "pid", pid)
+	slog.Info("detected previous susan process, cleaning up", "pid", pid)
 	return stop(proc)
 }
 
@@ -164,7 +164,7 @@ func stop(proc *os.Process) error {
 		default:
 			ok, err := terminated(proc.Pid)
 			if err != nil {
-				slog.Error("error checking if ollama process is terminated", "err", err)
+				slog.Error("error checking if susan process is terminated", "err", err)
 				return err
 			}
 			if ok {
@@ -184,7 +184,7 @@ func (s *Server) Run(ctx context.Context) error {
 	defer s.log.Close()
 
 	if err := cleanup(); err != nil {
-		slog.Warn("failed to cleanup previous ollama process", "err", err)
+		slog.Warn("failed to cleanup previous susan process", "err", err)
 	}
 
 	reaped := false
@@ -213,15 +213,15 @@ func (s *Server) Run(ctx context.Context) error {
 			var exitErr *exec.ExitError
 			if errors.As(err, &exitErr) && exitErr.ExitCode() == 1 && !s.dev && !reaped {
 				reaped = true
-				// This could be a port conflict, try to kill any existing ollama processes
+				// This could be a port conflict, try to kill any existing susan processes
 				if err := reapServers(); err != nil {
-					slog.Warn("failed to stop existing ollama server", "err", err)
+					slog.Warn("failed to stop existing susan server", "err", err)
 				} else {
 					slog.Debug("conflicting server stopped, waiting for port to be released")
 					continue
 				}
 			}
-			slog.Error("ollama exited", "err", err)
+			slog.Error("susan exited", "err", err)
 		}
 	}
 	return ctx.Err()

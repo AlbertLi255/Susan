@@ -5,15 +5,15 @@
 ; powershell -ExecutionPolicy Bypass -File .\scripts\build_windows.ps
 
 
-#define MyAppName "Ollama"
+#define MyAppName "Susan"
 #if GetEnv("PKG_VERSION") != ""
   #define MyAppVersion GetEnv("PKG_VERSION")
 #else
   #define MyAppVersion "0.0.0"
 #endif
-#define MyAppPublisher "Ollama"
+#define MyAppPublisher "Susan"
 #define MyAppURL "https://ollama.com/"
-#define MyAppExeName "ollama app.exe"
+#define MyAppExeName "susan app.exe"
 #define LlamaServerExeName "llama-server.exe"
 #define MyIcon ".\assets\app.ico"
 
@@ -35,7 +35,7 @@ DefaultDirName={localappdata}\Programs\{#MyAppName}
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
-OutputBaseFilename="OllamaSetup"
+OutputBaseFilename="SusanSetup"
 SetupIconFile={#MyIcon}
 UninstallDisplayIcon={uninstallexe}
 Compression=lzma2/ultra64
@@ -80,7 +80,7 @@ SignTool=MySignTool
 SignedUninstaller=yes
 #endif
 
-SetupMutex=OllamaSetupMutex
+SetupMutex=SusanSetupMutex
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -91,7 +91,7 @@ DialogFontSize=12
 [Files]
 #if FileExists("..\dist\windows-ollama-app-amd64.exe")
 Source: "..\dist\windows-ollama-app-amd64.exe"; DestDir: "{app}"; DestName: "{#MyAppExeName}" ;Check: not IsArm64();  Flags: ignoreversion 64bit; BeforeInstall: TaskKill('{#MyAppExeName}')
-Source: "..\dist\windows-amd64\ollama.exe"; DestDir: "{app}"; Check: not IsArm64(); Flags: ignoreversion 64bit; BeforeInstall: TaskKill('ollama.exe')
+Source: "..\dist\windows-amd64\susan.exe"; DestDir: "{app}"; Check: not IsArm64(); Flags: ignoreversion 64bit; BeforeInstall: TaskKill('susan.exe')
 Source: "..\dist\windows-amd64\lib\ollama\*"; Excludes: "\mlx_*\*"; DestDir: "{app}\lib\ollama\"; Check: not IsArm64(); Flags: ignoreversion 64bit recursesubdirs
 #endif
 
@@ -103,21 +103,21 @@ Source: "..\dist\windows-ollama-app-amd64.exe"; DestDir: "{app}"; DestName: "{#M
 #endif
 
 #if FileExists("..\dist\windows-arm64\ollama.exe")
-Source: "..\dist\windows-arm64\ollama.exe"; DestDir: "{app}"; Check: IsArm64(); Flags: ignoreversion 64bit; BeforeInstall: TaskKill('ollama.exe')
+Source: "..\dist\windows-arm64\susan.exe"; DestDir: "{app}"; Check: IsArm64(); Flags: ignoreversion 64bit; BeforeInstall: TaskKill('susan.exe')
 #endif
 #if DirExists("..\dist\windows-arm64\lib\ollama")
 Source: "..\dist\windows-arm64\lib\ollama\*"; DestDir: "{app}\lib\ollama\"; Check: IsArm64(); Flags: ignoreversion 64bit recursesubdirs
 #endif
 
-Source: ".\assets\app.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\assets\susan.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\app.ico"
-Name: "{app}\lib\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\app.ico"
-Name: "{userprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\app.ico"
+Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\susan.ico"
+Name: "{app}\lib\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\susan.ico"
+Name: "{userprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\susan.ico"
 
 [InstallDelete]
-Type: files; Name: "{%LOCALAPPDATA}\Ollama\updates"
+Type: files; Name: "{%LOCALAPPDATA}\Susan\updates"
 
 [Run]
 Filename: "{cmd}"; Parameters: "/C set PATH={app};%PATH% & ""{app}\{#MyAppExeName}"""; Flags: postinstall nowait runhidden
@@ -126,28 +126,28 @@ Filename: "{cmd}"; Parameters: "/C set PATH={app};%PATH% & ""{app}\{#MyAppExeNam
 ; Filename: "{cmd}"; Parameters: "/C ""taskkill /im ''{#MyAppExeName}'' /f /t"; Flags: runhidden
 ; Filename: "{cmd}"; Parameters: "/C ""taskkill /im ollama.exe /f /t"; Flags: runhidden
 Filename: "taskkill"; Parameters: "/im ""{#MyAppExeName}"" /f /t"; Flags: runhidden
-Filename: "taskkill"; Parameters: "/im ""ollama.exe"" /f /t"; Flags: runhidden
+Filename: "taskkill"; Parameters: "/im ""susan.exe"" /f /t"; Flags: runhidden
 Filename: "taskkill"; Parameters: "/im ""{#LlamaServerExeName}"" /f /t"; Flags: runhidden
 ; HACK!  need to give the server and app enough time to exit
 ; TODO - convert this to a Pascal code script so it waits until they're no longer running, then completes
 Filename: "{cmd}"; Parameters: "/c timeout 5"; Flags: runhidden
 
 [UninstallDelete]
-Type: filesandordirs; Name: "{%TEMP}\ollama*"
-Type: filesandordirs; Name: "{%LOCALAPPDATA}\Ollama"
-Type: filesandordirs; Name: "{%LOCALAPPDATA}\Programs\Ollama"
-Type: filesandordirs; Name: "{%USERPROFILE}\.ollama\history"
+Type: filesandordirs; Name: "{%TEMP}\susan*"
+Type: filesandordirs; Name: "{%LOCALAPPDATA}\Susan"
+Type: filesandordirs; Name: "{%LOCALAPPDATA}\Programs\Susan"
+Type: filesandordirs; Name: "{%USERPROFILE}\.susan\history"
 Type: filesandordirs; Name: "{userstartup}\{#MyAppName}.lnk"
 ; NOTE: if the user has a custom OLLAMA_MODELS it will be preserved
 
 [InstallDelete]
-Type: filesandordirs; Name: "{%TEMP}\ollama*"
+Type: filesandordirs; Name: "{%TEMP}\susan*"
 Type: filesandordirs; Name: "{app}\lib\ollama"
 
 [Messages]
-WizardReady=Ollama
+WizardReady=Susan
 ReadyLabel1=%nLet's get you up and running with your own large language models.
-SetupAppRunningError=Another Ollama installer is running.%n%nPlease cancel or finish the other installer, then click OK to continue with this install, or Cancel to exit.
+SetupAppRunningError=Another Susan installer is running.%n%nPlease cancel or finish the other installer, then click OK to continue with this install, or Cancel to exit.
 
 
 ;FinishedHeadingLabel=Run your first model
@@ -158,10 +158,10 @@ SetupAppRunningError=Another Ollama installer is running.%n%nPlease cancel or fi
 Root: HKCU; Subkey: "Environment"; \
     ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; \
     Check: NeedsAddPath('{app}')
-; Register ollama:// URL protocol
-Root: HKCU; Subkey: "Software\Classes\ollama"; ValueType: string; ValueName: ""; ValueData: "URL:Ollama Protocol"; Flags: uninsdeletekey
-Root: HKCU; Subkey: "Software\Classes\ollama"; ValueType: string; ValueName: "URL Protocol"; ValueData: ""; Flags: uninsdeletekey
-Root: HKCU; Subkey: "Software\Classes\ollama\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Flags: uninsdeletekey
+; Register susan:// URL protocol
+Root: HKCU; Subkey: "Software\Classes\susan"; ValueType: string; ValueName: ""; ValueData: "URL:Susan Protocol"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\susan"; ValueType: string; ValueName: "URL Protocol"; ValueData: ""; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\susan\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" "%1""; Flags: uninsdeletekey
 
 [Code]
 
@@ -257,8 +257,8 @@ begin
       Caption := '';
     end;
 
-    if (DirExists(GetEnv('USERPROFILE') + '\.ollama\models\blobs')) then begin
-      ModelsDir := GetEnv('USERPROFILE') + '\.ollama\models';
+    if (DirExists(GetEnv('USERPROFILE') + '\.susan\models\blobs')) then begin
+      ModelsDir := GetEnv('USERPROFILE') + '\.susan\models';
       ModelsSize := GetDirSize(ModelsDir);
     end;
 
@@ -311,7 +311,7 @@ begin
       Log('user requested model cleanup');
       if (VarIsEmpty(ModelsDir)) then begin
         Log('cleaning up home directory models')
-        DelTree(GetEnv('USERPROFILE') + '\.ollama\models', True, True, True);
+        DelTree(GetEnv('USERPROFILE') + '\.susan\models', True, True, True);
       end else begin
         Log('cleaning up custom directory models ' + ModelsDir)
         DelTree(ModelsDir + '\blobs', True, True, True);

@@ -375,8 +375,8 @@ jobs:
         run: |
           set -euo pipefail
           for payload in \
-            dist/windows-amd64/ollama.exe \
-            dist/windows-arm64/ollama.exe
+            dist/windows-amd64/susan.exe \
+            dist/windows-arm64/susan.exe
           do
             [ -f "$payload" ] || { echo "missing $payload"; exit 1; }
           done
@@ -439,9 +439,9 @@ jobs:
         run: |
           set -euo pipefail
           for payload in \
-            dist/windows-amd64/ollama.exe \
+            dist/windows-amd64/susan.exe \
             dist/windows-amd64/lib/ollama/llama-server.exe \
-            dist/windows-arm64/ollama.exe \
+            dist/windows-arm64/susan.exe \
             dist/windows-arm64/lib/ollama/llama-server.exe
           do
             [ -f "$payload" ] || { echo "missing $payload"; exit 1; }
@@ -754,8 +754,8 @@ jobs:
             dist/OllamaSetup.exe
             dist/install.ps1
             dist/install.sh
-            dist/ollama-windows-amd64.zip
-            dist/ollama-windows-arm64.zip
+            dist/susan-windows-amd64.zip
+            dist/susan-windows-arm64.zip
           )
           for payload in "${required[@]}"; do
             if [ ! -f "$payload" ]; then

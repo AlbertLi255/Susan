@@ -897,7 +897,7 @@ function buildOllamaCLI {
         [string]$distDir
     )
     mkdir -Force -path "${distDir}\" | Out-Null
-    & go build -trimpath -ldflags "-s -w -X=github.com/ollama/ollama/version.Version=$script:VERSION -X=github.com/ollama/ollama/server.mode=release" -o "${distDir}\ollama.exe" .
+    & go build -trimpath -ldflags "-s -w -X=github.com/ollama/ollama/version.Version=$script:VERSION -X=github.com/ollama/ollama/server.mode=release" -o "${distDir}\susan.exe" .
     if ($LASTEXITCODE -ne 0) { exit($LASTEXITCODE)}
 }
 
@@ -1253,20 +1253,20 @@ function zip {
             }
 
             # Compress the main amd64 zip (without rocm/mlx)
-            Write-Output "Generating ${distDir}\ollama-windows-amd64.zip"
-            $jobs += newZipJob $amd64Dir "${distDir}\ollama-windows-amd64.zip"
+            Write-Output "Generating ${distDir}\susan-windows-amd64.zip"
+            $jobs += newZipJob $amd64Dir "${distDir}\susan-windows-amd64.zip"
             $jobs += newDependencyAuditJob $amd64Dir "windows-amd64" "${distDir}\dependency-audit-windows-amd64.txt"
         }
 
         $arm64Dir = "${distDir}\windows-arm64"
         if (Test-Path -Path $arm64Dir) {
-            if ((Test-Path -Path "${arm64Dir}\ollama.exe") -and (Test-Path -Path "${arm64Dir}\lib\ollama\llama-server.exe")) {
+            if ((Test-Path -Path "${arm64Dir}\susan.exe") -and (Test-Path -Path "${arm64Dir}\lib\ollama\llama-server.exe")) {
                 verifyWindowsArm64Binaries $arm64Dir
-                Write-Output "Generating ${distDir}\ollama-windows-arm64.zip"
-                $jobs += newZipJob $arm64Dir "${distDir}\ollama-windows-arm64.zip"
+                Write-Output "Generating ${distDir}\susan-windows-arm64.zip"
+                $jobs += newZipJob $arm64Dir "${distDir}\susan-windows-arm64.zip"
                 $jobs += newDependencyAuditJob $arm64Dir "windows-arm64" "${distDir}\dependency-audit-windows-arm64.txt"
             } else {
-                Write-Output "Skipping ${distDir}\ollama-windows-arm64.zip; missing ARM64 ollama.exe or llama-server.exe"
+                Write-Output "Skipping ${distDir}\susan-windows-arm64.zip; missing ARM64 susan.exe or llama-server.exe"
             }
         }
 
