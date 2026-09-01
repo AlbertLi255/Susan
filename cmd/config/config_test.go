@@ -182,7 +182,7 @@ func TestLoadIntegration_CorruptedJSON(t *testing.T) {
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
 
-	dir := filepath.Join(tmpDir, ".ollama")
+	dir := filepath.Join(tmpDir, ".susan")
 	os.MkdirAll(dir, 0o755)
 	os.WriteFile(filepath.Join(dir, "config.json"), []byte(`{corrupted json`), 0o644)
 

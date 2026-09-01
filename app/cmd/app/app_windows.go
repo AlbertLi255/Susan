@@ -35,11 +35,11 @@ var (
 	pSetActiveWindow     = u32.NewProc("SetActiveWindow")
 	pIsIconic            = u32.NewProc("IsIconic")
 
-	appPath         = filepath.Join(os.Getenv("LOCALAPPDATA"), "Programs", "Ollama")
-	appLogPath      = filepath.Join(os.Getenv("LOCALAPPDATA"), "Ollama", "app.log")
-	startupShortcut = filepath.Join(os.Getenv("APPDATA"), "Microsoft", "Windows", "Start Menu", "Programs", "Startup", "Ollama.lnk")
-	ollamaPath      string
-	DesktopAppName  = "ollama app.exe"
+	appPath         = filepath.Join(os.Getenv("LOCALAPPDATA"), "Programs", "Susan")
+	appLogPath      = filepath.Join(os.Getenv("LOCALAPPDATA"), "Susan", "app.log")
+	startupShortcut = filepath.Join(os.Getenv("APPDATA"), "Microsoft", "Windows", "Start Menu", "Programs", "Startup", "Susan.lnk")
+	susanPath      string
+	DesktopAppName  = "susan app.exe"
 )
 
 func init() {
@@ -50,21 +50,21 @@ func init() {
 	} else {
 		appPath = filepath.Dir(exe)
 	}
-	ollamaPath = filepath.Join(appPath, "ollama.exe")
+	susanPath = filepath.Join(appPath, "susan.exe")
 
 	// Handle developer mode (go run ./cmd/app)
-	if _, err := os.Stat(ollamaPath); err != nil {
+	if _, err := os.Stat(susanPath); err != nil {
 		pwd, err := os.Getwd()
 		if err != nil {
-			slog.Warn("missing ollama.exe and failed to get pwd", "error", err)
+			slog.Warn("missing susan.exe and failed to get pwd", "error", err)
 			return
 		}
 		distAppPath := filepath.Join(pwd, "dist", "windows-"+runtime.GOARCH)
-		distOllamaPath := filepath.Join(distAppPath, "ollama.exe")
-		if _, err := os.Stat(distOllamaPath); err == nil {
+		distSusanPath := filepath.Join(distAppPath, "susan.exe")
+		if _, err := os.Stat(distSusanPath); err == nil {
 			slog.Info("detected developer mode")
 			appPath = distAppPath
-			ollamaPath = distOllamaPath
+			susanPath = distSusanPath
 		}
 	}
 }
@@ -193,7 +193,7 @@ func osRun(shutdown func(), hasCompletedFirstRun, startHidden bool) {
 	// may trigger the UI, and must do that from the main thread.
 	if !startHidden {
 		// Determine if the process was started from a shortcut
-		// ~\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\Ollama
+		// ~\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\Susan
 		const STARTF_TITLEISLINKNAME = 0x00000800
 		var info windows.StartupInfo
 		if err := windows.GetStartupInfo(&info); err != nil {
@@ -242,7 +242,7 @@ func osRun(shutdown func(), hasCompletedFirstRun, startHidden bool) {
 func createLoginShortcut() error {
 	// The installer lays down a shortcut for us so we can copy it without
 	// having to resort to calling COM APIs to establish the shortcut
-	shortcutOrigin := filepath.Join(appPath, "lib", "Ollama.lnk")
+	shortcutOrigin := filepath.Join(appPath, "lib", "Susan.lnk")
 
 	_, err := os.Stat(startupShortcut)
 	if err != nil {
@@ -279,7 +279,7 @@ func LaunchNewApp() {
 }
 
 func logStartup() {
-	slog.Info("starting Ollama", "app", appPath, "version", version.Version, "OS", updater.UserAgentOS)
+	slog.Info("starting Susan", "app", appPath, "version", version.Version, "OS", updater.UserAgentOS)
 }
 
 const (
@@ -418,11 +418,11 @@ func runInBackground() {
 	if cmd != nil {
 		err = cmd.Run()
 		if err != nil {
-			slog.Error("failed to run Ollama", "exe", exe, "error", err)
+			slog.Error("failed to run Susan", "exe", exe, "error", err)
 			os.Exit(1)
 		}
 	} else {
-		slog.Error("failed to start Ollama", "exe", exe)
+		slog.Error("failed to start Susan", "exe", exe)
 		os.Exit(1)
 	}
 }

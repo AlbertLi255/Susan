@@ -18,17 +18,17 @@ func TestFindLibOllamaPath(t *testing.T) {
 		{
 			name: "darwin release layout",
 			search: libOllamaPathSearch{
-				executable: filepath.Join(root, "darwin-app", "Ollama.app", "Contents", "Resources", "ollama"),
+				executable: filepath.Join(root, "darwin-app", "Susan.app", "Contents", "Resources", "susan"),
 				goos:       "darwin",
 				goarch:     "arm64",
 			},
-			dirs: []string{filepath.Join(root, "darwin-app", "Ollama.app", "Contents", "Resources")},
-			want: filepath.Join(root, "darwin-app", "Ollama.app", "Contents", "Resources"),
+			dirs: []string{filepath.Join(root, "darwin-app", "Susan.app", "Contents", "Resources")},
+			want: filepath.Join(root, "darwin-app", "Susan.app", "Contents", "Resources"),
 		},
 		{
 			name: "darwin standard install layout",
 			search: libOllamaPathSearch{
-				executable: filepath.Join(root, "darwin-install", "bin", "ollama"),
+				executable: filepath.Join(root, "darwin-install", "bin", "susan"),
 				goos:       "darwin",
 				goarch:     "arm64",
 			},
@@ -38,7 +38,7 @@ func TestFindLibOllamaPath(t *testing.T) {
 		{
 			name: "windows release layout",
 			search: libOllamaPathSearch{
-				executable: filepath.Join(root, "windows-release", "ollama.exe"),
+				executable: filepath.Join(root, "windows-release", "susan.exe"),
 				goos:       "windows",
 				goarch:     "amd64",
 			},
@@ -48,7 +48,7 @@ func TestFindLibOllamaPath(t *testing.T) {
 		{
 			name: "windows standard install layout",
 			search: libOllamaPathSearch{
-				executable: filepath.Join(root, "windows-install", "bin", "ollama.exe"),
+				executable: filepath.Join(root, "windows-install", "bin", "susan.exe"),
 				goos:       "windows",
 				goarch:     "amd64",
 			},
@@ -58,7 +58,7 @@ func TestFindLibOllamaPath(t *testing.T) {
 		{
 			name: "linux standard install layout",
 			search: libOllamaPathSearch{
-				executable: filepath.Join(root, "linux-install", "bin", "ollama"),
+				executable: filepath.Join(root, "linux-install", "bin", "susan"),
 				goos:       "linux",
 				goarch:     "amd64",
 			},
@@ -68,7 +68,7 @@ func TestFindLibOllamaPath(t *testing.T) {
 		{
 			name: "local linux underscore dist layout",
 			search: libOllamaPathSearch{
-				executable: filepath.Join(root, "linux-dev", "ollama"),
+				executable: filepath.Join(root, "linux-dev", "susan"),
 				workingDir: filepath.Join(root, "linux-dev"),
 				goos:       "linux",
 				goarch:     "amd64",
@@ -79,7 +79,7 @@ func TestFindLibOllamaPath(t *testing.T) {
 		{
 			name: "mlx-only standard install layout",
 			search: libOllamaPathSearch{
-				executable: filepath.Join(root, "mlx-install", "bin", "ollama"),
+				executable: filepath.Join(root, "mlx-install", "bin", "susan"),
 				goos:       "linux",
 				goarch:     "amd64",
 			},
@@ -89,7 +89,7 @@ func TestFindLibOllamaPath(t *testing.T) {
 		{
 			name: "darwin local build layout before executable directory fallback",
 			search: libOllamaPathSearch{
-				executable: filepath.Join(root, "darwin-dev", "ollama"),
+				executable: filepath.Join(root, "darwin-dev", "susan"),
 				workingDir: filepath.Join(root, "darwin-dev"),
 				goos:       "darwin",
 				goarch:     "arm64",

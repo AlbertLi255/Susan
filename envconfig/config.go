@@ -109,7 +109,7 @@ func AllowedOrigins() (origins []string) {
 }
 
 // Models returns the path to the models directory. Models directory can be configured via the OLLAMA_MODELS environment variable.
-// Default is $HOME/.ollama/models
+// Default is $HOME/.susan/models
 func Models() string {
 	if s := Var("OLLAMA_MODELS"); s != "" {
 		return s
@@ -120,7 +120,7 @@ func Models() string {
 		panic(err)
 	}
 
-	return filepath.Join(home, ".ollama", "models")
+	return filepath.Join(home, ".susan", "models")
 }
 
 // KeepAlive returns the duration that models stay loaded in memory. KeepAlive can be configured via the OLLAMA_KEEP_ALIVE environment variable.
@@ -372,11 +372,25 @@ func Values() map[string]string {
 }
 
 // Var returns an environment variable stripped of leading and trailing quotes or spaces
+// First checks SUSAN_ prefix, then falls back to OLLAMA_ prefix for compatibility
 func Var(key string) string {
-	return strings.Trim(strings.TrimSpace(os.Getenv(key)), "\"'")
+	// If key already starts with SUSAN_ or OLLAMA_, use it directly
+	if strings.HasPrefix(key, "SUSAN_") || strings.HasPrefix(key, "OLLAMA_") {
+		return strings.Trim(strings.TrimSpace(os.Getenv(key)), "\"'")
+	}
+
+	// Try SUSAN_ prefix first for compatibility
+	susanKey := "SUSAN_" + key
+	if val := os.Getenv(susanKey); val != "" {
+		return strings.Trim(strings.TrimSpace(val), "\"'")
+	}
+
+	// Fall back to OLLAMA_ prefix
+	ollamaKey := "OLLAMA_" + key
+	return strings.Trim(strings.TrimSpace(os.Getenv(ollamaKey)), "\"'")
 }
 
-// serverConfigData holds the parsed fields from ~/.ollama/server.json.
+// serverConfigData holds the parsed fields from ~/.susan/server.json.
 type serverConfigData struct {
 	DisableOllamaCloud bool `json:"disable_ollama_cloud,omitempty"`
 }
@@ -398,7 +412,7 @@ func loadServerConfig() {
 	cfg := serverConfigData{}
 	home, err := os.UserHomeDir()
 	if err == nil {
-		path := filepath.Join(home, ".ollama", "server.json")
+		path := filepath.Join(home, ".susan", "server.json")
 		data, err := os.ReadFile(path)
 		if err != nil {
 			if !errors.Is(err, os.ErrNotExist) {
@@ -424,7 +438,7 @@ func cachedServerConfig() serverConfigData {
 	return serverCfg
 }
 
-// ReloadServerConfig refreshes the cached ~/.ollama/server.json settings.
+// ReloadServerConfig refreshes the cached ~/.susan/server.json settings.
 func ReloadServerConfig() {
 	serverCfgMu.Lock()
 	serverCfgLoaded = false
@@ -434,9 +448,9 @@ func ReloadServerConfig() {
 	loadServerConfig()
 }
 
-// NoCloud returns true if Ollama cloud features are disabled,
+// NoCloud returns true if Susan cloud features are disabled,
 // checking both the OLLAMA_NO_CLOUD environment variable and
-// the disable_ollama_cloud field in ~/.ollama/server.json.
+// the disable_ollama_cloud field in ~/.susan/server.json.
 func NoCloud() bool {
 	if NoCloudEnv() {
 		return true

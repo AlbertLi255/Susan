@@ -22,9 +22,9 @@ import (
 	"github.com/ollama/ollama/app/version"
 )
 
-var ollamaPath = func() string {
+var susanPath = func() string {
 	if updater.BundlePath != "" {
-		return filepath.Join(updater.BundlePath, "Contents", "Resources", "ollama")
+		return filepath.Join(updater.BundlePath, "Contents", "Resources", "susan")
 	}
 
 	pwd, err := os.Getwd()
@@ -32,12 +32,12 @@ var ollamaPath = func() string {
 		slog.Warn("failed to get pwd", "error", err)
 		return ""
 	}
-	return filepath.Join(pwd, "ollama")
+	return filepath.Join(pwd, "susan")
 }()
 
 var (
 	isApp           = updater.BundlePath != ""
-	appLogPath      = filepath.Join(os.Getenv("HOME"), ".ollama", "logs", "app.log")
+	appLogPath      = filepath.Join(os.Getenv("HOME"), ".susan", "logs", "app.log")
 	launchAgentPath = filepath.Join(os.Getenv("HOME"), "Library", "LaunchAgents", "com.ollama.ollama.plist")
 )
 
@@ -91,7 +91,7 @@ func init() {
 	if len(os.Args) > 2 {
 		if os.Args[1] == "___launch___" {
 			path := strings.TrimPrefix(os.Args[2], "file://")
-			slog.Info("Ollama binary called as ShipIt - launching", "app", path)
+			slog.Info("Susan binary called as ShipIt - launching", "app", path)
 			appName := C.CString(path)
 			defer C.free(unsafe.Pointer(appName))
 			C.launchApp(appName)
@@ -136,11 +136,11 @@ func installSymlink() {
 	if !isApp {
 		return
 	}
-	cliPath := C.CString(ollamaPath)
+	cliPath := C.CString(susanPath)
 	defer C.free(unsafe.Pointer(cliPath))
 
 	// Check the users path first
-	cmd, _ := exec.LookPath("ollama")
+	cmd, _ := exec.LookPath("susan")
 	if cmd != "" {
 		resolved, err := os.Readlink(cmd)
 		if err == nil {
@@ -151,8 +151,8 @@ func installSymlink() {
 		} else {
 			resolved = cmd
 		}
-		if resolved == ollamaPath {
-			slog.Info("ollama already in users PATH", "cli", cmd)
+		if resolved == susanPath {
+			slog.Info("susan already in users PATH", "cli", cmd)
 			return
 		}
 	}
@@ -208,13 +208,13 @@ func logStartup() {
 			if filepath.Base(p) == "MacOS" {
 				p = filepath.Dir(filepath.Dir(p))
 				if p != appPath {
-					slog.Info("starting sandboxed Ollama", "app", appPath, "sandbox", p)
+					slog.Info("starting sandboxed Susan", "app", appPath, "sandbox", p)
 					return
 				}
 			}
 		}
 	}
-	slog.Info("starting Ollama", "app", appPath, "version", version.Version, "OS", updater.UserAgentOS)
+	slog.Info("starting Susan", "app", appPath, "version", version.Version, "OS", updater.UserAgentOS)
 }
 
 func hideWindow(ptr unsafe.Pointer) {
@@ -230,15 +230,15 @@ func styleWindow(ptr unsafe.Pointer) {
 }
 
 func runInBackground() {
-	cmd := exec.Command(filepath.Join(updater.BundlePath, "Contents", "MacOS", "Ollama"), "hidden")
+	cmd := exec.Command(filepath.Join(updater.BundlePath, "Contents", "MacOS", "Susan"), "hidden")
 	if cmd != nil {
 		err := cmd.Run()
 		if err != nil {
-			slog.Error("failed to run Ollama", "bundlePath", updater.BundlePath, "error", err)
+			slog.Error("failed to run Susan", "bundlePath", updater.BundlePath, "error", err)
 			os.Exit(1)
 		}
 	} else {
-		slog.Error("failed to start Ollama in background", "bundlePath", updater.BundlePath)
+		slog.Error("failed to start Susan in background", "bundlePath", updater.BundlePath)
 		os.Exit(1)
 	}
 }

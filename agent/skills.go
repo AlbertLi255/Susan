@@ -16,9 +16,9 @@ import (
 )
 
 const (
-	// SkillsDirEnv overrides the user-level Ollama-owned skills directory. The
-	// cross-client .agents/skills/ convention and project-level .ollama/skills/
-	// are also scanned (see LoadDefaultSkills); on a name collision, Ollama-owned
+	// SkillsDirEnv overrides the user-level Susan-owned skills directory. The
+	// cross-client .agents/skills/ convention and project-level .susan/skills/
+	// are also scanned (see LoadDefaultSkills); on a name collision, Susan-owned
 	// directories take precedence over .agents/skills/, and project-level takes
 	// precedence over user-level.
 	SkillsDirEnv  = "OLLAMA_SKILLS"
@@ -37,7 +37,7 @@ Create a focused, reusable instruction package. Treat a skill as guidance for th
 
 ## Choose the location
 
-Create user skills beside this one. The skill directory shown in the loaded skill context is this skill's location; its parent is the user skill root. This bundled skill normally lives at ~/.ollama/skills/skill-creator, so new user skills normally go at ~/.ollama/skills/<skill-name>/SKILL.md.
+Create user skills beside this one. The skill directory shown in the loaded skill context is this skill's location; its parent is the user skill root. This bundled skill normally lives at ~/.susan/skills/skill-creator, so new user skills normally go at ~/.susan/skills/<skill-name>/SKILL.md.
 
 Use a project-local skill directory only when the user asks to keep the skill with that project. Do not overwrite an existing skill without the user's approval. New and changed skills are discovered when the agent starts, so tell the user to begin a new agent session afterward.
 
@@ -82,13 +82,13 @@ func SkillsDir() (string, error) {
 		return filepath.Abs(path)
 	}
 	if xdg := strings.TrimSpace(os.Getenv("XDG_CONFIG_HOME")); xdg != "" {
-		return filepath.Join(xdg, "ollama", "skills"), nil
+		return filepath.Join(xdg, "susan", "skills"), nil
 	}
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".ollama", "skills"), nil
+	return filepath.Join(home, ".susan", "skills"), nil
 }
 
 // Skill is a validated, loadable instruction set. It never grants tool
@@ -201,11 +201,11 @@ func DiscoverSkills(dir string) (*SkillCatalog, error) {
 // roots override earlier ones on name collisions (recording a diagnostic):
 //
 //  1. ~/.agents/skills/              (user, cross-client)
-//  2. user Ollama skills dir          (user, Ollama-owned; SkillsDir)
+//  2. user Susan skills dir          (user, Susan-owned; SkillsDir)
 //  3. <project>/.agents/skills/      (project, cross-client)
-//  4. <project>/.ollama/skills/      (project, Ollama-owned)
+//  4. <project>/.susan/skills/      (project, Susan-owned)
 //
-// Project-level overrides user-level, and within a scope Ollama-owned
+// Project-level overrides user-level, and within a scope Susan-owned
 // directories override .agents/skills/. projectDir is the agent's working
 // directory at startup (discovery is a session-start snapshot per the spec).
 func LoadDefaultSkills(projectDir string) (*SkillCatalog, error) {
@@ -292,7 +292,7 @@ type SkillImportFailure struct {
 }
 
 // ImportSkills imports skills from a conventional coding-agent source into the
-// canonical Ollama skills directory. Supported sources are codex, claude, and
+// canonical Susan skills directory. Supported sources are codex, claude, and
 // pi. Existing skills are left untouched: an identical directory is reported
 // as existing, and a differing one is reported as a conflict.
 func ImportSkills(source string) (SkillImportResult, error) {
@@ -303,7 +303,7 @@ func ImportSkills(source string) (SkillImportResult, error) {
 
 	destination, err := SkillsDir()
 	if err != nil {
-		return SkillImportResult{}, fmt.Errorf("resolve Ollama skills directory: %w", err)
+		return SkillImportResult{}, fmt.Errorf("resolve Susan skills directory: %w", err)
 	}
 	return importSkillsFromRoots(source, conventionalSkillImportRoots(home), destination)
 }
@@ -478,14 +478,14 @@ func importSkillDirectory(source, destination string) (skillImportState, error) 
 
 func ensureImportDestination(dir string) error {
 	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return fmt.Errorf("create Ollama skills directory: %w", err)
+		return fmt.Errorf("create Susan skills directory: %w", err)
 	}
 	info, err := os.Lstat(dir)
 	if err != nil {
-		return fmt.Errorf("inspect Ollama skills directory: %w", err)
+		return fmt.Errorf("inspect Susan skills directory: %w", err)
 	}
 	if info.Mode()&os.ModeSymlink != 0 || !info.IsDir() {
-		return errors.New("Ollama skills directory must be a regular, non-symlinked directory")
+		return errors.New("Susan skills directory must be a regular, non-symlinked directory")
 	}
 	return nil
 }
@@ -642,7 +642,7 @@ func defaultSkillRoots(projectDir string) ([]skillRoot, error) {
 		if abs, err := filepath.Abs(projectDir); err == nil {
 			roots = append(roots,
 				skillRoot{path: filepath.Join(abs, ".agents", "skills")},
-				skillRoot{path: filepath.Join(abs, ".ollama", "skills")},
+				skillRoot{path: filepath.Join(abs, ".susan", "skills")},
 			)
 		}
 	}

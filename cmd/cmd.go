@@ -416,7 +416,7 @@ func CreateHandler(cmd *cobra.Command, args []string) error {
 
 	if err := client.Create(cmd.Context(), req, fn); err != nil {
 		if strings.Contains(err.Error(), "path or Modelfile are required") {
-			return fmt.Errorf("the ollama server must be updated to use `ollama create` with this client")
+			return fmt.Errorf("the susan server must be updated to use `susan create` with this client")
 		}
 		return err
 	}
@@ -653,7 +653,7 @@ func generateEmbedding(cmd *cobra.Command, modelName, input string, keepAlive *a
 func handleCloudAuthorizationError(err error) bool {
 	var authErr api.AuthorizationError
 	if errors.As(err, &authErr) && authErr.StatusCode == http.StatusUnauthorized {
-		fmt.Printf("You need to be signed in to Ollama to run Cloud models.\n\n")
+		fmt.Printf("You need to be signed in to Susan to run Cloud models.\n\n")
 		if authErr.SigninURL != "" {
 			fmt.Printf(ConnectInstructions, authErr.SigninURL)
 		}
@@ -875,7 +875,7 @@ func RunHandler(cmd *cobra.Command, args []string) error {
 	// If it's an embedding model, handle embedding generation
 	if isEmbeddingModel {
 		if opts.Prompt == "" {
-			return errors.New("embedding models require input text. Usage: ollama run " + name + " \"your text here\"")
+			return errors.New("embedding models require input text. Usage: susan run " + name + " \"your text here\"")
 		}
 
 		// Get embedding-specific flags
@@ -900,7 +900,7 @@ func RunHandler(cmd *cobra.Command, args []string) error {
 		if err := loadOrUnloadModel(cmd, &opts); err != nil {
 			var sErr api.AuthorizationError
 			if errors.As(err, &sErr) && sErr.StatusCode == http.StatusUnauthorized {
-				fmt.Printf("You need to be signed in to Ollama to run Cloud models.\n\n")
+				fmt.Printf("You need to be signed in to Susan to run Cloud models.\n\n")
 
 				if sErr.SigninURL != "" {
 					fmt.Printf(ConnectInstructions, sErr.SigninURL)
@@ -943,7 +943,7 @@ func SigninHandler(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		var aErr api.AuthorizationError
 		if errors.As(err, &aErr) && aErr.StatusCode == http.StatusUnauthorized {
-			fmt.Println("You need to be signed in to Ollama to run Cloud models.")
+			fmt.Println("You need to be signed in to Susan to run Cloud models.")
 			fmt.Println()
 
 			if aErr.SigninURL != "" {
@@ -2100,11 +2100,11 @@ func versionHandler(cmd *cobra.Command, _ []string) {
 
 	serverVersion, err := client.Version(cmd.Context())
 	if err != nil {
-		fmt.Println("Warning: could not connect to a running Ollama instance")
+		fmt.Println("Warning: could not connect to a running Susan instance")
 	}
 
 	if serverVersion != "" {
-		fmt.Printf("ollama version is %s\n", serverVersion)
+		fmt.Printf("susan version is %s\n", serverVersion)
 	}
 
 	if serverVersion != version.Version {
@@ -2285,7 +2285,7 @@ func NewCLI() *cobra.Command {
 	}
 
 	rootCmd := &cobra.Command{
-		Use:           "ollama",
+		Use:           "susan",
 		Short:         "Large language model runner",
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -2370,7 +2370,7 @@ func NewCLI() *cobra.Command {
 	serveCmd := &cobra.Command{
 		Use:     "serve",
 		Aliases: []string{"start"},
-		Short:   "Start Ollama",
+		Short:   "Start Susan",
 		Args:    cobra.ExactArgs(0),
 		RunE:    RunServer,
 	}
@@ -2479,7 +2479,7 @@ func NewCLI() *cobra.Command {
 			return discover.RunNativeProbeCommand(cmd.Context(), gpuDiscoverLibDirs, os.Stdout)
 		},
 	}
-	gpuDiscoverCmd.Flags().StringArrayVar(&gpuDiscoverLibDirs, "lib-dir", nil, "Ollama runtime library directory")
+	gpuDiscoverCmd.Flags().StringArrayVar(&gpuDiscoverLibDirs, "lib-dir", nil, "Susan runtime library directory")
 
 	envVars := envconfig.AsMap()
 
