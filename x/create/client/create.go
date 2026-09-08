@@ -9,6 +9,7 @@ package client
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -235,9 +236,9 @@ func CreateModel(opts CreateOptions, p *progress.Progress) error {
 }
 
 func appendLayersManifestWriter(next create.ManifestWriter, extra []create.LayerInfo) create.ManifestWriter {
-	return func(modelName string, config create.LayerInfo, layers []create.LayerInfo) error {
+	return func(modelName string, config create.LayerInfo, layers []create.LayerInfo, class create.Classification) error {
 		layers = append(layers, extra...)
-		return next(modelName, config, layers)
+		return next(modelName, config, layers, class)
 	}
 }
 
@@ -314,6 +315,7 @@ func createModelFromBaseWithDraft(opts CreateOptions, draftLayers []create.Layer
 			Name:      configLayer.Name,
 		},
 		layers,
+		create.Classification{Quantize: quant.Canonical(opts.Quantize)},
 	)
 }
 
@@ -328,6 +330,17 @@ func readConfigV2(m *imagemanifest.ModelManifest) (*model.ConfigV2, error) {
 		return nil, fmt.Errorf("failed to parse base config: %w", err)
 	}
 	return &cfg, nil
+}
+
+func readHFGenerationDefaults(modelDir string) (model.GenerationDefaults, error) {
+	data, err := os.ReadFile(filepath.Join(modelDir, "generation_config.json"))
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	return model.ParseHFGenerationDefaults(data)
 }
 
 func inferSafetensorsCapabilities(modelDir, parserName string) []string {
@@ -377,7 +390,7 @@ func newLayerCreator() create.LayerCreator {
 
 // newManifestWriter returns a ManifestWriter callback for writing the model manifest.
 func newManifestWriter(opts CreateOptions, capabilities []string, parserName, rendererName string) create.ManifestWriter {
-	return func(modelName string, config create.LayerInfo, layers []create.LayerInfo) error {
+	return func(modelName string, config create.LayerInfo, layers []create.LayerInfo, class create.Classification) error {
 		name := model.ParseName(modelName)
 		if !name.IsValid() {
 			return fmt.Errorf("invalid model name: %s", modelName)
@@ -389,8 +402,8 @@ func newManifestWriter(opts CreateOptions, capabilities []string, parserName, re
 			configData = *opts.BaseConfig
 		}
 		configData.ModelFormat = "safetensors"
-		if opts.Quantize != "" || configData.FileType == "" {
-			configData.FileType = strings.ToLower(strings.TrimSpace(opts.Quantize))
+		if class.Quantize != "" || configData.FileType == "" {
+			configData.FileType = class.Quantize
 		}
 		configData.Capabilities = capabilities
 		configData.Requires = MinOllamaVersion
@@ -399,6 +412,15 @@ func newManifestWriter(opts CreateOptions, capabilities []string, parserName, re
 		}
 		configData.Parser = resolveParserName(opts.Modelfile, parserName)
 		configData.Renderer = resolveRendererName(opts.Modelfile, rendererName)
+		if slices.Contains(capabilities, "completion") {
+			defaults, err := readHFGenerationDefaults(opts.ModelDir)
+			if err != nil {
+				return fmt.Errorf("failed to read generation_config.json: %w", err)
+			}
+			if len(defaults) > 0 {
+				configData.GenerationDefaults = defaults
+			}
+		}
 		if opts.Modelfile != nil && opts.Modelfile.Draft != "" {
 			draft, err := draftMetadata(opts.Modelfile.Draft)
 			if err != nil {
@@ -567,11 +589,11 @@ func chatTemplateHasThinkingSupport(chatTemplate string) bool {
 }
 
 func alwaysSupportsThinking(architectures []string, modelType string) bool {
-	if isQwen35Family(modelType) {
+	if isQwen35Family(modelType) || isQwen4Family(modelType) {
 		return true
 	}
 	for _, arch := range architectures {
-		if isQwen35Family(arch) {
+		if isQwen35Family(arch) || isQwen4Family(arch) {
 			return true
 		}
 	}
@@ -581,6 +603,22 @@ func alwaysSupportsThinking(architectures []string, modelType string) bool {
 func isQwen35Family(s string) bool {
 	s = strings.ToLower(s)
 	return strings.Contains(s, "qwen3_5") || strings.Contains(s, "qwen3next")
+}
+
+func isQwen4Family(s string) bool {
+	s = strings.ToLower(s)
+	return strings.Contains(s, "qwen4exp") ||
+		strings.Contains(s, "qwen4_exp")
+}
+
+func qwen35RendererName(modelDir string) string {
+	template := readChatTemplate(modelDir)
+	if strings.Contains(template, "resolved_reasoning_effort") &&
+		strings.Contains(template, "preserve_thinking") {
+		return "qwen3.8"
+	}
+
+	return "qwen3.5"
 }
 
 func lagunaRendererParserName(modelDir string) string {
@@ -665,6 +703,8 @@ func parserNameForIdentifier(modelDir, s string) string {
 		return "deepseek3"
 	case strings.Contains(s, "gemma4"):
 		return "gemma4"
+	case isQwen4Family(s):
+		return "qwen3.5"
 	case isQwen35Family(s):
 		return "qwen3.5"
 	case strings.Contains(s, "qwen3"):
@@ -728,8 +768,10 @@ func rendererNameForIdentifier(modelDir, s string) string {
 		return "glm-4.7"
 	case strings.Contains(s, "deepseek"):
 		return "deepseek3"
+	case isQwen4Family(s):
+		return "qwen3.8"
 	case isQwen35Family(s):
-		return "qwen3.5"
+		return qwen35RendererName(modelDir)
 	case strings.Contains(s, "qwen3"):
 		return "qwen3-coder"
 	// Nemotron-H publishes NemotronHForCausalLM for text and
