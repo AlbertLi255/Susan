@@ -415,7 +415,7 @@ func TestNoCloud(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			home := t.TempDir()
 			if tt.configContent != "" {
-				configDir := filepath.Join(home, ".ollama")
+				configDir := filepath.Join(home, ".susan")
 				if err := os.MkdirAll(configDir, 0o755); err != nil {
 					t.Fatal(err)
 				}
