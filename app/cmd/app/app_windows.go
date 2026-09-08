@@ -38,7 +38,7 @@ var (
 	appPath         = filepath.Join(os.Getenv("LOCALAPPDATA"), "Programs", "Susan")
 	appLogPath      = filepath.Join(os.Getenv("LOCALAPPDATA"), "Susan", "app.log")
 	startupShortcut = filepath.Join(os.Getenv("APPDATA"), "Microsoft", "Windows", "Start Menu", "Programs", "Startup", "Susan.lnk")
-	susanPath      string
+	susanPath       string
 	DesktopAppName  = "susan app.exe"
 )
 

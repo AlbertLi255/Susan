@@ -212,38 +212,38 @@ func TestOllamaServeArgs(t *testing.T) {
 		want bool
 	}{
 		{
-			name: "system ollama serve",
-			args: []string{"ollama", "serve"},
+			name: "system susan serve",
+			args: []string{"susan", "serve"},
 			want: true,
 		},
 		{
-			name: "relative path ollama serve",
-			args: []string{"./ollama", "serve"},
+			name: "relative path susan serve",
+			args: []string{"./susan", "serve"},
 			want: true,
 		},
 		{
 			name: "serve after other flags",
-			args: []string{"./ollama", "--verbose", "serve"},
+			args: []string{"./susan", "--verbose", "serve"},
 			want: true,
 		},
 		{
 			name: "start alias",
-			args: []string{"ollama", "start"},
+			args: []string{"susan", "start"},
 			want: true,
 		},
 		{
 			name: "launch command",
-			args: []string{"ollama", "launch", "opencode"},
+			args: []string{"susan", "launch", "opencode"},
 			want: false,
 		},
 		{
 			name: "run command with model named serve",
-			args: []string{"ollama", "run", "serve"},
+			args: []string{"susan", "run", "serve"},
 			want: false,
 		},
 		{
 			name: "launch command with serve in passthrough args",
-			args: []string{"ollama", "launch", "codex", "--", "-p", "serve"},
+			args: []string{"susan", "launch", "codex", "--", "-p", "serve"},
 			want: false,
 		},
 		{
