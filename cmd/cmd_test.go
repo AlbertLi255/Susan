@@ -773,7 +773,7 @@ func TestRunHandler_CloudAuthErrorOnShow_PrintsSigninMessage(t *testing.T) {
 		t.Fatal("expected run to stop before /api/generate after unauthorized /api/show")
 	}
 
-	if !strings.Contains(out.String(), "You need to be signed in to Ollama to run Cloud models.") {
+	if !strings.Contains(out.String(), "You need to be signed in to Susan to run Cloud models.") {
 		t.Fatalf("expected sign-in guidance message, got %q", out.String())
 	}
 
@@ -837,7 +837,7 @@ func TestRunHandler_CloudAuthErrorOnGenerate_PrintsSigninMessage(t *testing.T) {
 		t.Fatalf("RunHandler returned error: %v", err)
 	}
 
-	if !strings.Contains(out.String(), "You need to be signed in to Ollama to run Cloud models.") {
+	if !strings.Contains(out.String(), "You need to be signed in to Susan to run Cloud models.") {
 		t.Fatalf("expected sign-in guidance message, got %q", out.String())
 	}
 
