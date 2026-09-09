@@ -50,7 +50,7 @@ func TestStatus(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			home := t.TempDir()
 			if tt.configContent != "" {
-				configPath := filepath.Join(home, ".ollama", "server.json")
+				configPath := filepath.Join(home, ".susan", "server.json")
 				if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
 					t.Fatal(err)
 				}
