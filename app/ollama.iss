@@ -15,7 +15,7 @@
 #define MyAppURL "https://ollama.com/"
 #define MyAppExeName "susan app.exe"
 #define LlamaServerExeName "llama-server.exe"
-#define MyIcon ".\assets\app.ico"
+#define MyIcon ".\assets\susan.ico"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
