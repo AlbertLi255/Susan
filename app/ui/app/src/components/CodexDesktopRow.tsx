@@ -54,7 +54,7 @@ function codexDesktopDescription(
 ): string {
   if (!status?.connected) return defaultDescription;
   const requestCount = status.requests ?? 0;
-  return `${requestCount} Ollama ${requestCount === 1 ? "request" : "requests"} this session`;
+  return `${requestCount} Susan ${requestCount === 1 ? "request" : "requests"} this session`;
 }
 
 export function CodexDesktopRow({
@@ -85,7 +85,7 @@ export function CodexDesktopRow({
       setError(null);
       setNotice(null);
     } catch {
-      setError("Ollama could not read the ChatGPT connection status.");
+      setError("Susan could not read the ChatGPT connection status.");
     }
   }, []);
 
@@ -153,7 +153,7 @@ export function CodexDesktopRow({
         if (next.running) {
           setPhase("idle");
           setError(
-            "ChatGPT is installed. Turn on the switch to restart it with Ollama models.",
+            "ChatGPT is installed. Turn on the switch to restart it with Susan models.",
           );
           return;
         }
@@ -164,20 +164,20 @@ export function CodexDesktopRow({
         setStatus(result.status);
         if (result.restartConfirmationRequired) {
           setError(
-            "ChatGPT is installed. Turn on the switch to restart it with Ollama models.",
+            "ChatGPT is installed. Turn on the switch to restart it with Susan models.",
           );
         } else if (result.error || !result.status.connected) {
           setError(
-            result.error || "Ollama could not add its models to ChatGPT.",
+            result.error || "Susan could not add its models to ChatGPT.",
           );
         } else {
-          setNotice("Ollama models added alongside Codex models");
+          setNotice("Susan models added alongside Codex models");
         }
         setPhase("idle");
       } catch {
         if (!mounted.current) return;
         setPhase("idle");
-        setError("Ollama could not finish connecting ChatGPT.");
+        setError("Susan could not finish connecting ChatGPT.");
       } finally {
         checking = false;
       }
@@ -224,11 +224,11 @@ export function CodexDesktopRow({
     error ??
     notice ??
     (phase === "installing"
-      ? "Ollama is downloading the ChatGPT installer…"
+      ? "Susan is downloading the ChatGPT installer…"
       : phase === "waiting-for-install"
-        ? "Finish installing ChatGPT. Ollama will connect it automatically."
+        ? "Finish installing ChatGPT. Susan will connect it automatically."
         : phase === "connecting"
-          ? "Connecting ChatGPT to Ollama…"
+          ? "Connecting ChatGPT to Susan…"
           : phase === "disconnecting"
             ? "Restoring ChatGPT’s usual connection…"
             : codexDesktopDescription(status, integration.description));
@@ -243,7 +243,7 @@ export function CodexDesktopRow({
     const enabled = !connected;
     if (enabled && !installed) {
       if (!window.installCodexDesktop || !window.getCodexDesktopStatus) {
-        setError("Ollama could not install ChatGPT.");
+        setError("Susan could not install ChatGPT.");
         return;
       }
       setPhase("installing");
@@ -261,7 +261,7 @@ export function CodexDesktopRow({
       }
       if (installResult !== "opened") {
         setPhase("idle");
-        setError("Ollama could not install ChatGPT.");
+        setError("Susan could not install ChatGPT.");
         return;
       }
       setPhase("waiting-for-install");
@@ -284,8 +284,8 @@ export function CodexDesktopRow({
         if (
           !window.confirm(
             enabled
-              ? "Restart ChatGPT to add Ollama models? Any running task will stop."
-              : "Restart ChatGPT to remove Ollama models? Any running task will stop.",
+              ? "Restart ChatGPT to add Susan models? Any running task will stop."
+              : "Restart ChatGPT to remove Susan models? Any running task will stop.",
           )
         ) {
           return;
@@ -302,21 +302,21 @@ export function CodexDesktopRow({
       if (result.status.connected !== enabled) {
         setError(
           enabled
-            ? "Ollama could not add its models to ChatGPT."
-            : "Ollama could not remove its models from ChatGPT.",
+            ? "Susan could not add its models to ChatGPT."
+            : "Susan could not remove its models from ChatGPT.",
         );
         return;
       }
       setNotice(
         enabled
-          ? "Ollama models added alongside Codex models"
-          : "Ollama models removed · Codex models remain available",
+          ? "Susan models added alongside Codex models"
+          : "Susan models removed · Codex models remain available",
       );
     } catch {
       setError(
         enabled
-          ? "Ollama could not add its models to ChatGPT."
-          : "Ollama could not remove its models from ChatGPT.",
+          ? "Susan could not add its models to ChatGPT."
+          : "Susan could not remove its models from ChatGPT.",
       );
     } finally {
       operationInFlight.current = false;
@@ -360,17 +360,17 @@ export function CodexDesktopRow({
           aria-busy={pending || undefined}
           aria-label={
             connected
-              ? "Remove Ollama models from ChatGPT"
+              ? "Remove Susan models from ChatGPT"
               : isConnecting
                 ? "Connecting ChatGPT"
-                : "Add Ollama models to ChatGPT"
+                : "Add Susan models to ChatGPT"
           }
           title={
             connected
-              ? "Remove Ollama models"
+              ? "Remove Susan models"
               : installed
-                ? "Add Ollama models"
-                : "Install ChatGPT and add Ollama models"
+                ? "Add Susan models"
+                : "Install ChatGPT and add Susan models"
           }
           disabled={pending}
           onClick={() => void toggleConnection()}

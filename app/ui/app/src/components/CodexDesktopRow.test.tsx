@@ -13,7 +13,7 @@ afterEach(() => {
 const integration: IntegrationStatus = {
   id: "chatgpt",
   name: "ChatGPT",
-  description: "Use Ollama models in ChatGPT",
+  description: "Use Susan models in ChatGPT",
   installed: true,
   command: "ollama launch chatgpt",
 };
@@ -37,12 +37,12 @@ describe("CodexDesktopRow", () => {
     );
 
     expect(html).toContain(">ChatGPT (Desktop)</p>");
-    expect(html).toContain("Use Ollama models in ChatGPT");
-    expect(html).toContain('aria-label="Add Ollama models to ChatGPT"');
+    expect(html).toContain("Use Susan models in ChatGPT");
+    expect(html).toContain('aria-label="Add Susan models to ChatGPT"');
     expect(html).toContain('aria-checked="false"');
   });
 
-  it("shows only the Ollama request count when connected", () => {
+  it("shows only the Susan request count when connected", () => {
     const html = renderToStaticMarkup(
       <CodexDesktopRow
         integration={integration}
@@ -54,14 +54,14 @@ describe("CodexDesktopRow", () => {
       />,
     );
 
-    expect(html).toContain("0 Ollama requests this session");
-    expect(html).not.toContain("Codex + Ollama");
-    expect(html).not.toContain("3 Ollama models");
-    expect(html).toContain('aria-label="Remove Ollama models from ChatGPT"');
+    expect(html).toContain("0 Susan requests this session");
+    expect(html).not.toContain("Codex + Susan");
+    expect(html).not.toContain("3 Susan models");
+    expect(html).toContain('aria-label="Remove Susan models from ChatGPT"');
     expect(html).toContain('aria-checked="true"');
   });
 
-  it("shows the Ollama request count with singular copy", () => {
+  it("shows the Susan request count with singular copy", () => {
     const html = renderToStaticMarkup(
       <CodexDesktopRow
         integration={integration}
@@ -73,7 +73,7 @@ describe("CodexDesktopRow", () => {
       />,
     );
 
-    expect(html).toContain("1 Ollama request this session");
+    expect(html).toContain("1 Susan request this session");
   });
 
   it("offers installation when ChatGPT is not installed", () => {
@@ -84,9 +84,9 @@ describe("CodexDesktopRow", () => {
       />,
     );
 
-    expect(html).toContain("Use Ollama models in ChatGPT");
+    expect(html).toContain("Use Susan models in ChatGPT");
     expect(html).not.toContain('disabled=""');
-    expect(html).toContain('title="Install ChatGPT and add Ollama models"');
+    expect(html).toContain('title="Install ChatGPT and add Susan models"');
     expect(html).toContain("Download &amp; connect");
   });
 
@@ -135,7 +135,7 @@ describe("CodexDesktopRow", () => {
       expect(
         renderer!.root.findAll((node) =>
           node.children.includes(
-            "Ollama is downloading the ChatGPT installer…",
+            "Susan is downloading the ChatGPT installer…",
           ),
         ),
       ).toHaveLength(1);
@@ -155,7 +155,7 @@ describe("CodexDesktopRow", () => {
       expect(
         renderer!.root.findAll((node) =>
           node.children.includes(
-            "Finish installing ChatGPT. Ollama will connect it automatically.",
+            "Finish installing ChatGPT. Susan will connect it automatically.",
           ),
         ),
       ).toHaveLength(1);
@@ -200,7 +200,7 @@ describe("CodexDesktopRow", () => {
       );
       expect(
         renderer!.root.findAll((node) =>
-          node.children.includes("Connecting ChatGPT to Ollama…"),
+          node.children.includes("Connecting ChatGPT to Susan…"),
         ),
       ).toHaveLength(1);
 
@@ -247,7 +247,7 @@ describe("CodexDesktopRow", () => {
         );
       });
       const toggle = renderer!.root.findByProps({
-        "aria-label": "Add Ollama models to ChatGPT",
+        "aria-label": "Add Susan models to ChatGPT",
       });
       await act(async () => {
         await toggle.props.onClick();
@@ -260,11 +260,11 @@ describe("CodexDesktopRow", () => {
       expect(connect).toHaveBeenCalledWith(true, false);
       expect(
         renderer!.root.findByProps({
-          "aria-label": "Remove Ollama models from ChatGPT",
+          "aria-label": "Remove Susan models from ChatGPT",
         }).props["aria-checked"],
       ).toBe(true);
       expect(renderer!.root.findByProps({ role: "status" }).children).toContain(
-        "Ollama models added alongside Codex models",
+        "Susan models added alongside Codex models",
       );
     } finally {
       await act(async () => renderer?.unmount());
@@ -298,7 +298,7 @@ describe("CodexDesktopRow", () => {
         );
       });
       const toggle = renderer!.root.findByProps({
-        "aria-label": "Add Ollama models to ChatGPT",
+        "aria-label": "Add Susan models to ChatGPT",
       });
       await act(async () => {
         await toggle.props.onClick();
@@ -308,11 +308,11 @@ describe("CodexDesktopRow", () => {
 
       expect(connect).not.toHaveBeenCalled();
       expect(renderer!.root.findByProps({ role: "alert" }).children).toContain(
-        "ChatGPT is installed. Turn on the switch to restart it with Ollama models.",
+        "ChatGPT is installed. Turn on the switch to restart it with Susan models.",
       );
       expect(
         renderer!.root.findByProps({
-          "aria-label": "Add Ollama models to ChatGPT",
+          "aria-label": "Add Susan models to ChatGPT",
         }).props["aria-checked"],
       ).toBe(false);
     } finally {
@@ -342,7 +342,7 @@ describe("CodexDesktopRow", () => {
         );
       });
       const toggle = renderer!.root.findByProps({
-        "aria-label": "Add Ollama models to ChatGPT",
+        "aria-label": "Add Susan models to ChatGPT",
       });
       await act(async () => {
         await toggle.props.onClick();
@@ -357,7 +357,7 @@ describe("CodexDesktopRow", () => {
     }
   });
 
-  it("uses concise restart copy when adding Ollama models", async () => {
+  it("uses concise restart copy when adding Susan models", async () => {
     const confirm = vi.fn(() => false);
     const runningStatus = status({ running: true });
     const connect = vi.fn().mockResolvedValue({
@@ -383,14 +383,14 @@ describe("CodexDesktopRow", () => {
         );
       });
       const toggle = renderer!.root.findByProps({
-        "aria-label": "Add Ollama models to ChatGPT",
+        "aria-label": "Add Susan models to ChatGPT",
       });
       await act(async () => {
         await toggle.props.onClick();
       });
 
       expect(confirm).toHaveBeenCalledWith(
-        "Restart ChatGPT to add Ollama models? Any running task will stop.",
+        "Restart ChatGPT to add Susan models? Any running task will stop.",
       );
       expect(connect).toHaveBeenCalledOnce();
       expect(connect).toHaveBeenCalledWith(true, false);
@@ -399,7 +399,7 @@ describe("CodexDesktopRow", () => {
     }
   });
 
-  it("adds Ollama models after the restart is confirmed", async () => {
+  it("adds Susan models after the restart is confirmed", async () => {
     const confirm = vi.fn(() => true);
     const connectedStatus = status({
       connected: true,
@@ -434,20 +434,20 @@ describe("CodexDesktopRow", () => {
         );
       });
       const toggle = renderer!.root.findByProps({
-        "aria-label": "Add Ollama models to ChatGPT",
+        "aria-label": "Add Susan models to ChatGPT",
       });
       await act(async () => {
         await toggle.props.onClick();
       });
 
       expect(confirm).toHaveBeenCalledWith(
-        "Restart ChatGPT to add Ollama models? Any running task will stop.",
+        "Restart ChatGPT to add Susan models? Any running task will stop.",
       );
       expect(connect).toHaveBeenNthCalledWith(1, true, false);
       expect(connect).toHaveBeenNthCalledWith(2, true, true);
       expect(
         renderer!.root.findByProps({
-          "aria-label": "Remove Ollama models from ChatGPT",
+          "aria-label": "Remove Susan models from ChatGPT",
         }).props["aria-checked"],
       ).toBe(true);
     } finally {
@@ -495,7 +495,7 @@ describe("CodexDesktopRow", () => {
         );
       });
       const toggle = renderer!.root.findByProps({
-        "aria-label": "Add Ollama models to ChatGPT",
+        "aria-label": "Add Susan models to ChatGPT",
       });
       await act(async () => {
         await toggle.props.onClick();
@@ -519,7 +519,7 @@ describe("CodexDesktopRow", () => {
       />,
     );
 
-    expect(html).toContain('aria-label="Remove Ollama models from ChatGPT"');
+    expect(html).toContain('aria-label="Remove Susan models from ChatGPT"');
     expect(html).not.toContain('disabled=""');
 
     const restore = vi.fn().mockResolvedValue({
@@ -544,7 +544,7 @@ describe("CodexDesktopRow", () => {
         );
       });
       const restoreButton = renderer!.root.findByProps({
-        "aria-label": "Remove Ollama models from ChatGPT",
+        "aria-label": "Remove Susan models from ChatGPT",
       });
       await act(async () => {
         await restoreButton.props.onClick();

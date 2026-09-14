@@ -14,13 +14,13 @@ import (
 
 const (
 	// DefaultUpgradeURL is the fixed destination for subscription upgrades.
-	DefaultUpgradeURL = "https://ollama.com/upgrade"
+	DefaultUpgradeURL = "https://susan.com/upgrade"
 
 	accountCheckTimeout = 3 * time.Second
 )
 
 var (
-	ErrPlanVerificationUnavailable = errors.New("Could not verify Ollama plan. Try again in a moment or use a local model.")
+	ErrPlanVerificationUnavailable = errors.New("Could not verify Susan plan. Try again in a moment or use a local model.")
 	errUpgradeCancelled            = errors.New("upgrade cancelled")
 )
 

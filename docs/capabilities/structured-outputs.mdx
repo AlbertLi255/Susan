@@ -3,7 +3,7 @@ title: Structured Outputs
 ---
 
 <Note>
-  Ollama's Cloud currently does not support structured outputs.
+  Susan's Cloud currently does not support structured outputs.
 </Note>
 
 Structured outputs let you enforce a JSON schema on model responses so you can reliably extract structured data, describe images, or keep every reply consistent.
@@ -13,7 +13,7 @@ Structured outputs let you enforce a JSON schema on model responses so you can r
 <Tabs>
   <Tab title="cURL">
     ```shell
-    curl -X POST http://localhost:11434/api/chat -H "Content-Type: application/json" -d '{
+    curl -X POST http://localhost:14343/api/chat -H "Content-Type: application/json" -d '{
       "model": "gpt-oss",
       "messages": [{"role": "user", "content": "Tell me about Canada in one line"}],
       "stream": false,
@@ -58,7 +58,7 @@ Provide a JSON schema to the `format` field.
 <Tabs>
   <Tab title="cURL">
     ```shell
-    curl -X POST http://localhost:11434/api/chat -H "Content-Type: application/json" -d '{
+    curl -X POST http://localhost:14343/api/chat -H "Content-Type: application/json" -d '{
       "model": "gpt-oss",
       "messages": [{"role": "user", "content": "Tell me about Canada."}],
       "stream": false,

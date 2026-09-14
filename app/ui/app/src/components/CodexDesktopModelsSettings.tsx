@@ -318,7 +318,7 @@ export const CodexDesktopModelsSettings = forwardRef<
 
   const refresh = useCallback(async () => {
     if (!window.getCodexDesktopModelsSettings) {
-      setError("ChatGPT model settings are unavailable in this Ollama build.");
+      setError("ChatGPT model settings are unavailable in this Susan build.");
       setWarning(null);
       setLoading(false);
       return;
@@ -337,7 +337,7 @@ export const CodexDesktopModelsSettings = forwardRef<
         request === statusRequestRef.current &&
         !operationInFlightRef.current
       ) {
-        setError("Ollama could not load the ChatGPT model settings.");
+        setError("Susan could not load the ChatGPT model settings.");
         setWarning(null);
       }
     } finally {
@@ -399,7 +399,7 @@ export const CodexDesktopModelsSettings = forwardRef<
 
   const applyChanges = async () => {
     if (!window.applyCodexDesktopModels) {
-      setError("ChatGPT model settings are available in the Ollama macOS app.");
+      setError("ChatGPT model settings are available in the Susan macOS app.");
       return;
     }
     if (selected.length === 0) {
@@ -423,8 +423,8 @@ export const CodexDesktopModelsSettings = forwardRef<
         if (
           !window.confirm(
             result.settings.connected
-              ? "Restart ChatGPT to update Ollama models? Any running task will stop."
-              : "Restart ChatGPT to add Ollama models? Any running task will stop.",
+              ? "Restart ChatGPT to update Susan models? Any running task will stop."
+              : "Restart ChatGPT to add Susan models? Any running task will stop.",
           )
         ) {
           return;
@@ -457,7 +457,7 @@ export const CodexDesktopModelsSettings = forwardRef<
         );
       }
     } catch {
-      setError("Ollama could not apply the ChatGPT models.");
+      setError("Susan could not apply the ChatGPT models.");
     } finally {
       ++statusRequestRef.current;
       operationInFlightRef.current = false;
@@ -470,7 +470,7 @@ export const CodexDesktopModelsSettings = forwardRef<
 
     const resetModels = window.resetCodexDesktopModels;
     if (!resetModels) {
-      setError("Ollama could not reset the ChatGPT models.");
+      setError("Susan could not reset the ChatGPT models.");
       return false;
     }
 
@@ -491,7 +491,7 @@ export const CodexDesktopModelsSettings = forwardRef<
       applyResult(result);
       return true;
     } catch {
-      setError("Ollama could not reset the ChatGPT models.");
+      setError("Susan could not reset the ChatGPT models.");
       return false;
     } finally {
       ++statusRequestRef.current;
@@ -534,7 +534,7 @@ export const CodexDesktopModelsSettings = forwardRef<
                 ChatGPT
               </h2>
               <p className="mt-1 text-base/6 text-zinc-500 sm:text-sm/6 dark:text-zinc-400">
-                Choose up to {maxModels} Ollama models to use in ChatGPT.
+                Choose up to {maxModels} Susan models to use in ChatGPT.
               </p>
             </div>
             <div className="shrink-0">

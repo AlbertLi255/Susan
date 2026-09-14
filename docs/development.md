@@ -7,14 +7,14 @@ Install prerequisites:
 - C/C++ compiler: Clang on macOS, Visual Studio 2022 C++ tools on Windows, or GCC/Clang on Linux
 - [Ninja](https://github.com/ninja-build/ninja/releases) in `PATH` is recommended, especially on Windows
 
-For pure Go iteration against an existing native payload, run Ollama from the repository root:
+For pure Go iteration against an existing native payload, run Susan from the repository root:
 
 ```shell
 go run . serve
 ```
 
 > [!NOTE]
-> Ollama includes native code compiled with CGO.  From time to time these data structures can change and CGO can get out of sync resulting in unexpected crashes.  You can force a full build of the native code by running `go clean -cache` first. 
+> Susan includes native code compiled with CGO.  From time to time these data structures can change and CGO can get out of sync resulting in unexpected crashes.  You can force a full build of the native code by running `go clean -cache` first. 
 
 ## Native build model
 
@@ -177,11 +177,11 @@ go test ./...
 
 ## Library detection
 
-Ollama looks for native helper binaries and acceleration libraries in installed and local development layouts:
+Susan looks for native helper binaries and acceleration libraries in installed and local development layouts:
 
 * `../lib/ollama` for standard installs where `ollama` is under `bin/`
 * `./lib/ollama` for Windows release-style payloads and local dist output
 * `.` for macOS release artifacts that colocate helpers with `ollama`
 * `build/lib/ollama` and `dist/<platform>/lib/ollama` for local development builds
 
-If the libraries are not found, Ollama will not run with any acceleration libraries.
+If the libraries are not found, Susan will not run with any acceleration libraries.

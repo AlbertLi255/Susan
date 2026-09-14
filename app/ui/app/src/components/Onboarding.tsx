@@ -184,12 +184,12 @@ export function IntroScreen({
           <div className="flex flex-col items-center justify-center gap-2">
             <img
               src="/hello.png"
-              alt="Ollama waving"
+              alt="Susan waving"
               className="h-[72px] w-[72px] select-none object-contain"
               draggable={false}
             />
             <h1 className="font-rounded text-2xl font-medium leading-8">
-              Welcome to Ollama!
+              Welcome to Susan!
             </h1>
           </div>
           <p className="mt-4 max-w-[380px] text-sm leading-6 text-neutral-500">
@@ -295,7 +295,7 @@ export function WelcomeScreen({
             className="mt-2 cursor-pointer rounded-md px-3 py-2 text-sm font-normal text-neutral-600 underline decoration-neutral-300 underline-offset-4 hover:text-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-500"
             onClick={onLocal}
           >
-            No thanks, I&apos;ll use Ollama locally
+            No thanks, I&apos;ll use Susan locally
           </button>
           <InlineError message={signInError ?? completionError} />
           {completionError && onRetryCompletion && (
@@ -323,7 +323,7 @@ export function RunOllamaScreen({
       <OnboardingCard>
         <OnboardingIcon compact />
         <h1 className="mt-6 font-rounded text-[22px] font-medium leading-7">
-          Run Ollama
+          Run Susan
         </h1>
 
         <div className="mt-6 grid h-12 w-full max-w-[330px] grid-cols-[minmax(0,1fr)_32px] items-center rounded-full bg-neutral-100 px-4 pr-3">
@@ -396,7 +396,7 @@ export function ClaudeConnectedIntro({ onDone }: { onDone: () => void }) {
       >
         <img
           src="/claude-connected.png"
-          alt="Ollama models in the Claude model picker"
+          alt="Susan models in the Claude model picker"
           width={900}
           height={761}
           className="h-auto w-full object-contain"
@@ -407,13 +407,13 @@ export function ClaudeConnectedIntro({ onDone }: { onDone: () => void }) {
             id="claude-connected-title"
             className="font-rounded text-lg font-medium leading-6 text-neutral-950 dark:text-neutral-100"
           >
-            Easily access Ollama models in your Claude
+            Easily access Susan models in your Claude
           </h2>
           <p
             id="claude-connected-description"
             className="mt-2 text-[13px] leading-5 text-neutral-500 dark:text-neutral-400"
           >
-            Ollama models now show up in Claude so you can pick the right model
+            Susan models now show up in Claude so you can pick the right model
             for the task.
           </p>
           <div className="mt-5 flex justify-end">
@@ -486,7 +486,7 @@ export function ConnectAppsScreen({
       return status;
     } catch {
       if (screenMounted.current) {
-        setClaudeError("Ollama could not read the Claude connection status.");
+        setClaudeError("Susan could not read the Claude connection status.");
       }
       return null;
     }
@@ -512,7 +512,7 @@ export function ConnectAppsScreen({
         if (claudeResult.status === "fulfilled") {
           setClaudeStatus(claudeResult.value);
         } else {
-          setClaudeError("Ollama could not read the Claude connection status.");
+          setClaudeError("Susan could not read the Claude connection status.");
         }
       },
     );
@@ -530,7 +530,7 @@ export function ConnectAppsScreen({
       try {
         return (await window.openClaudeDesktop()) || null;
       } catch {
-        return "Ollama connected Claude, but could not open the app.";
+        return "Susan connected Claude, but could not open the app.";
       }
     },
     [],
@@ -571,7 +571,7 @@ export function ConnectAppsScreen({
             () => {
               if (screenMounted.current) {
                 setClaudeError(
-                  "Ollama connected Claude, but could not open the app.",
+                  "Susan connected Claude, but could not open the app.",
                 );
               }
             },
@@ -583,8 +583,8 @@ export function ConnectAppsScreen({
           if (screenMounted.current) {
             setClaudeError(
               enabled
-                ? "Ollama could not connect to Claude."
-                : "Ollama could not disconnect from Claude.",
+                ? "Susan could not connect to Claude."
+                : "Susan could not disconnect from Claude.",
             );
           }
         });
@@ -607,7 +607,7 @@ export function ConnectAppsScreen({
       let restartConfirmed = claudeRestartConfirmed.current;
       if (liveStatus.running && !restartConfirmed) {
         restartConfirmed = window.confirm(
-          "Restart Claude Desktop to use Ollama? Any running task will stop.",
+          "Restart Claude Desktop to use Susan? Any running task will stop.",
         );
         if (!restartConfirmed) {
           setClaudePhase("idle");
@@ -629,7 +629,7 @@ export function ConnectAppsScreen({
       setClaudeError(
         error instanceof ClaudeConnectionTimeoutError
           ? "Claude is taking too long to launch. Check Claude and try again."
-          : "Ollama connected Claude, but could not open the app.",
+          : "Susan connected Claude, but could not open the app.",
       );
     } finally {
       setClaudePhase("idle");
@@ -705,7 +705,7 @@ export function ConnectAppsScreen({
         if (status.running) {
           setClaudePhase("idle");
           setClaudeError(
-            "Claude is installed. Turn on Connect to restart it with Ollama.",
+            "Claude is installed. Turn on Connect to restart it with Susan.",
           );
           return;
         }
@@ -723,7 +723,7 @@ export function ConnectAppsScreen({
         if (!actionError && result.status.connected) {
           actionError = await finishClaudeConnection(result.status);
         } else if (!actionError) {
-          actionError = "Ollama could not connect to Claude.";
+          actionError = "Susan could not connect to Claude.";
         }
         setClaudeError(actionError);
         setClaudePhase("idle");
@@ -733,7 +733,7 @@ export function ConnectAppsScreen({
         setClaudeError(
           error instanceof ClaudeConnectionTimeoutError
             ? "Claude is taking too long to connect. Check Claude and try again."
-            : "Ollama could not finish connecting Claude.",
+            : "Susan could not finish connecting Claude.",
         );
       } finally {
         checking = false;
@@ -768,7 +768,7 @@ export function ConnectAppsScreen({
         !window.getClaudeDesktopStatus) ||
       !window.setClaudeDesktopConnected
     ) {
-      setClaudeError("Claude connection is available in the Ollama macOS app.");
+      setClaudeError("Claude connection is available in the Susan macOS app.");
       return;
     }
 
@@ -785,13 +785,13 @@ export function ConnectAppsScreen({
       setClaudeError(
         error instanceof ClaudeConnectionTimeoutError
           ? `Claude is taking too long to ${enabling ? "connect" : "disconnect"}. Try again.`
-          : "Ollama could not read the Claude connection status.",
+          : "Susan could not read the Claude connection status.",
       );
       return;
     }
     if (!status) {
       setClaudePhase("idle");
-      setClaudeError("Ollama could not read the Claude connection status.");
+      setClaudeError("Susan could not read the Claude connection status.");
       return;
     }
     setClaudeStatus(status);
@@ -812,7 +812,7 @@ export function ConnectAppsScreen({
     if (enabling && !status.installed) {
       if (!window.installClaudeDesktop) {
         setClaudePhase("idle");
-        setClaudeError("Ollama could not open the Claude installer.");
+        setClaudeError("Susan could not open the Claude installer.");
         return;
       }
       setClaudePhase("installing");
@@ -828,7 +828,7 @@ export function ConnectAppsScreen({
       }
       if (installResult !== "opened") {
         setClaudePhase("idle");
-        setClaudeError("Ollama could not open the Claude installer.");
+        setClaudeError("Susan could not open the Claude installer.");
         return;
       }
       setClaudePhase("waiting-for-install");
@@ -839,8 +839,8 @@ export function ConnectAppsScreen({
     if (status.running) {
       restartConfirmed = window.confirm(
         enabling
-          ? "Restart Claude Desktop to use Ollama? Any running task will stop."
-          : "Restart Claude Desktop to remove Ollama? Any running task will stop.",
+          ? "Restart Claude Desktop to use Susan? Any running task will stop."
+          : "Restart Claude Desktop to remove Susan? Any running task will stop.",
       );
       if (!restartConfirmed) {
         setClaudePhase("idle");
@@ -869,8 +869,8 @@ export function ConnectAppsScreen({
         (enabling ? !result.status.connected : result.status.configured)
       ) {
         actionError = enabling
-          ? "Ollama could not connect to Claude."
-          : "Ollama could not disconnect from Claude.";
+          ? "Susan could not connect to Claude."
+          : "Susan could not disconnect from Claude.";
       }
       setClaudeError(actionError);
     } catch (error) {
@@ -878,8 +878,8 @@ export function ConnectAppsScreen({
         error instanceof ClaudeConnectionTimeoutError
           ? `Claude is taking too long to ${enabling ? "connect" : "disconnect"}. Try again.`
           : enabling
-            ? "Ollama could not connect to Claude."
-            : "Ollama could not disconnect from Claude.",
+            ? "Susan could not connect to Claude."
+            : "Susan could not disconnect from Claude.",
       );
     } finally {
       if (!claudeConnectedIntroPending.current) {
@@ -897,7 +897,7 @@ export function ConnectAppsScreen({
     : (integrationStatuses?.find((item) => item.id === "chatgpt") ?? {
         id: "chatgpt",
         name: "ChatGPT (Desktop)",
-        description: "Use Ollama models in ChatGPT",
+        description: "Use Susan models in ChatGPT",
         installed: false,
       });
   const launchIntegrations =
@@ -1000,13 +1000,13 @@ export function ConnectAppsScreen({
           >
             {claudeGuidance ??
               (claudeConnected
-                ? `Connected to Ollama · ${claudeDesktopRequestCountLabel(claudeStatus?.routedRequests ?? 0)}`
+                ? `Connected to Susan · ${claudeDesktopRequestCountLabel(claudeStatus?.routedRequests ?? 0)}`
                 : claudePhase === "installing"
-                  ? "Ollama is downloading the Claude installer…"
+                  ? "Susan is downloading the Claude installer…"
                   : claudePhase === "waiting-for-install"
-                    ? "Finish installing Claude. Ollama will connect it automatically."
+                    ? "Finish installing Claude. Susan will connect it automatically."
                     : claudePhase === "connecting"
-                      ? "Connecting Claude to Ollama…"
+                      ? "Connecting Claude to Susan…"
                       : claudePhase === "launching"
                         ? "Opening Claude…"
                         : claudePhase === "disconnecting"

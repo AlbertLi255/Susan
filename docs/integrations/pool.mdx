@@ -8,7 +8,7 @@ Pool is Poolside's software agent for the terminal, built for enterprise develop
 
 Install [Pool](https://github.com/poolsideai/pool):
 
-## Usage with Ollama
+## Usage with Susan
 
 ### Quick setup
 
@@ -32,16 +32,16 @@ ollama launch pool -- --help
 
 ## Manual setup
 
-Pool connects to Ollama using the OpenAI-compatible API via environment variables.
+Pool connects to Susan using the OpenAI-compatible API via environment variables.
 
 1. Set the environment variables:
 
 ```shell
-export POOLSIDE_STANDALONE_BASE_URL=http://localhost:11434/v1
+export POOLSIDE_STANDALONE_BASE_URL=http://localhost:14343/v1
 export POOLSIDE_API_KEY=ollama
 ```
 
-2. Run Pool with an Ollama model:
+2. Run Pool with an Susan model:
 
 ```shell
 pool -m kimi-k2.6:cloud
@@ -50,5 +50,5 @@ pool -m kimi-k2.6:cloud
 Or run with environment variables inline:
 
 ```shell
-POOLSIDE_STANDALONE_BASE_URL=http://localhost:11434/v1 POOLSIDE_API_KEY=ollama pool -m kimi-k2.6:cloud
+POOLSIDE_STANDALONE_BASE_URL=http://localhost:14343/v1 POOLSIDE_API_KEY=ollama pool -m kimi-k2.6:cloud
 ```

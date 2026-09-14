@@ -708,8 +708,8 @@ function ChatForm({
           }
           message={
             activeFeatureForBanner === "webSearch"
-              ? "Web search requires an Ollama account"
-              : "Cloud models require an Ollama account"
+              ? "Web search requires a Susan account"
+              : "Cloud models require a Susan account"
           }
           className="mb-4"
           onDismiss={() => {

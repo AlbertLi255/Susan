@@ -151,7 +151,7 @@ function ClaudeModelPicker({
     <Popover className="relative min-w-0">
       <PopoverButton
         id={id}
-        aria-label={`Ollama model for ${routeName}`}
+        aria-label={`Susan model for ${routeName}`}
         aria-haspopup="listbox"
         disabled={disabled}
         className="flex min-h-9 w-full items-center gap-2 rounded-lg bg-neutral-50 px-3 py-1.5 text-left text-sm text-neutral-800 outline-none ring-1 ring-inset ring-neutral-200 hover:bg-neutral-100 focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-700 dark:text-neutral-100 dark:ring-neutral-600 dark:hover:bg-neutral-600"
@@ -335,7 +335,7 @@ export const ClaudeDesktopModelsSettings = forwardRef<
         request === statusRequestRef.current &&
         !operationInFlightRef.current
       ) {
-        setError("Ollama could not read the Claude connection status.");
+        setError("Susan could not read the Claude connection status.");
       }
     }
   }, [applyStatus]);
@@ -363,7 +363,7 @@ export const ClaudeDesktopModelsSettings = forwardRef<
         }
       })
       .catch(() => {
-        if (!cancelled) setError("Ollama could not load your models.");
+        if (!cancelled) setError("Susan could not load your models.");
       })
       .finally(() => {
         if (!cancelled) setModelsLoading(false);
@@ -450,12 +450,12 @@ export const ClaudeDesktopModelsSettings = forwardRef<
     const applyMappings = window.applyClaudeDesktopMappings;
     if (!applyMappings) {
       setError(
-        "Claude routing settings are available in the Ollama macOS app.",
+        "Claude routing settings are available in the Susan macOS app.",
       );
       return;
     }
     if (assignedModels.length === 0) {
-      setError("Choose at least one Ollama model for Claude.");
+      setError("Choose at least one Susan model for Claude.");
       return;
     }
     if (hasInvalidMapping) {
@@ -472,7 +472,7 @@ export const ClaudeDesktopModelsSettings = forwardRef<
     try {
       await runMappingAction(
         (restartConfirmed) => applyMappings(mappingsToApply, restartConfirmed),
-        "Ollama could not apply the Claude model mappings.",
+        "Susan could not apply the Claude model mappings.",
       );
     } finally {
       ++statusRequestRef.current;
@@ -483,7 +483,7 @@ export const ClaudeDesktopModelsSettings = forwardRef<
 
   const toggleAutoMode = async (checked: boolean) => {
     if (!window.setClaudeDesktopAutoMode) {
-      setError("Auto mode is available in the Ollama macOS app.");
+      setError("Auto mode is available in the Susan macOS app.");
       return;
     }
     setError(null);
@@ -508,7 +508,7 @@ export const ClaudeDesktopModelsSettings = forwardRef<
       applyStatus(result.status);
       if (result.error) setError(result.error);
     } catch {
-      setError("Ollama could not update Claude auto mode.");
+      setError("Susan could not update Claude auto mode.");
     } finally {
       ++statusRequestRef.current;
       operationInFlightRef.current = false;
@@ -522,7 +522,7 @@ export const ClaudeDesktopModelsSettings = forwardRef<
 
     const resetMappings = window.resetClaudeDesktopMappings;
     if (!resetMappings) {
-      setError("Ollama could not reset the Claude model mappings.");
+      setError("Susan could not reset the Claude model mappings.");
       return false;
     }
 
@@ -533,7 +533,7 @@ export const ClaudeDesktopModelsSettings = forwardRef<
     try {
       return await runMappingAction(
         resetMappings,
-        "Ollama could not reset the Claude model mappings.",
+        "Susan could not reset the Claude model mappings.",
       );
     } finally {
       ++statusRequestRef.current;
@@ -565,10 +565,10 @@ export const ClaudeDesktopModelsSettings = forwardRef<
     : autoModeAvailable
       ? "Let Claude decide when to ask before making changes."
       : accountCloudModels.length > 0
-        ? "Select a cloud model from Ollama.com to use auto mode."
+        ? "Select a cloud model from Susan.com to use auto mode."
         : autoModeModelNames.length > 0
           ? `Select one of ${formatModelList(autoModeModelNames)} to use auto mode.`
-          : "Auto mode needs a cloud model available to your Ollama.com account.";
+          : "Auto mode needs a cloud model available to your Susan.com account.";
 
   const guidance =
     claudeDesktopRecoveryMessage(status.error, error) ??
@@ -609,7 +609,7 @@ export const ClaudeDesktopModelsSettings = forwardRef<
                   Claude
                 </h2>
                 <p className="mt-1 text-base/6 text-zinc-500 sm:text-sm/6 dark:text-zinc-400">
-                  Choose which Ollama model Claude uses for each model option.
+                  Choose which Susan model Claude uses for each model option.
                 </p>
               </div>
               <Button

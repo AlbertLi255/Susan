@@ -253,7 +253,7 @@ describe("CodexDesktopModelsSettings", () => {
       });
 
       expect(textContent(renderer!.root)).toContain(
-        "ChatGPT model settings are unavailable in this Ollama build.",
+        "ChatGPT model settings are unavailable in this Susan build.",
       );
       expect(textContent(renderer!.root)).not.toContain("Loading models…");
     } finally {
@@ -412,7 +412,7 @@ describe("CodexDesktopModelsSettings", () => {
     }
   });
 
-  it("keeps the same automatic list after the Ollama account changes", async () => {
+  it("keeps the same automatic list after the Susan account changes", async () => {
     const refresh = vi.fn().mockResolvedValue({
       settings: settings({
         usesDefaults: true,
@@ -500,7 +500,7 @@ describe("CodexDesktopModelsSettings", () => {
 
       expect(textContent(renderer!.root)).toContain("ChatGPT");
       expect(textContent(renderer!.root)).toContain(
-        "Choose up to 5 Ollama models to use in ChatGPT.",
+        "Choose up to 5 Susan models to use in ChatGPT.",
       );
       expect(textContent(renderer!.root)).not.toContain("5 of 5 selected");
       const lightIcon = renderer!.root.findByProps({
@@ -789,7 +789,7 @@ describe("CodexDesktopModelsSettings", () => {
       if (!restartButton) throw new Error("Restart button not found");
       expect(Boolean(restartButton.props.disabled)).toBe(false);
       expect(textContent(renderer!.root)).not.toContain(
-        "Your selected Ollama models are ready in ChatGPT.",
+        "Your selected Susan models are ready in ChatGPT.",
       );
     } finally {
       await act(async () => renderer?.unmount());
@@ -800,12 +800,12 @@ describe("CodexDesktopModelsSettings", () => {
     {
       connected: false,
       confirmation:
-        "Restart ChatGPT to add Ollama models? Any running task will stop.",
+        "Restart ChatGPT to add Susan models? Any running task will stop.",
     },
     {
       connected: true,
       confirmation:
-        "Restart ChatGPT to update Ollama models? Any running task will stop.",
+        "Restart ChatGPT to update Susan models? Any running task will stop.",
     },
   ])(
     "uses the native restart copy when connected is $connected",
@@ -901,7 +901,7 @@ describe("CodexDesktopModelsSettings", () => {
       });
 
       expect(window.confirm).toHaveBeenCalledWith(
-        "Restart ChatGPT to update Ollama models? Any running task will stop.",
+        "Restart ChatGPT to update Susan models? Any running task will stop.",
       );
       expect(apply.mock.calls).toEqual([
         [next, false],
@@ -996,7 +996,7 @@ describe("CodexDesktopModelsSettings", () => {
       });
       const content = textContent(renderer!.root);
       expect(content).toContain("Restart ChatGPT");
-      expect(content).not.toContain("Remove Ollama models");
+      expect(content).not.toContain("Remove Susan models");
       const restartButton = renderer!.root
         .findAllByType("button")
         .find((button) => textContent(button) === "Restart ChatGPT");
@@ -1068,7 +1068,7 @@ describe("CodexDesktopModelsSettings", () => {
     }
   });
 
-  it("does not show an Ollama approval control", async () => {
+  it("does not show a Susan approval control", async () => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     vi.stubGlobal("window", {
       addEventListener: vi.fn(),

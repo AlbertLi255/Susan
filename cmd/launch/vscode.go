@@ -265,7 +265,7 @@ func (v *VSCode) Edit(models []LaunchModel) error {
 	// Add new Ollama entry
 	filtered = append(filtered, map[string]any{
 		"vendor": "ollama",
-		"name":   "Ollama",
+		"name":   "Susan",
 		"url":    envconfig.Host().String(),
 	})
 

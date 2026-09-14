@@ -146,7 +146,7 @@ function pickerButton(renderer: ReactTestRenderer) {
     .findAllByType("button")
     .find(
       (candidate) =>
-        candidate.props["aria-label"] === "Ollama model for Fable 5",
+        candidate.props["aria-label"] === "Susan model for Fable 5",
     );
   if (!button) throw new Error("Claude model picker button not found");
   return button;
@@ -476,7 +476,7 @@ describe("ClaudeDesktopModelsSettings interactions", () => {
       });
 
       const picker = renderer!.root.findByProps({
-        "aria-label": "Ollama model for Fable 5",
+        "aria-label": "Susan model for Fable 5",
       });
       expect(picker.findAllByType("span")[0].children.join("")).toBe(
         "kimi-k3:cloud",
@@ -534,7 +534,7 @@ describe("ClaudeDesktopModelsSettings interactions", () => {
 
       expect(onDraftChange).toHaveBeenLastCalledWith(false);
       const picker = renderer!.root.findByProps({
-        "aria-label": "Ollama model for Fable 5",
+        "aria-label": "Susan model for Fable 5",
       });
       expect(picker.findAllByType("span")[0].children.join("")).toBe(
         "kimi-k3:cloud",
@@ -595,7 +595,7 @@ describe("ClaudeDesktopModelsSettings interactions", () => {
       expect(confirm).toHaveBeenCalledOnce();
       expect(resetMappings).toHaveBeenCalledWith(false);
       const picker = renderer!.root.findByProps({
-        "aria-label": "Ollama model for Fable 5",
+        "aria-label": "Susan model for Fable 5",
       });
       expect(picker.findAllByType("span")[0].children.join("")).toBe(
         "kimi-k3:cloud",
@@ -689,10 +689,10 @@ describe("ClaudeDesktopModelsSettings interactions", () => {
       expect(resetMappings).toHaveBeenCalledWith(false);
 
       const fable = renderer!.root.findByProps({
-        "aria-label": "Ollama model for Fable 5",
+        "aria-label": "Susan model for Fable 5",
       });
       const sonnet = renderer!.root.findByProps({
-        "aria-label": "Ollama model for Sonnet 5",
+        "aria-label": "Susan model for Sonnet 5",
       });
       expect(fable.findAllByType("span")[0].children.join("")).toBe(
         "Select a model",

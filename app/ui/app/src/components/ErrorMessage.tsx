@@ -17,8 +17,8 @@ const renderWithLinks = (text: string) => {
   urlRegex.lastIndex = 0;
 
   // Split text by URLs
-  // for example if the text is "connection failed. Try visiting https://ollama.com or check https://ollama.com/doc for help"
-  // then the parsed parts will be ["connection failed. Try visiting ", "https://ollama.com", " or check ", "https://ollama.com/doc", " for help"]
+  // for example if the text is "connection failed. Try visiting https://susan.com or check https://susan.com/doc for help"
+  // then the parsed parts will be ["connection failed. Try visiting ", "https://susan.com", " or check ", "https://susan.com/doc", " for help"]
   const parts = text.split(urlRegex);
 
   return parts.map((part, index) => {

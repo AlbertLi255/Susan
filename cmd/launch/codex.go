@@ -22,7 +22,7 @@ func (c *Codex) String() string { return "Codex CLI" }
 
 const (
 	codexProfileName           = "ollama-launch"
-	codexProviderName          = "Ollama"
+	codexProviderName          = "Susan"
 	codexFallbackContextWindow = 128_000
 	codexRestoreSuccess        = "Codex launch configuration removed."
 

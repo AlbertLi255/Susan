@@ -11,7 +11,7 @@ ollama run gemma4 ./image.png what is in this image?
 ```
 
 
-## Usage with Ollama's API
+## Usage with Susan's API
 Provide an `images` array. SDKs accept file paths, URLs or raw bytes while the REST API expects base64-encoded image data.
 
 
@@ -24,8 +24,8 @@ Provide an `images` array. SDKs accept file paths, URLs or raw bytes while the R
     # 2. Encode the image
     IMG=$(base64 < test.jpg | tr -d '\n')
 
-    # 3. Send it to Ollama
-    curl -X POST http://localhost:11434/api/chat \
+    # 3. Send it to Susan
+    curl -X POST http://localhost:14343/api/chat \
     -H "Content-Type: application/json" \
     -d '{
         "model": "gemma4",

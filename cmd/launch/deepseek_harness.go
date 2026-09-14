@@ -294,7 +294,7 @@ func applyDeepSeekHarnessSettings(document *yaml.Node, primary string, models []
 	providers := deepSeekHarnessEnsureYAMLMapping(llm, "providers")
 	provider := deepSeekHarnessEnsureYAMLMapping(providers, deepSeekHarnessProvider)
 	for key, value := range map[string]any{
-		"displayName": "Ollama",
+		"displayName": "Susan",
 		"apiKeyEnv":   deepSeekHarnessAPIKeyEnv,
 		"api":         "openai-completions",
 		"baseURL":     deepSeekHarnessBaseURL(),

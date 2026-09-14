@@ -4,11 +4,11 @@ title: Claude Code
 
 [Claude Code](https://code.claude.com/docs/en/overview) is an agentic coding tool that reads your codebase, edits files, and runs commands.
 
-Ollama connects Claude Code to local and cloud models through its Anthropic-compatible API.
+Susan connects Claude Code to local and cloud models through its Anthropic-compatible API.
 
 ## Get started
 
-Launch Claude Code with Ollama:
+Launch Claude Code with Susan:
 
 ```shell
 ollama launch claude
@@ -62,7 +62,7 @@ ollama launch claude
       <div className="capability-list-icon"><Icon icon="globe" /></div>
       <div>
         <div className="capability-list-heading">Web search</div>
-        <div className="capability-list-copy">Search the web through Ollama</div>
+        <div className="capability-list-copy">Search the web through Susan</div>
       </div>
     </div>
 
@@ -98,11 +98,11 @@ ollama launch claude
 Choose a model with enough context for your repository.
 
 <CardGroup cols={2}>
-  <Card title="Cloud models" icon="cloud" href="https://ollama.com/search?c=cloud">
+  <Card title="Cloud models" icon="cloud" href="https://susan.com/search?c=cloud">
     Use larger models without downloading them.
   </Card>
 
-  <Card title="Local models" icon="hard-drive" href="https://ollama.com/search?c=tools">
+  <Card title="Local models" icon="hard-drive" href="https://susan.com/search?c=tools">
     Choose a model and set a 64k+ context window.
   </Card>
 </CardGroup>
@@ -123,7 +123,7 @@ The `--yes` flag skips selectors, pulls the model when needed, and requires `--m
 
 ### Web search
 
-Use Ollama's web search API from Claude Code.
+Use Susan's web search API from Claude Code.
 
 See [Web search](/capabilities/web-search) for setup and usage.
 
@@ -176,7 +176,7 @@ irm https://claude.ai/install.ps1 | iex
 ```shell
 export ANTHROPIC_AUTH_TOKEN=ollama
 export ANTHROPIC_API_KEY=""
-export ANTHROPIC_BASE_URL=http://localhost:11434
+export ANTHROPIC_BASE_URL=http://localhost:14343
 ```
 
 <p className="manual-step-title">3. Run Claude Code</p>
@@ -188,5 +188,5 @@ claude --model qwen3.5
 Or run with environment variables inline:
 
 ```shell
-ANTHROPIC_AUTH_TOKEN=ollama ANTHROPIC_BASE_URL=http://localhost:11434 ANTHROPIC_API_KEY="" claude --model kimi-k2.7-code:cloud
+ANTHROPIC_AUTH_TOKEN=ollama ANTHROPIC_BASE_URL=http://localhost:14343 ANTHROPIC_API_KEY="" claude --model kimi-k2.7-code:cloud
 ```
