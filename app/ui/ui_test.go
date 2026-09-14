@@ -476,8 +476,8 @@ func TestUserAgent(t *testing.T) {
 	ua := userAgent()
 
 	// The userAgent function should return a string in the format:
-	// "ollama/version (arch os) app/version Go/goversion"
-	// Example: "ollama/v0.1.28 (amd64 darwin) Go/go1.21.0"
+	// "susan/version (arch os) app/version Go/goversion"
+	// Example: "susan/v0.1.28 (amd64 darwin) Go/go1.21.0"
 
 	if ua == "" {
 		t.Fatal("userAgent returned empty string")
@@ -541,8 +541,8 @@ func TestUserAgent(t *testing.T) {
 	}
 
 	info := clientInfoFromRequest(req)
-	if info.Product != "ollama" {
-		t.Errorf("Expected Product to be 'ollama', got '%s'", info.Product)
+	if info.Product != "susan" {
+		t.Errorf("Expected Product to be 'susan', got '%s'", info.Product)
 	}
 
 	if info.Version != "" && info.Version[0] != 'v' {
@@ -596,8 +596,8 @@ func TestUserAgentTransport(t *testing.T) {
 		t.Errorf("User-Agent mismatch\nExpected: %s\nReceived: %s", expectedUA, receivedUA)
 	}
 
-	if !strings.HasPrefix(receivedUA, "ollama/") {
-		t.Errorf("User-Agent should start with 'ollama/', got: %s", receivedUA)
+	if !strings.HasPrefix(receivedUA, "susan/") {
+		t.Errorf("User-Agent should start with 'susan/', got: %s", receivedUA)
 	}
 
 	t.Logf("User-Agent transport successfully set: %s", receivedUA)
