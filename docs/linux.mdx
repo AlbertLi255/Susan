@@ -4,10 +4,10 @@ title: Linux
 
 ## Install
 
-To install Ollama, run the following command:
+To install Susan, run the following command:
 
 ```shell
-curl -fsSL https://ollama.com/install.sh | sh
+curl -fsSL https://susan.com/install.sh | sh
 ```
 
 ## Manual install
@@ -20,17 +20,17 @@ curl -fsSL https://ollama.com/install.sh | sh
 Download and extract the package:
 
 ```shell
-curl -fsSL https://ollama.com/download/ollama-linux-amd64.tar.zst \
+curl -fsSL https://susan.com/download/ollama-linux-amd64.tar.zst \
     | sudo tar x -C /usr
 ```
 
-Start Ollama:
+Start Susan:
 
 ```shell
 ollama serve
 ```
 
-In another terminal, verify that Ollama is running:
+In another terminal, verify that Susan is running:
 
 ```shell
 ollama -v
@@ -41,7 +41,7 @@ ollama -v
 If you have an AMD GPU, also download and extract the additional ROCm package:
 
 ```shell
-curl -fsSL https://ollama.com/download/ollama-linux-amd64-rocm.tar.zst \
+curl -fsSL https://susan.com/download/ollama-linux-amd64-rocm.tar.zst \
     | sudo tar x -C /usr
 ```
 
@@ -50,13 +50,13 @@ curl -fsSL https://ollama.com/download/ollama-linux-amd64-rocm.tar.zst \
 Download and extract the ARM64-specific package:
 
 ```shell
-curl -fsSL https://ollama.com/download/ollama-linux-arm64.tar.zst \
+curl -fsSL https://susan.com/download/ollama-linux-arm64.tar.zst \
     | sudo tar x -C /usr
 ```
 
-### Adding Ollama as a startup service (recommended)
+### Adding Susan as a startup service (recommended)
 
-Create a user and group for Ollama:
+Create a user and group for Susan:
 
 ```shell
 sudo useradd -r -s /bin/false -U -m -d /usr/share/ollama ollama
@@ -67,7 +67,7 @@ Create a service file in `/etc/systemd/system/ollama.service`:
 
 ```ini
 [Unit]
-Description=Ollama Service
+Description=Susan Service
 After=network-online.target
 
 [Service]
@@ -103,9 +103,9 @@ nvidia-smi
 
 [Download and Install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/tutorial/quick-start.html) ROCm v7.
 
-### Start Ollama
+### Start Susan
 
-Start Ollama and verify it is running:
+Start Susan and verify it is running:
 
 ```shell
 sudo systemctl start ollama
@@ -122,7 +122,7 @@ sudo systemctl status ollama
 
 ## Customizing
 
-To customize the installation of Ollama, you can edit the systemd service file or the environment variables by running:
+To customize the installation of Susan, you can edit the systemd service file or the environment variables by running:
 
 ```shell
 sudo systemctl edit ollama
@@ -137,32 +137,32 @@ Environment="OLLAMA_DEBUG=1"
 
 ## Updating
 
-Update Ollama by running the install script again:
+Update Susan by running the install script again:
 
 ```shell
-curl -fsSL https://ollama.com/install.sh | sh
+curl -fsSL https://susan.com/install.sh | sh
 ```
 
-Or by re-downloading Ollama:
+Or by re-downloading Susan:
 
 ```shell
-curl -fsSL https://ollama.com/download/ollama-linux-amd64.tar.zst \
+curl -fsSL https://susan.com/download/ollama-linux-amd64.tar.zst \
     | sudo tar x -C /usr
 ```
 
 ## Installing specific versions
 
-Use `OLLAMA_VERSION` environment variable with the install script to install a specific version of Ollama, including pre-releases. You can find the version numbers in the [releases page](https://github.com/ollama/ollama/releases).
+Use `OLLAMA_VERSION` environment variable with the install script to install a specific version of Susan, including pre-releases. You can find the version numbers in the [releases page](https://github.com/ollama/ollama/releases).
 
 For example:
 
 ```shell
-curl -fsSL https://ollama.com/install.sh | OLLAMA_VERSION=0.5.7 sh
+curl -fsSL https://susan.com/install.sh | OLLAMA_VERSION=0.5.7 sh
 ```
 
 ## Viewing logs
 
-To view logs of Ollama running as a startup service, run:
+To view logs of Susan running as a startup service, run:
 
 ```shell
 journalctl -e -u ollama
@@ -190,7 +190,7 @@ Remove the ollama binary from your bin directory (either `/usr/local/bin`, `/usr
 sudo rm $(which ollama)
 ```
 
-Remove the downloaded models and Ollama service user and group:
+Remove the downloaded models and Susan service user and group:
 
 ```shell
 sudo userdel ollama

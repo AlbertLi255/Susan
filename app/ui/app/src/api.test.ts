@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 const { listModels } = vi.hoisted(() => ({ listModels: vi.fn() }));
-vi.mock("./lib/ollama-client", () => ({
+vi.mock("./lib/susan-client", () => ({
   ollamaClient: { list: listModels },
 }));
 
@@ -22,7 +22,7 @@ describe("fetchConnectUrl", () => {
         new Response(
           JSON.stringify({
             signin_url:
-              "https://ollama.com/connect?name=MacBook&key=public-key",
+              "https://susan.com/connect?name=MacBook&key=public-key",
           }),
           { status: 401 },
         ),
@@ -30,7 +30,7 @@ describe("fetchConnectUrl", () => {
     );
 
     await expect(fetchConnectUrl()).resolves.toBe(
-      "https://ollama.com/connect?name=MacBook&key=public-key&launch=true",
+      "https://susan.com/connect?name=MacBook&key=public-key&launch=true",
     );
   });
 });
@@ -47,7 +47,7 @@ describe("getIntegrationStatuses", () => {
           {
             id: "claude-desktop",
             name: "Claude",
-            description: "Use Ollama models in Claude Desktop",
+            description: "Use Susan models in Claude Desktop",
             installed: true,
           },
           {
@@ -66,7 +66,7 @@ describe("getIntegrationStatuses", () => {
       {
         id: "claude-desktop",
         name: "Claude",
-        description: "Use Ollama models in Claude Desktop",
+        description: "Use Susan models in Claude Desktop",
         installed: true,
       },
       {
@@ -96,7 +96,7 @@ describe("getClaudeDesktopAvailableModels", () => {
         {
           name: "remote-placeholder",
           digest: "remote",
-          remote_host: "https://ollama.com",
+          remote_host: "https://susan.com",
         },
       ],
     });

@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "name": "Ollama",
+  "name": "Susan",
   "colors": {
     "primary": "#000",
     "light": "#b5b5b5",
@@ -10,7 +10,7 @@
   "logo": {
     "light": "/images/logo.png",
     "dark": "/images/logo-dark.png",
-    "href": "https://ollama.com"
+    "href": "https://susan.com"
   },
   "theme": "maple",
   "background": {
@@ -40,13 +40,13 @@
     "links": [
       {
         "label": "Sign in",
-        "href": "https://ollama.com/signin"
+        "href": "https://susan.com/signin"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Download",
-      "href": "https://ollama.com/download"
+      "href": "https://susan.com/download"
     }
   },
   "api": {

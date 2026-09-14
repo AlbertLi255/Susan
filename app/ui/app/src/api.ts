@@ -12,7 +12,7 @@ import {
   User,
 } from "@/gotypes";
 import { parseJsonlFromResponse } from "./util/jsonl-parsing";
-import { ollamaClient as ollama } from "./lib/ollama-client";
+import { ollamaClient as ollama } from "./lib/susan-client";
 import type { ModelResponse } from "ollama/browser";
 import { API_BASE, OLLAMA_DOT_COM } from "./lib/config";
 
@@ -270,7 +270,7 @@ export async function getClaudeDesktopAvailableModels(
           }),
       );
   } catch (err) {
-    throw new Error(`Failed to fetch Ollama models: ${err}`);
+    throw new Error(`Failed to fetch Susan models: ${err}`);
   }
 }
 

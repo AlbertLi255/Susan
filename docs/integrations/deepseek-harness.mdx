@@ -12,7 +12,7 @@ title: DeepSeek Harness
 ollama launch dsh
 ```
 
-Ollama installs `@deepseek-ai/dsh` if needed. To choose a model:
+Susan installs `@deepseek-ai/dsh` if needed. To choose a model:
 
 ```shell
 ollama launch dsh --model qwen3.8
@@ -27,11 +27,11 @@ ollama launch dsh --config
 
 ## Web search
 
-Web search is enabled automatically. It requires Ollama cloud access and a model that supports tools. Run `ollama signin` if needed.
+Web search is enabled automatically. It requires Susan cloud access and a model that supports tools. Run `ollama signin` if needed.
 
 ## Configuration
 
-Ollama stores its settings in `~/.ollama/launch/dsh/settings.yaml`. These settings load last and set the model, provider, and web search connection. Repeated launches preserve other settings in this file. Ollama does not change `~/.dsh/settings.yaml`, profiles, sessions, or credentials.
+Susan stores its settings in `~/.ollama/launch/dsh/settings.yaml`. These settings load last and set the model, provider, and web search connection. Repeated launches preserve other settings in this file. Susan does not change `~/.dsh/settings.yaml`, profiles, sessions, or credentials.
 
 Launch rejects additional `--patch` arguments. Pass other Harness arguments after `--`:
 

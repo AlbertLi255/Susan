@@ -20,12 +20,12 @@ import (
 
 const (
 	claudeDesktopIntegrationName = "claude-desktop"
-	claudeDesktopProfileName     = "Ollama"
+	claudeDesktopProfileName     = "Susan"
 	claudeDesktopProfileID       = "00000000-0000-4000-8000-000000000114"
 	claudeDesktopGatewayBaseURL  = "http://" + proxy.DefaultClaudeDesktopListenAddr
 	claudeDesktopProbeTimeout    = 2 * time.Second
-	claudeDesktopModelLabel      = "Default Ollama model"
-	claudeDesktopSuccessMessage  = "Claude Desktop profile changed to Ollama."
+	claudeDesktopModelLabel      = "Default Susan model"
+	claudeDesktopSuccessMessage  = "Claude Desktop profile changed to Susan."
 	claudeDesktopRestoreMessage  = "To restore the usual Claude profile, run: ollama launch claude-desktop --restore"
 	claudeDesktopRestoredMessage = "Claude Desktop restored to the usual Claude profile."
 )
@@ -362,7 +362,7 @@ func (c *ClaudeDesktop) Run(_ string, _ []LaunchModel, args []string) error {
 	if err := ensureClaudeDesktopGateway(); err != nil {
 		return err
 	}
-	return claudeDesktopLaunchOrRestart("Restart Claude Desktop to use Ollama?", c.ConfigureAutodiscovery)
+	return claudeDesktopLaunchOrRestart("Restart Claude Desktop to use Susan?", c.ConfigureAutodiscovery)
 }
 
 func (c *ClaudeDesktop) Restore() error {
@@ -440,7 +440,7 @@ func ensureClaudeDesktopGateway() error {
 	ctx, cancel := context.WithTimeout(context.Background(), claudeDesktopProbeTimeout)
 	defer cancel()
 	if err := claudeDesktopProbeGateway(ctx, claudeDesktopGatewayBaseURL); err != nil {
-		return fmt.Errorf("Claude gateway is unavailable at %s: %w; restart Ollama and try again", claudeDesktopGatewayBaseURL, err)
+		return fmt.Errorf("Claude gateway is unavailable at %s: %w; restart Susan and try again", claudeDesktopGatewayBaseURL, err)
 	}
 	return nil
 }
@@ -741,7 +741,7 @@ func writeClaudeDesktopMeta(path, id, name string) error {
 func writeClaudeDesktopGatewayProfile(path, baseURL, apiKey string, forceChooser, autoMode bool) error {
 	cfg, err := readClaudeDesktopJSONAllowMissing(path)
 	if err != nil {
-		return fmt.Errorf("parse Claude Desktop Ollama profile: %w", err)
+		return fmt.Errorf("parse Claude Desktop Susan profile: %w", err)
 	}
 	cfg["inferenceProvider"] = "gateway"
 	cfg["inferenceGatewayBaseUrl"] = baseURL
@@ -796,7 +796,7 @@ func restoreClaudeDesktopMeta(path string) error {
 func restoreClaudeDesktopOllamaProfile(path string) error {
 	cfg, err := readClaudeDesktopJSONAllowMissing(path)
 	if err != nil {
-		return fmt.Errorf("parse Claude Desktop Ollama profile: %w", err)
+		return fmt.Errorf("parse Claude Desktop Susan profile: %w", err)
 	}
 	if len(cfg) == 0 {
 		return nil

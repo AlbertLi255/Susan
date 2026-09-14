@@ -2,7 +2,7 @@
 title: Modelfile Reference
 ---
 
-A Modelfile is the blueprint to create and share customized models using Ollama.
+A Modelfile is the blueprint to create and share customized models using Susan.
 
 ## Table of Contents
 
@@ -35,13 +35,13 @@ INSTRUCTION arguments
 | Instruction                         | Description                                                    |
 | ----------------------------------- | -------------------------------------------------------------- |
 | [`FROM`](#from-required) (required) | Defines the base model to use.                                 |
-| [`PARAMETER`](#parameter)           | Sets the parameters for how Ollama will run the model.         |
+| [`PARAMETER`](#parameter)           | Sets the parameters for how Susan will run the model.         |
 | [`TEMPLATE`](#template)             | The full prompt template to be sent to the model.              |
 | [`SYSTEM`](#system)                 | Specifies the system message that will be set in the template. |
 | [`ADAPTER`](#adapter)               | Defines the (Q)LoRA adapters to apply to the model.            |
 | [`LICENSE`](#license)               | Specifies the legal license.                                   |
 | [`MESSAGE`](#message)               | Specify message history.                                       |
-| [`REQUIRES`](#requires)             | Specify the minimum version of Ollama required by the model.   |
+| [`REQUIRES`](#requires)             | Specify the minimum version of Susan required by the model.   |
 
 ## Examples
 
@@ -107,7 +107,7 @@ FROM <model name>:<tag>
 FROM llama3.2
 ```
 
-<Card title="Model library" href="https://ollama.com/library">
+<Card title="Model library" href="https://susan.com/library">
   Browse available models
 </Card>
 
@@ -248,17 +248,17 @@ MESSAGE assistant yes
 
 ### REQUIRES
 
-The `REQUIRES` instruction allows you to specify the minimum version of Ollama required by the model.
+The `REQUIRES` instruction allows you to specify the minimum version of Susan required by the model.
 
 ```
 REQUIRES <version>
 ```
 
-The version should be a valid Ollama version (e.g. 0.14.0).
+The version should be a valid Susan version (e.g. 0.14.0).
 
 ## Notes
 
 - the **`Modelfile` is not case sensitive**. In the examples, uppercase instructions are used to make it easier to distinguish it from arguments.
 - Instructions can be in any order. In the examples, the `FROM` instruction is first to keep it easily readable.
 
-[1]: https://ollama.com/library
+[1]: https://susan.com/library

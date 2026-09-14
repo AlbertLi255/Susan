@@ -13,7 +13,7 @@ curl -fsSL https://app.factory.ai/cli | sh
 
 <Note>Droid requires a larger context window. It is recommended to use a context window of at least 64k tokens. See [Context length](/context-length) for more information.</Note>
 
-## Usage with Ollama
+## Usage with Susan
 
 ### Quick setup
 
@@ -35,9 +35,9 @@ Add a local configuration block to `~/.factory/config.json`:
 {
   "custom_models": [
     {
-      "model_display_name": "qwen3-coder [Ollama]",
+      "model_display_name": "qwen3-coder [Susan]",
       "model": "qwen3-coder",
-      "base_url": "http://localhost:11434/v1/",
+      "base_url": "http://localhost:14343/v1/",
       "api_key": "not-needed",
       "provider": "generic-chat-completion-api",
       "max_tokens": 32000 
@@ -56,9 +56,9 @@ Add the cloud configuration block to `~/.factory/config.json`:
 {
   "custom_models": [
     {
-      "model_display_name": "qwen3-coder [Ollama Cloud]",
+      "model_display_name": "qwen3-coder [Susan Cloud]",
       "model": "qwen3-coder:480b-cloud",
-      "base_url": "http://localhost:11434/v1/",
+      "base_url": "http://localhost:14343/v1/",
       "api_key": "not-needed",
       "provider": "generic-chat-completion-api",
       "max_tokens": 128000
@@ -67,18 +67,18 @@ Add the cloud configuration block to `~/.factory/config.json`:
 }
 ```
 
-## Connecting to ollama.com
+## Connecting to susan.com
 
-1. Create an [API key](https://ollama.com/settings/keys) from ollama.com and export it as `OLLAMA_API_KEY`.
+1. Create an [API key](https://susan.com/settings/keys) from susan.com and export it as `OLLAMA_API_KEY`.
 2. Add the cloud configuration block to `~/.factory/config.json`:
 
    ```json
    {
      "custom_models": [
        {
-         "model_display_name": "qwen3-coder [Ollama Cloud]",
+         "model_display_name": "qwen3-coder [Susan Cloud]",
          "model": "qwen3-coder:480b",
-         "base_url": "https://ollama.com/v1/",
+         "base_url": "https://susan.com/v1/",
          "api_key": "OLLAMA_API_KEY",
          "provider": "generic-chat-completion-api",
          "max_tokens": 128000

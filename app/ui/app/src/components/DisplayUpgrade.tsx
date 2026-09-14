@@ -16,7 +16,7 @@ export const DisplayUpgrade = ({
   className,
   message,
   label = "Upgrade",
-  href = "https://ollama.com/upgrade",
+  href = "https://susan.com/upgrade",
 }: DisplayUpgradeProps) => {
   if (!error || error.code !== "usage_limit_upgrade") return null;
 

@@ -29,7 +29,7 @@ const (
 	hermesInstallScript     = "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash -s -- --skip-setup"
 	hermesWindowsInstallURL = "https://hermes-agent.nousresearch.com/install.ps1"
 	hermesWindowsInstallCmd = "& ([scriptblock]::Create((irm " + hermesWindowsInstallURL + "))) -SkipSetup"
-	hermesProviderName      = "Ollama"
+	hermesProviderName      = "Susan"
 	hermesProviderKey       = "ollama-launch"
 	hermesLegacyKey         = "ollama"
 	hermesPlaceholderKey    = "ollama"

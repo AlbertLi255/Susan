@@ -421,7 +421,7 @@ export default function Settings() {
     } catch (error) {
       console.error("Failed to reset settings:", error);
       setResetError(
-        "Ollama could not reset every setting. Check the settings above and try again.",
+        "Susan could not reset every setting. Check the settings above and try again.",
       );
     } finally {
       setResettingToDefaults(false);
@@ -453,11 +453,11 @@ export default function Settings() {
         }
       }
     } catch (error) {
-      console.error("Error connecting to Ollama account:", error);
+      console.error("Error connecting to Susan account:", error);
       setConnectionError(
         error instanceof Error
           ? error.message
-          : "Failed to connect to Ollama account",
+          : "Failed to connect to Susan account",
       );
       setIsAwaitingConnection(false);
     }
@@ -469,7 +469,7 @@ export default function Settings() {
       await disconnectUser();
       window.location.reload();
     } catch {
-      setConnectionError("Failed to disconnect Ollama account");
+      setConnectionError("Failed to disconnect Susan account");
     }
   };
 
@@ -495,7 +495,7 @@ export default function Settings() {
           aria-busy={resettingToDefaults}
           className="mx-auto max-w-4xl space-y-4 border-0 p-0"
         >
-          {/* Connect Ollama Account */}
+          {/* Connect Susan Account */}
           <div className="overflow-hidden rounded-xl bg-white dark:bg-neutral-800">
             <div className="p-4">
               <Field>
@@ -527,7 +527,7 @@ export default function Settings() {
                             className="px-3 py-2 text-sm font-medium bg-black/90 backdrop-blur-sm text-white rounded-lg border border-white/10 shadow-2xl transition-all duration-300 ease-out relative overflow-hidden group"
                             onClick={() =>
                               window.open(
-                                "https://ollama.com/upgrade",
+                                "https://susan.com/upgrade",
                                 "_blank",
                               )
                             }
@@ -544,7 +544,7 @@ export default function Settings() {
                           color="white"
                           className="px-3 py-2 text-sm"
                           onClick={() =>
-                            window.open("https://ollama.com/settings", "_blank")
+                            window.open("https://susan.com/settings", "_blank")
                           }
                         >
                           Manage
@@ -574,7 +574,7 @@ export default function Settings() {
                 ) : (
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label>Ollama account</Label>
+                      <Label>Susan account</Label>
                       <Description>Not connected</Description>
                     </div>
                     <Button
@@ -640,7 +640,7 @@ export default function Settings() {
                       <div>
                         <Label>Show apps in menu</Label>
                         <Description>
-                          Show connected apps at the top of the Ollama menu.
+                          Show connected apps at the top of the Susan menu.
                         </Description>
                       </div>
                     </div>
@@ -680,15 +680,15 @@ export default function Settings() {
                 </div>
               </Field>
 
-              {/* Expose Ollama */}
+              {/* Expose Susan */}
               <Field>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start space-x-3 flex-1">
                     <WifiIcon className="mt-1 h-5 w-5 flex-shrink-0 text-black dark:text-neutral-100" />
                     <div>
-                      <Label>Expose Ollama to the network</Label>
+                      <Label>Expose Susan to the network</Label>
                       <Description>
-                        Allow other devices or services to access Ollama.
+                        Allow other devices or services to access Susan.
                       </Description>
                     </div>
                   </div>

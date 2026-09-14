@@ -266,8 +266,8 @@ export default function Chat({ chatId }: { chatId: string }) {
                   onDismiss={clearChatError}
                   href={
                     user?.plan === "pro"
-                      ? "https://ollama.com/settings/billing"
-                      : "https://ollama.com/upgrade"
+                      ? "https://susan.com/settings/billing"
+                      : "https://susan.com/upgrade"
                   }
                 />
               </div>

@@ -26,15 +26,15 @@ import {
 import type { IntegrationStatuses } from "@/api";
 
 describe("Onboarding", () => {
-  it("explains what Ollama is before asking the user to choose a path", () => {
+  it("explains what Susan is before asking the user to choose a path", () => {
     const html = renderToStaticMarkup(<IntroScreen onContinue={vi.fn()} />);
 
-    expect(html).toContain("Welcome to Ollama!");
-    expect(html.indexOf('alt="Ollama waving"')).toBeLessThan(
-      html.indexOf("Welcome to Ollama!"),
+    expect(html).toContain("Welcome to Susan!");
+    expect(html.indexOf('alt="Susan waving"')).toBeLessThan(
+      html.indexOf("Welcome to Susan!"),
     );
     expect(html).toMatch(/<main class="light-only [^"]*bg-white/);
-    expect(html).not.toMatch(/alt="Ollama waving" class="[^"]*dark:/);
+    expect(html).not.toMatch(/alt="Susan waving" class="[^"]*dark:/);
     expect(html).toContain(
       "Run open models with your coding agents so you can spend less while keeping your data private.",
     );
@@ -76,7 +76,7 @@ describe("Onboarding", () => {
             {
               id: "claude-desktop",
               name: "Claude",
-              description: "Use Ollama models in Claude Desktop",
+              description: "Use Susan models in Claude Desktop",
               installed: true,
             },
             {
@@ -88,7 +88,7 @@ describe("Onboarding", () => {
             {
               id: "chatgpt",
               name: "ChatGPT",
-              description: "Use Ollama models in ChatGPT",
+              description: "Use Susan models in ChatGPT",
               installed: true,
               command: "ollama launch chatgpt",
             },
@@ -97,8 +97,8 @@ describe("Onboarding", () => {
       );
 
       expect(html).not.toContain('id="desktop-heading"');
-      expect(html).not.toContain("Use Ollama models in Claude Desktop");
-      expect(html).not.toContain("Use Ollama models in ChatGPT");
+      expect(html).not.toContain("Use Susan models in Claude Desktop");
+      expect(html).not.toContain("Use Susan models in ChatGPT");
       expect(html).not.toContain("ollama launch chatgpt");
       expect(html).toContain('id="terminal-heading"');
       expect(html).toContain("ollama launch claude");
@@ -213,7 +213,7 @@ describe("Onboarding", () => {
               {
                 id: "claude-desktop",
                 name: "Claude",
-                description: "Use Ollama models in Claude Desktop",
+                description: "Use Susan models in Claude Desktop",
                 installed: false,
                 action: "connect",
               },
@@ -339,7 +339,7 @@ describe("Onboarding", () => {
               {
                 id: "claude-desktop",
                 name: "Claude",
-                description: "Use Ollama models in Claude Desktop",
+                description: "Use Susan models in Claude Desktop",
                 installed: true,
                 action: "connect",
               },
@@ -451,17 +451,17 @@ describe("Onboarding", () => {
   it("opens the device connection flow without relaunching the app", () => {
     expect(
       onboardingConnectUrl(
-        "https://ollama.com/connect?name=MacBook&key=public-key&launch=true",
+        "https://susan.com/connect?name=MacBook&key=public-key&launch=true",
         "signin",
       ),
-    ).toBe("https://ollama.com/connect?name=MacBook&key=public-key");
+    ).toBe("https://susan.com/connect?name=MacBook&key=public-key");
     expect(
       onboardingConnectUrl(
-        "https://ollama.com/connect?name=MacBook&key=public-key",
+        "https://susan.com/connect?name=MacBook&key=public-key",
         "signup",
       ),
     ).toBe(
-      "https://ollama.com/connect?name=MacBook&key=public-key&signup=true",
+      "https://susan.com/connect?name=MacBook&key=public-key&signup=true",
     );
   });
 
@@ -480,8 +480,8 @@ describe("Onboarding", () => {
       />,
     );
 
-    expect(html).toContain("Welcome to Ollama");
-    expect(html).not.toContain("Run Ollama");
+    expect(html).toContain("Welcome to Susan");
+    expect(html).not.toContain("Run Susan");
     expect(html).not.toContain("Sign up");
   });
 
@@ -490,7 +490,7 @@ describe("Onboarding", () => {
       {
         id: "claude-desktop",
         name: "Claude Code (Desktop)",
-        description: "Use Ollama models in Claude Desktop",
+        description: "Use Susan models in Claude Desktop",
         installed: true,
         action: "connect",
       },
@@ -570,7 +570,7 @@ describe("Onboarding", () => {
       "Connect Claude, or copy a command to run in your terminal.",
     );
     expect(html).toContain("Claude Code (Desktop)");
-    expect(html).toContain("Use Ollama models in Claude Desktop");
+    expect(html).toContain("Use Susan models in Claude Desktop");
     expect(html).toContain("Claude Code");
     expect(html).toContain("Codex CLI");
     expect(html).not.toContain("Search apps");
@@ -581,12 +581,12 @@ describe("Onboarding", () => {
     expect(html).not.toContain("Ready to launch");
     expect(html).not.toContain('id="claude-apps-heading"');
     expect(html.indexOf("Desktop")).toBeLessThan(
-      html.indexOf("Use Ollama models in Claude Desktop"),
+      html.indexOf("Use Susan models in Claude Desktop"),
     );
     expect(html).not.toContain(">Command</th>");
     expect(html).toContain("ollama launch claude");
     expect(html).not.toContain("Installed");
-    expect(html).toContain("Use Ollama models in ChatGPT");
+    expect(html).toContain("Use Susan models in ChatGPT");
     expect(html).toContain('aria-label="Connect Claude"');
     expect(html).toContain('role="switch"');
     expect(html).toContain('aria-checked="false"');
@@ -622,7 +622,7 @@ describe("Onboarding", () => {
     expect(html).not.toContain("Launch command");
     expect(html).not.toContain('aria-pressed="true"');
     expect(html).not.toContain("Continue");
-    expect(html).not.toContain("Run Ollama");
+    expect(html).not.toContain("Run Susan");
     expect(html).not.toContain('viewBox="0 0 3400 3400"');
   });
 
@@ -633,7 +633,7 @@ describe("Onboarding", () => {
           {
             id: "claude-desktop",
             name: "Claude",
-            description: "Use Ollama models in Claude Desktop",
+            description: "Use Susan models in Claude Desktop",
             installed: true,
           },
           {
@@ -652,10 +652,10 @@ describe("Onboarding", () => {
       />,
     );
 
-    expect(html.indexOf("Use Ollama models in Claude Desktop")).toBeLessThan(
+    expect(html.indexOf("Use Susan models in Claude Desktop")).toBeLessThan(
       html.indexOf(">ChatGPT (Desktop)</p>"),
     );
-    expect(html).toContain('aria-label="Add Ollama models to ChatGPT"');
+    expect(html).toContain('aria-label="Add Susan models to ChatGPT"');
     expect(html).not.toContain('aria-label="Copy ChatGPT command"');
     expect(html).toContain('aria-label="Copy Codex CLI command"');
   });
@@ -679,7 +679,7 @@ describe("Onboarding", () => {
           {
             id: "claude-desktop",
             name: "Claude",
-            description: "Use Ollama models in Claude Desktop",
+            description: "Use Susan models in Claude Desktop",
             installed: true,
             action: "connect",
           },
@@ -702,7 +702,7 @@ describe("Onboarding", () => {
     expect(html).not.toContain("Inactive");
     expect(html).toContain('aria-checked="true"');
     expect(html).toContain('aria-label="Disconnect Claude"');
-    expect(html).toContain("Connected to Ollama · 12 requests this session");
+    expect(html).toContain("Connected to Susan · 12 requests this session");
   });
 
   it("shows initial Claude recovery guidance without error styling", () => {
@@ -725,7 +725,7 @@ describe("Onboarding", () => {
           {
             id: "claude-desktop",
             name: "Claude",
-            description: "Use Ollama models in Claude Desktop",
+            description: "Use Susan models in Claude Desktop",
             installed: true,
             action: "connect",
           },
@@ -775,7 +775,7 @@ describe("Onboarding", () => {
           {
             id: "claude-desktop",
             name: "Claude",
-            description: "Use Ollama models in Claude Desktop",
+            description: "Use Susan models in Claude Desktop",
             installed: true,
             action: "connect",
           },
@@ -800,7 +800,7 @@ describe("Onboarding", () => {
           {
             id: "claude-desktop",
             name: "Claude",
-            description: "Use Ollama models in Claude Desktop",
+            description: "Use Susan models in Claude Desktop",
             installed: false,
             action: "connect",
           },
@@ -808,7 +808,7 @@ describe("Onboarding", () => {
       />,
     );
 
-    expect(html).toContain("Use Ollama models in Claude Desktop");
+    expect(html).toContain("Use Susan models in Claude Desktop");
     expect(html).toContain('aria-label="Connect Claude"');
     expect(html).toContain("Download &amp; connect");
     expect(html).not.toContain("Inactive");
@@ -882,7 +882,7 @@ describe("Onboarding", () => {
     );
     expect(html).toContain("Your data is never logged or trained on.");
     expect(html).toContain("Sign up");
-    expect(html).toContain("No thanks, I&#x27;ll use Ollama locally");
+    expect(html).toContain("No thanks, I&#x27;ll use Susan locally");
     expect(html).toContain("Sign in");
     expect(html).not.toContain("Skip");
   });
@@ -912,7 +912,7 @@ describe("Onboarding", () => {
       <RunOllamaScreen completionError={null} onRetryCompletion={vi.fn()} />,
     );
 
-    expect(html).toContain("Run Ollama");
+    expect(html).toContain("Run Susan");
     expect(html).toMatch(/<main class="light-only [^"]*bg-white/);
     expect(html).toContain(FIRST_MODEL_COMMAND);
     expect(html).not.toContain("Finish");

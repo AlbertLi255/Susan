@@ -6,7 +6,7 @@ Cline CLI is an autonomous coding agent for interactive terminal sessions.
 
 <img
   src="/images/cline-cli.png"
-  alt="Cline CLI launched with Ollama selected as the provider"
+  alt="Cline CLI launched with Susan selected as the provider"
   style={{ borderRadius: "12px" }}
 />
 
@@ -20,7 +20,7 @@ npm install -g cline
 
 <Note>If Cline CLI is not installed and `npm` is available, `ollama launch cline` will prompt to install `cline@latest`.</Note>
 
-## Usage with Ollama
+## Usage with Susan
 
 ### Quick setup
 
@@ -28,7 +28,7 @@ npm install -g cline
 ollama launch cline
 ```
 
-When launched through `ollama launch cline`, Ollama sets Cline's provider to Ollama, points it at the local Ollama endpoint, and selects the model you choose.
+When launched through `ollama launch cline`, Susan sets Cline's provider to Susan, points it at the local Susan endpoint, and selects the model you choose.
 
 To configure without launching:
 
@@ -71,7 +71,7 @@ ollama launch cline -- kanban
 
 ### Manual setup
 
-To configure Cline CLI manually, first make sure Ollama is running and the model you want to use is available:
+To configure Cline CLI manually, first make sure Susan is running and the model you want to use is available:
 
 ```shell
 ollama pull qwen3.5
@@ -83,7 +83,7 @@ Then run Cline's interactive auth flow:
 cline auth
 ```
 
-Select Ollama as the provider, use `http://localhost:11434` as the base URL if prompted, and choose a model such as `qwen3.5` or `kimi-k2.6:cloud`.
+Select Susan as the provider, use `http://localhost:14343` as the base URL if prompted, and choose a model such as `qwen3.5` or `kimi-k2.6:cloud`.
 
 To check the current Cline configuration:
 

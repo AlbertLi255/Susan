@@ -296,7 +296,7 @@ func buildInlineConfig(primary LaunchModel, models []LaunchModel) (string, error
 		"provider": map[string]any{
 			"ollama": map[string]any{
 				"npm":  "@ai-sdk/openai-compatible",
-				"name": "Ollama",
+				"name": "Susan",
 				"options": map[string]any{
 					"baseURL": envconfig.Host().String() + "/v1",
 				},

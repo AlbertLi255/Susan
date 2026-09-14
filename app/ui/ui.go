@@ -1765,7 +1765,7 @@ func userAgent() string {
 		version = "v0.0.0"
 	}
 
-	return fmt.Sprintf("ollama/%s (%s %s) app/%s Go/%s",
+	return fmt.Sprintf("susan/%s (%s %s) app/%s Go/%s",
 		version,
 		runtime.GOARCH,
 		runtime.GOOS,

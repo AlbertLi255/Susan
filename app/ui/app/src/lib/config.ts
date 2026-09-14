@@ -10,4 +10,4 @@ export const OLLAMA_HOST = import.meta.env.DEV
   : window.location.origin;
 
 export const OLLAMA_DOT_COM =
-  import.meta.env.VITE_OLLAMA_DOT_COM_URL || "https://ollama.com";
+  import.meta.env.VITE_OLLAMA_DOT_COM_URL || "https://susan.com";

@@ -575,7 +575,7 @@ func loadOrUnloadModel(cmd *cobra.Command, opts *runOptions) error {
 				remoteModel = opts.Model
 			}
 			if isCloud {
-				fmt.Fprintf(os.Stderr, "Connecting to '%s' on 'ollama.com' ⚡\n", remoteModel)
+				fmt.Fprintf(os.Stderr, "Connecting to '%s' on 'susan.com' ⚡\n", remoteModel)
 			} else {
 				fmt.Fprintf(os.Stderr, "Connecting to '%s' on '%s'\n", remoteModel, info.RemoteHost)
 			}
@@ -974,7 +974,7 @@ func SignoutHandler(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		var aErr api.AuthorizationError
 		if errors.As(err, &aErr) && aErr.StatusCode == http.StatusUnauthorized {
-			fmt.Println("You are not signed in to ollama.com")
+			fmt.Println("You are not signed in to susan.com")
 			fmt.Println()
 			return nil
 		} else {
@@ -982,7 +982,7 @@ func SignoutHandler(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	fmt.Println("You have signed out of ollama.com")
+	fmt.Println("You have signed out of susan.com")
 	fmt.Println()
 	return nil
 }
@@ -1004,7 +1004,7 @@ func PushHandler(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			var aErr api.AuthorizationError
 			if errors.As(err, &aErr) && aErr.StatusCode == http.StatusUnauthorized {
-				fmt.Println("You need to be signed in to push models to ollama.com.")
+				fmt.Println("You need to be signed in to push models to susan.com.")
 				fmt.Println()
 
 				if aErr.SigninURL != "" {
@@ -1073,7 +1073,7 @@ func PushHandler(cmd *cobra.Command, args []string) error {
 
 	destination := n.String()
 	if strings.HasSuffix(n.Host, ".ollama.ai") || strings.HasSuffix(n.Host, ".ollama.com") {
-		destination = "https://ollama.com/" + strings.TrimSuffix(n.DisplayShortest(), ":latest")
+		destination = "https://susan.com/" + strings.TrimSuffix(n.DisplayShortest(), ":latest")
 	}
 	fmt.Printf("\nYou can find your model at:\n\n")
 	fmt.Printf("\t%s\n", destination)
@@ -2397,7 +2397,7 @@ func NewCLI() *cobra.Command {
 
 	signinCmd := &cobra.Command{
 		Use:     "signin",
-		Short:   "Sign in to ollama.com",
+		Short:   "Sign in to susan.com",
 		Args:    cobra.ExactArgs(0),
 		PreRunE: checkServerHeartbeat,
 		RunE:    SigninHandler,
@@ -2405,7 +2405,7 @@ func NewCLI() *cobra.Command {
 
 	loginCmd := &cobra.Command{
 		Use:     "login",
-		Short:   "Sign in to ollama.com",
+		Short:   "Sign in to susan.com",
 		Hidden:  true,
 		Args:    cobra.ExactArgs(0),
 		PreRunE: checkServerHeartbeat,
@@ -2414,7 +2414,7 @@ func NewCLI() *cobra.Command {
 
 	signoutCmd := &cobra.Command{
 		Use:     "signout",
-		Short:   "Sign out from ollama.com",
+		Short:   "Sign out from susan.com",
 		Args:    cobra.ExactArgs(0),
 		PreRunE: checkServerHeartbeat,
 		RunE:    SignoutHandler,
@@ -2422,7 +2422,7 @@ func NewCLI() *cobra.Command {
 
 	logoutCmd := &cobra.Command{
 		Use:     "logout",
-		Short:   "Sign out from ollama.com",
+		Short:   "Sign out from susan.com",
 		Hidden:  true,
 		Args:    cobra.ExactArgs(0),
 		PreRunE: checkServerHeartbeat,

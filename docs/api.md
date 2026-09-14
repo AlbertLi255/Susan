@@ -1,6 +1,6 @@
 # API
 
-> Note: Ollama's API docs are moving to https://docs.ollama.com/api
+> Note: Susan's API docs are moving to https://docs.susan.com/api
 
 ## Endpoints
 
@@ -76,7 +76,7 @@ Enable JSON mode by setting the `format` parameter to `json`. This will structur
 ##### Request
 
 ```shell
-curl http://localhost:11434/api/generate -d '{
+curl http://localhost:14343/api/generate -d '{
   "model": "llama3.2",
   "prompt": "Why is the sky blue?"
 }'
@@ -132,7 +132,7 @@ To calculate how fast the response is generated in tokens per second (token/s), 
 A response can be received in one reply when streaming is off.
 
 ```shell
-curl http://localhost:11434/api/generate -d '{
+curl http://localhost:14343/api/generate -d '{
   "model": "llama3.2",
   "prompt": "Why is the sky blue?",
   "stream": false
@@ -164,7 +164,7 @@ If `stream` is set to `false`, the response will be a single JSON object:
 ##### Request
 
 ```shell
-curl http://localhost:11434/api/generate -d '{
+curl http://localhost:14343/api/generate -d '{
   "model": "codellama:code",
   "prompt": "def compute_gcd(a, b):",
   "suffix": "    return result",
@@ -199,9 +199,9 @@ curl http://localhost:11434/api/generate -d '{
 ##### Request
 
 ```shell
-curl -X POST http://localhost:11434/api/generate -H "Content-Type: application/json" -d '{
+curl -X POST http://localhost:14343/api/generate -H "Content-Type: application/json" -d '{
   "model": "llama3.1:8b",
-  "prompt": "Ollama is 22 years old and is busy saving the world. Respond using JSON",
+  "prompt": "Susan is 22 years old and is busy saving the world. Respond using JSON",
   "stream": false,
   "format": {
     "type": "object",
@@ -248,7 +248,7 @@ curl -X POST http://localhost:11434/api/generate -H "Content-Type: application/j
 ##### Request
 
 ```shell
-curl http://localhost:11434/api/generate -d '{
+curl http://localhost:14343/api/generate -d '{
   "model": "llama3.2",
   "prompt": "What color is the sky at different times of the day? Respond using JSON",
   "format": "json",
@@ -300,7 +300,7 @@ To submit images to multimodal models such as `llava` or `bakllava`, provide a l
 #### Request
 
 ```shell
-curl http://localhost:11434/api/generate -d '{
+curl http://localhost:14343/api/generate -d '{
   "model": "llava",
   "prompt":"What is in this picture?",
   "stream": false,
@@ -333,7 +333,7 @@ In some cases, you may wish to bypass the templating system and provide a full p
 ##### Request
 
 ```shell
-curl http://localhost:11434/api/generate -d '{
+curl http://localhost:14343/api/generate -d '{
   "model": "mistral",
   "prompt": "[INST] why is the sky blue? [/INST]",
   "raw": true,
@@ -348,7 +348,7 @@ For reproducible outputs, set `seed` to a number:
 ##### Request
 
 ```shell
-curl http://localhost:11434/api/generate -d '{
+curl http://localhost:14343/api/generate -d '{
   "model": "mistral",
   "prompt": "Why is the sky blue?",
   "options": {
@@ -381,7 +381,7 @@ If you want to set custom options for the model at runtime rather than in the Mo
 ##### Request
 
 ```shell
-curl http://localhost:11434/api/generate -d '{
+curl http://localhost:14343/api/generate -d '{
   "model": "llama3.2",
   "prompt": "Why is the sky blue?",
   "stream": false,
@@ -437,7 +437,7 @@ If an empty prompt is provided, the model will be loaded into memory.
 ##### Request
 
 ```shell
-curl http://localhost:11434/api/generate -d '{
+curl http://localhost:14343/api/generate -d '{
   "model": "llama3.2"
 }'
 ```
@@ -462,7 +462,7 @@ If an empty prompt is provided and the `keep_alive` parameter is set to `0`, a m
 ##### Request
 
 ```shell
-curl http://localhost:11434/api/generate -d '{
+curl http://localhost:14343/api/generate -d '{
   "model": "llama3.2",
   "keep_alive": 0
 }'
@@ -519,7 +519,7 @@ Tool calling is supported by providing a list of tools in the `tools` parameter.
 
 Models can also explain the result of the tool call in the response. See the [Chat request (With history, with tools)](#chat-request-with-history-with-tools) example below.
 
-[See models with tool calling capabilities](https://ollama.com/search?c=tool).
+[See models with tool calling capabilities](https://susan.com/search?c=tool).
 
 ### Structured outputs
 
@@ -534,7 +534,7 @@ Structured outputs are supported by providing a JSON schema in the `format` para
 Send a chat message with a streaming response.
 
 ```shell
-curl http://localhost:11434/api/chat -d '{
+curl http://localhost:14343/api/chat -d '{
   "model": "llama3.2",
   "messages": [
     {
@@ -587,7 +587,7 @@ Final response:
 ##### Request
 
 ```shell
-curl http://localhost:11434/api/chat -d '{
+curl http://localhost:14343/api/chat -d '{
   "model": "llama3.2",
   "messages": [
     {
@@ -670,7 +670,7 @@ Final response:
 ##### Request
 
 ```shell
-curl http://localhost:11434/api/chat -d '{
+curl http://localhost:14343/api/chat -d '{
   "model": "llama3.2",
   "messages": [
     {
@@ -707,7 +707,7 @@ curl http://localhost:11434/api/chat -d '{
 ##### Request
 
 ```shell
-curl http://localhost:11434/api/chat -d '{
+curl http://localhost:14343/api/chat -d '{
   "model": "llama3.2",
   "messages": [
     {
@@ -774,9 +774,9 @@ curl http://localhost:11434/api/chat -d '{
 ##### Request
 
 ```shell
-curl -X POST http://localhost:11434/api/chat -H "Content-Type: application/json" -d '{
+curl -X POST http://localhost:14343/api/chat -H "Content-Type: application/json" -d '{
   "model": "llama3.1",
-  "messages": [{"role": "user", "content": "Ollama is 22 years old and busy saving the world. Return a JSON object with the age and availability."}],
+  "messages": [{"role": "user", "content": "Susan is 22 years old and busy saving the world. Return a JSON object with the age and availability."}],
   "stream": false,
   "format": {
     "type": "object",
@@ -827,7 +827,7 @@ Send a chat message with a conversation history. You can use this same approach 
 ##### Request
 
 ```shell
-curl http://localhost:11434/api/chat -d '{
+curl http://localhost:14343/api/chat -d '{
   "model": "llama3.2",
   "messages": [
     {
@@ -883,7 +883,7 @@ Final response:
 ##### Request
 
 ```shell
-curl http://localhost:11434/api/chat -d '{
+curl http://localhost:14343/api/chat -d '{
   "model": "llama3.2",
   "messages": [
     {
@@ -963,7 +963,7 @@ curl http://localhost:11434/api/chat -d '{
 Send a chat message with images. The images should be provided as an array, with the individual images encoded in Base64.
 
 ```shell
-curl http://localhost:11434/api/chat -d '{
+curl http://localhost:14343/api/chat -d '{
   "model": "llava",
   "messages": [
     {
@@ -1001,7 +1001,7 @@ curl http://localhost:11434/api/chat -d '{
 ##### Request
 
 ```shell
-curl http://localhost:11434/api/chat -d '{
+curl http://localhost:14343/api/chat -d '{
   "model": "llama3.2",
   "messages": [
     {
@@ -1041,7 +1041,7 @@ curl http://localhost:11434/api/chat -d '{
 ##### Request
 
 ```shell
-curl http://localhost:11434/api/chat -d '{
+curl http://localhost:14343/api/chat -d '{
   "model": "llama3.2",
   "messages": [
     {
@@ -1116,7 +1116,7 @@ If the messages array is empty, the model will be loaded into memory.
 ##### Request
 
 ```shell
-curl http://localhost:11434/api/chat -d '{
+curl http://localhost:14343/api/chat -d '{
   "model": "llama3.2",
   "messages": []
 }'
@@ -1144,7 +1144,7 @@ If the messages array is empty and the `keep_alive` parameter is set to `0`, a m
 ##### Request
 
 ```shell
-curl http://localhost:11434/api/chat -d '{
+curl http://localhost:14343/api/chat -d '{
   "model": "llama3.2",
   "messages": [],
   "keep_alive": 0
@@ -1215,7 +1215,7 @@ Create a new model from an existing model.
 ##### Request
 
 ```shell
-curl http://localhost:11434/api/create -d '{
+curl http://localhost:14343/api/create -d '{
   "model": "mario",
   "from": "llama3.2",
   "system": "You are Mario from Super Mario Bros."
@@ -1247,7 +1247,7 @@ Quantize a non-quantized model.
 ##### Request
 
 ```shell
-curl http://localhost:11434/api/create -d '{
+curl http://localhost:14343/api/create -d '{
   "model": "llama3.2:quantized",
   "from": "llama3.2:3b-instruct-fp16",
   "quantize": "q4_K_M"
@@ -1278,7 +1278,7 @@ Create a model from a GGUF file. The `files` parameter should be filled out with
 ##### Request
 
 ```shell
-curl http://localhost:11434/api/create -d '{
+curl http://localhost:14343/api/create -d '{
   "model": "my-gguf-model",
   "files": {
     "test.gguf": "sha256:432f310a77f4650a88d0fd59ecdd7cebed8d684bafea53cbff0473542964f0c3"
@@ -1299,12 +1299,12 @@ A stream of JSON objects is returned:
 
 #### Create a model from a Safetensors directory
 
-The `files` parameter should include a dictionary of files for the safetensors model which includes the file names and SHA256 digest of each file. Use [/api/blobs/:digest](#push-a-blob) to first push each of the files to the server before calling this API. Files will remain in the cache until the Ollama server is restarted.
+The `files` parameter should include a dictionary of files for the safetensors model which includes the file names and SHA256 digest of each file. Use [/api/blobs/:digest](#push-a-blob) to first push each of the files to the server before calling this API. Files will remain in the cache until the Susan server is restarted.
 
 ##### Request
 
 ```shell
-curl http://localhost:11434/api/create -d '{
+curl http://localhost:14343/api/create -d '{
   "model": "fred",
   "files": {
     "config.json": "sha256:dd3443e529fb2290423a0c65c2d633e67b419d273f170259e27297219828e389",
@@ -1336,7 +1336,7 @@ A stream of JSON objects is returned:
 HEAD /api/blobs/:digest
 ```
 
-Ensures that the file blob (Binary Large Object) used with create a model exists on the server. This checks your Ollama server and not ollama.com.
+Ensures that the file blob (Binary Large Object) used with create a model exists on the server. This checks your Susan server and not susan.com.
 
 ### Query Parameters
 
@@ -1347,7 +1347,7 @@ Ensures that the file blob (Binary Large Object) used with create a model exists
 #### Request
 
 ```shell
-curl -I http://localhost:11434/api/blobs/sha256:29fdb92e57cf0827ded04ae6461b5931d01fa595843f55d36f5b275a52087dd2
+curl -I http://localhost:14343/api/blobs/sha256:29fdb92e57cf0827ded04ae6461b5931d01fa595843f55d36f5b275a52087dd2
 ```
 
 #### Response
@@ -1360,7 +1360,7 @@ Return 200 OK if the blob exists, 404 Not Found if it does not.
 POST /api/blobs/:digest
 ```
 
-Push a file to the Ollama server to create a "blob" (Binary Large Object).
+Push a file to the Susan server to create a "blob" (Binary Large Object).
 
 ### Query Parameters
 
@@ -1371,7 +1371,7 @@ Push a file to the Ollama server to create a "blob" (Binary Large Object).
 #### Request
 
 ```shell
-curl -T model.gguf -X POST http://localhost:11434/api/blobs/sha256:29fdb92e57cf0827ded04ae6461b5931d01fa595843f55d36f5b275a52087dd2
+curl -T model.gguf -X POST http://localhost:14343/api/blobs/sha256:29fdb92e57cf0827ded04ae6461b5931d01fa595843f55d36f5b275a52087dd2
 ```
 
 #### Response
@@ -1391,7 +1391,7 @@ List models that are available locally.
 #### Request
 
 ```shell
-curl http://localhost:11434/api/tags
+curl http://localhost:14343/api/tags
 ```
 
 #### Response
@@ -1453,7 +1453,7 @@ Show information about a model including details, modelfile, template, parameter
 #### Request
 
 ```shell
-curl http://localhost:11434/api/show -d '{
+curl http://localhost:14343/api/show -d '{
   "model": "llava"
 }'
 ```
@@ -1513,7 +1513,7 @@ Copy a model. Creates a model with another name from an existing model.
 #### Request
 
 ```shell
-curl http://localhost:11434/api/copy -d '{
+curl http://localhost:14343/api/copy -d '{
   "source": "llama3.2",
   "destination": "llama3-backup"
 }'
@@ -1540,7 +1540,7 @@ Delete a model and its data.
 #### Request
 
 ```shell
-curl -X DELETE http://localhost:11434/api/delete -d '{
+curl -X DELETE http://localhost:14343/api/delete -d '{
   "model": "llama3:13b"
 }'
 ```
@@ -1568,7 +1568,7 @@ Download a model from the ollama library. Cancelled pulls are resumed from where
 #### Request
 
 ```shell
-curl http://localhost:11434/api/pull -d '{
+curl http://localhost:14343/api/pull -d '{
   "model": "llama3.2"
 }'
 ```
@@ -1640,7 +1640,7 @@ Upload a model to a model library. Requires registering for ollama.ai and adding
 #### Request
 
 ```shell
-curl http://localhost:11434/api/push -d '{
+curl http://localhost:14343/api/push -d '{
   "model": "mattw/pygmalion:latest"
 }'
 ```
@@ -1711,7 +1711,7 @@ Advanced parameters:
 #### Request
 
 ```shell
-curl http://localhost:11434/api/embed -d '{
+curl http://localhost:14343/api/embed -d '{
   "model": "all-minilm",
   "input": "Why is the sky blue?"
 }'
@@ -1737,7 +1737,7 @@ curl http://localhost:11434/api/embed -d '{
 #### Request (Multiple input)
 
 ```shell
-curl http://localhost:11434/api/embed -d '{
+curl http://localhost:14343/api/embed -d '{
   "model": "all-minilm",
   "input": ["Why is the sky blue?", "Why is the grass green?"]
 }'
@@ -1774,7 +1774,7 @@ List models that are currently loaded into memory.
 ### Request
 
 ```shell
-curl http://localhost:11434/api/ps
+curl http://localhost:14343/api/ps
 ```
 
 #### Response
@@ -1829,7 +1829,7 @@ Advanced parameters:
 #### Request
 
 ```shell
-curl http://localhost:11434/api/embeddings -d '{
+curl http://localhost:14343/api/embeddings -d '{
   "model": "all-minilm",
   "prompt": "Here is an article about llamas..."
 }'
@@ -1854,14 +1854,14 @@ curl http://localhost:11434/api/embeddings -d '{
 GET /api/version
 ```
 
-Retrieve the Ollama version
+Retrieve the Susan version
 
 ### Examples
 
 #### Request
 
 ```shell
-curl http://localhost:11434/api/version
+curl http://localhost:14343/api/version
 ```
 
 #### Response

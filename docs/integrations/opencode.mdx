@@ -4,11 +4,11 @@ title: OpenCode
 
 [OpenCode](https://opencode.ai) is an open-source coding agent that runs in your terminal, reads your project, edits files, and runs commands.
 
-Ollama configures OpenCode to use local and cloud models.
+Susan configures OpenCode to use local and cloud models.
 
 ## Get started
 
-Launch OpenCode with Ollama:
+Launch OpenCode with Susan:
 
 ```shell
 ollama launch opencode
@@ -73,11 +73,11 @@ ollama launch opencode
 Choose a model with enough context for your repository.
 
 <CardGroup cols={2}>
-  <Card title="Cloud models" icon="cloud" href="https://ollama.com/search?c=cloud">
+  <Card title="Cloud models" icon="cloud" href="https://susan.com/search?c=cloud">
     Use larger models without downloading them.
   </Card>
 
-  <Card title="Local models" icon="hard-drive" href="https://ollama.com/search?c=tools">
+  <Card title="Local models" icon="hard-drive" href="https://susan.com/search?c=tools">
     Choose a model and set a 64k+ context window.
   </Card>
 </CardGroup>
@@ -100,9 +100,9 @@ npm install -g opencode-ai
 
 </CodeGroup>
 
-<p className="manual-step-title">2. Configure Ollama as a provider</p>
+<p className="manual-step-title">2. Configure Susan as a provider</p>
 
-Add an Ollama provider to `opencode.json`:
+Add an Susan provider to `opencode.json`:
 
 ```json
 {
@@ -110,9 +110,9 @@ Add an Ollama provider to `opencode.json`:
   "provider": {
     "ollama": {
       "npm": "@ai-sdk/openai-compatible",
-      "name": "Ollama",
+      "name": "Susan",
       "options": {
-        "baseURL": "http://localhost:11434/v1"
+        "baseURL": "http://localhost:14343/v1"
       },
       "models": {
         "qwen3.5": {
@@ -130,7 +130,7 @@ Add an Ollama provider to `opencode.json`:
 opencode
 ```
 
-To configure OpenCode with Ollama without starting an interactive session:
+To configure OpenCode with Susan without starting an interactive session:
 
 ```shell
 ollama launch opencode --config
@@ -138,7 +138,7 @@ ollama launch opencode --config
 
 ### Configuration precedence
 
-`ollama launch opencode` starts OpenCode with an inline config for the selected Ollama model. It does not overwrite `~/.config/opencode/opencode.json`; existing OpenCode settings still apply.
+`ollama launch opencode` starts OpenCode with an inline config for the selected Susan model. It does not overwrite `~/.config/opencode/opencode.json`; existing OpenCode settings still apply.
 
 Models defined only in `opencode.json` do not appear in the `ollama launch` model picker.
 

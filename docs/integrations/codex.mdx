@@ -11,7 +11,7 @@ Install the [Codex CLI](https://developers.openai.com/codex/cli/). For the deskt
 npm install -g @openai/codex
 ```
 
-## Usage with Ollama
+## Usage with Susan
 
 <Note>Codex requires a larger context window. It is recommended to use a context window of at least 64k tokens.</Note>
 
@@ -21,7 +21,7 @@ npm install -g @openai/codex
 ollama launch codex
 ```
 
-When launched through `ollama launch codex`, Ollama refreshes the model catalog
+When launched through `ollama launch codex`, Susan refreshes the model catalog
 and uses a dedicated Codex profile for that session.
 
 To configure without launching:
@@ -30,7 +30,7 @@ To configure without launching:
 ollama launch codex --config
 ```
 
-To remove the Ollama launch profile and generated model catalog:
+To remove the Susan launch profile and generated model catalog:
 
 ```shell
 ollama launch codex --restore
@@ -38,7 +38,7 @@ ollama launch codex --restore
 
 ### Manual setup
 
-To use `codex` with Ollama, use the `--oss` flag:
+To use `codex` with Susan, use the `--oss` flag:
 
 ```
 codex --oss
@@ -66,8 +66,8 @@ model_provider = "ollama-launch"
 model_catalog_json = "/Users/you/.codex/model.json"
 
 [model_providers.ollama-launch]
-name = "Ollama"
-base_url = "http://localhost:11434/v1/"
+name = "Susan"
+base_url = "http://localhost:14343/v1/"
 wire_api = "responses"
 ```
 
@@ -79,8 +79,8 @@ codex --profile ollama-launch
 
 ## Web search
 
-Codex web-search requests sent through the Ollama profile are executed by
-Ollama for both local and cloud models. Sign in with `ollama signin` to use the
+Codex web-search requests sent through the Susan profile are executed by
+Susan for both local and cloud models. Sign in with `ollama signin` to use the
 web-search service.
 
 To disable web search for a Codex session:
