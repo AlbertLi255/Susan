@@ -195,11 +195,11 @@ type Store struct {
 var defaultDBPath = func() string {
 	switch runtime.GOOS {
 	case "windows":
-		return filepath.Join(os.Getenv("LOCALAPPDATA"), "Ollama", "db.sqlite")
+		return filepath.Join(os.Getenv("LOCALAPPDATA"), "Susan", "db.sqlite")
 	case "darwin":
-		return filepath.Join(os.Getenv("HOME"), "Library", "Application Support", "Ollama", "db.sqlite")
+		return filepath.Join(os.Getenv("HOME"), "Library", "Application Support", "Susan", "db.sqlite")
 	default:
-		return filepath.Join(os.Getenv("HOME"), ".ollama", "db.sqlite")
+		return filepath.Join(os.Getenv("HOME"), ".susan", "db.sqlite")
 	}
 }()
 
@@ -207,11 +207,11 @@ var defaultDBPath = func() string {
 var legacyConfigPath = func() string {
 	switch runtime.GOOS {
 	case "windows":
-		return filepath.Join(os.Getenv("LOCALAPPDATA"), "Ollama", "config.json")
+		return filepath.Join(os.Getenv("LOCALAPPDATA"), "Susan", "config.json")
 	case "darwin":
-		return filepath.Join(os.Getenv("HOME"), "Library", "Application Support", "Ollama", "config.json")
+		return filepath.Join(os.Getenv("HOME"), "Library", "Application Support", "Susan", "config.json")
 	default:
-		return filepath.Join(os.Getenv("HOME"), ".ollama", "config.json")
+		return filepath.Join(os.Getenv("HOME"), ".susan", "config.json")
 	}
 }()
 
@@ -406,7 +406,7 @@ func (s *Store) Settings() (Settings, error) {
 		} else {
 			home, err := os.UserHomeDir()
 			if err == nil {
-				settings.Models = filepath.Join(home, ".ollama", "models")
+				settings.Models = filepath.Join(home, ".susan", "models")
 			}
 		}
 	}

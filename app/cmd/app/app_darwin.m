@@ -954,7 +954,7 @@ static NSImage *ollamaApplicationIcon(void) {
         : [NSURL URLWithString:downloadURLString];
     if (url == nil || (!chatGPT && authorization.length == 0)) {
         NSError *error = [NSError
-            errorWithDomain:@"com.ollama.app"
+            errorWithDomain:@"com.susan.app"
                        code:3
                    userInfo:@{NSLocalizedDescriptionKey:
                        chatGPT
@@ -1086,7 +1086,7 @@ didFinishDownloadingToURL:(NSURL *)location {
     if (response.statusCode != 200 || !trustedHost ||
         ![response.URL.scheme isEqualToString:@"https"]) {
         error = [NSError
-            errorWithDomain:@"com.ollama.app"
+            errorWithDomain:@"com.susan.app"
                        code:1
                    userInfo:@{NSLocalizedDescriptionKey:
                        chatGPT
@@ -1100,7 +1100,7 @@ didFinishDownloadingToURL:(NSURL *)location {
                              error:&error];
         if (error == nil && [attributes fileSize] < 1024 * 1024) {
             error = [NSError
-                errorWithDomain:@"com.ollama.app"
+                errorWithDomain:@"com.susan.app"
                        code:2
                    userInfo:@{NSLocalizedDescriptionKey:
                            chatGPT
@@ -1170,7 +1170,7 @@ didCompleteWithError:(NSError *)error {
         self.claudeDownloadedInstallerURL == nil) {
         if (self.claudeDownloadError == nil) {
             self.claudeDownloadError = [NSError
-                errorWithDomain:@"com.ollama.app"
+                errorWithDomain:@"com.susan.app"
                            code:3
                        userInfo:@{NSLocalizedDescriptionKey:
                            chatGPT
@@ -1243,7 +1243,7 @@ didCompleteWithError:(NSError *)error {
     }
     if (!installed) {
         NSError *installError = [NSError
-            errorWithDomain:@"com.ollama.app"
+            errorWithDomain:@"com.susan.app"
                        code:4
                    userInfo:@{NSLocalizedDescriptionKey:
                        [NSString stringWithFormat:
@@ -1594,10 +1594,10 @@ didCompleteWithError:(NSError *)error {
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 - (void)registerSelfAsLoginItem:(BOOL)firstTimeRun {
     appLogInfo(@"using v13+ SMAppService for login registration");
-    // Maps to the file Susan.app/Contents/Library/LaunchAgents/com.ollama.ollama.plist
-    SMAppService* service = [SMAppService agentServiceWithPlistName:@"com.ollama.ollama.plist"];
+    // Maps to the file Susan.app/Contents/Library/LaunchAgents/com.susan.susan.plist
+    SMAppService* service = [SMAppService agentServiceWithPlistName:@"com.susan.susan.plist"];
     if (!service) {
-        appLogInfo(@"SMAppService failed to find service for com.ollama.ollama.plist");
+        appLogInfo(@"SMAppService failed to find service for com.susan.susan.plist");
         return;
     }
     SMAppServiceStatus status = [service status];
@@ -1881,6 +1881,7 @@ static BOOL isOllamaApplication(NSRunningApplication *app) {
         return NO;
     }
     return [bundleId isEqualToString:[[NSBundle mainBundle] bundleIdentifier]] ||
+        [bundleId isEqualToString:@"com.electron.susan"] ||
         [bundleId isEqualToString:@"ai.ollama.ollama"] ||
         [bundleId isEqualToString:@"com.electron.ollama"];
 }

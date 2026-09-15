@@ -168,8 +168,8 @@ func TestHermesConfigurePreservesExistingConfigAndEnablesWeb(t *testing.T) {
 	if ollamaProvider == nil {
 		t.Fatal("expected ollama-launch provider entry")
 	}
-	if got, _ := ollamaProvider["name"].(string); got != "Ollama" {
-		t.Fatalf("expected providers entry name Ollama, got %q", got)
+	if got, _ := ollamaProvider["name"].(string); got != "Susan" {
+		t.Fatalf("expected providers entry name Susan, got %q", got)
 	}
 	if got, _ := ollamaProvider["api"].(string); got != srv.URL+"/v1" {
 		t.Fatalf("expected providers entry api %q, got %q", srv.URL+"/v1", got)
@@ -207,7 +207,7 @@ func TestHermesConfigureUpdatesMatchingCustomProviderWithoutDroppingFields(t *te
 		"providers:\n" +
 		"  ollama:\n" +
 		"    name: Ollama\n" +
-		"    api: http://127.0.0.1:11434/v1\n" +
+		"    api: http://127.0.0.1:14343/v1\n" +
 		"    default_model: old-model\n" +
 		"    models:\n" +
 		"      - old-model\n" +
@@ -215,7 +215,7 @@ func TestHermesConfigureUpdatesMatchingCustomProviderWithoutDroppingFields(t *te
 		"    extra_field: keep-me\n" +
 		"custom_providers:\n" +
 		"  - name: Ollama\n" +
-		"    base_url: http://127.0.0.1:11434/v1\n" +
+		"    base_url: http://127.0.0.1:14343/v1\n" +
 		"    model: old-model\n" +
 		"    api_mode: chat_completions\n" +
 		"    models:\n" +
@@ -405,11 +405,11 @@ func TestHermesConfigureMigratesLegacyManagedAliases(t *testing.T) {
 		"providers:\n" +
 		"  ollama:\n" +
 		"    name: Ollama\n" +
-		"    api: http://127.0.0.1:11434/v1\n" +
+		"    api: http://127.0.0.1:14343/v1\n" +
 		"    default_model: old-model\n" +
 		"custom_providers:\n" +
 		"  - name: Ollama\n" +
-		"    base_url: http://127.0.0.1:11434/v1\n" +
+		"    base_url: http://127.0.0.1:14343/v1\n" +
 		"    model: old-model\n"
 	if err := os.WriteFile(configPath, []byte(existing), 0o644); err != nil {
 		t.Fatal(err)
@@ -497,7 +497,7 @@ func TestHermesCurrentModelRequiresHealthyManagedConfig(t *testing.T) {
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
 	withHermesPlatform(t, "darwin")
-	withHermesOllamaURL(t, "http://127.0.0.1:11434")
+	withHermesOllamaURL(t, "http://127.0.0.1:14343")
 
 	configPath := filepath.Join(tmpDir, ".hermes", "config.yaml")
 	if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
@@ -514,7 +514,7 @@ func TestHermesCurrentModelRequiresHealthyManagedConfig(t *testing.T) {
 				"model:\n" +
 				"  provider: openrouter\n" +
 				"  default: gemma4\n" +
-				"  base_url: http://127.0.0.1:11434/v1\n",
+				"  base_url: http://127.0.0.1:14343/v1\n",
 		},
 		{
 			name: "wrong base url",
@@ -534,7 +534,7 @@ func TestHermesCurrentModelRequiresHealthyManagedConfig(t *testing.T) {
 				"model:\n" +
 				"  provider: ollama-launch\n" +
 				"  default: gemma4\n" +
-				"  base_url: http://127.0.0.1:11434/v1\n",
+				"  base_url: http://127.0.0.1:14343/v1\n",
 		},
 		{
 			name: "inconsistent managed provider entry",
@@ -542,10 +542,10 @@ func TestHermesCurrentModelRequiresHealthyManagedConfig(t *testing.T) {
 				"model:\n" +
 				"  provider: ollama-launch\n" +
 				"  default: gemma4\n" +
-				"  base_url: http://127.0.0.1:11434/v1\n" +
+				"  base_url: http://127.0.0.1:14343/v1\n" +
 				"providers:\n" +
 				"  ollama-launch:\n" +
-				"    api: http://127.0.0.1:11434/v1\n" +
+				"    api: http://127.0.0.1:14343/v1\n" +
 				"    default_model: qwen3.5\n",
 		},
 		{
@@ -554,10 +554,10 @@ func TestHermesCurrentModelRequiresHealthyManagedConfig(t *testing.T) {
 				"model:\n" +
 				"  provider: custom:ollama\n" +
 				"  default: gemma4\n" +
-				"  base_url: http://127.0.0.1:11434/v1\n" +
+				"  base_url: http://127.0.0.1:14343/v1\n" +
 				"providers:\n" +
 				"  ollama:\n" +
-				"    api: http://127.0.0.1:11434/v1\n" +
+				"    api: http://127.0.0.1:14343/v1\n" +
 				"    default_model: gemma4\n",
 		},
 		{
@@ -566,14 +566,14 @@ func TestHermesCurrentModelRequiresHealthyManagedConfig(t *testing.T) {
 				"model:\n" +
 				"  provider: ollama-launch\n" +
 				"  default: gemma4\n" +
-				"  base_url: http://127.0.0.1:11434/v1\n" +
+				"  base_url: http://127.0.0.1:14343/v1\n" +
 				"providers:\n" +
 				"  ollama-launch:\n" +
-				"    api: http://127.0.0.1:11434/v1\n" +
+				"    api: http://127.0.0.1:14343/v1\n" +
 				"    default_model: gemma4\n" +
 				"custom_providers:\n" +
 				"  - name: Ollama\n" +
-				"    base_url: http://127.0.0.1:11434/v1\n" +
+				"    base_url: http://127.0.0.1:14343/v1\n" +
 				"    model: gemma4\n",
 		},
 	}

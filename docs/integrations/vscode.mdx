@@ -28,14 +28,14 @@ The extension discovers models from `http://127.0.0.1:14343` by default.
 Pull a local model:
 
 ```shell
-ollama pull qwen3.6
+susan pull qwen3.6
 ```
 
 To use a cloud model, pull it and sign in:
 
 ```shell
-ollama pull kimi-k2.6:cloud
-ollama signin
+susan pull kimi-k2.6:cloud
+susan signin
 ```
 
 Local models do not require sign-in.
@@ -51,8 +51,8 @@ For local models, open Susan **Settings**, set the context length to at least 64
 If Susan models do not appear in the model picker:
 
 1. Make sure Susan is running.
-2. Run `ollama list` and confirm that models are available.
+2. Run `susan list` and confirm that models are available.
 3. Run **Susan: Refresh Models** from the Command Palette.
 4. Run **Susan: Diagnose Models** and check the **Susan** output channel.
 
-If a cloud model asks you to sign in, run `ollama signin`.
+If a cloud model asks you to sign in, run `susan signin`.

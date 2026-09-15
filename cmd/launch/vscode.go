@@ -227,7 +227,7 @@ func (v *VSCode) FocusVSCode() {
 
 // printModelAccessTip shows instructions for finding Ollama models in VS Code.
 func (v *VSCode) printModelAccessTip() {
-	fmt.Fprintf(os.Stderr, "\nTip: To use Ollama models, open Copilot Chat and click the model picker.\n")
+	fmt.Fprintf(os.Stderr, "\nTip: To use Susan models, open Copilot Chat and click the model picker.\n")
 	fmt.Fprintf(os.Stderr, "     If you don't see your models, click \"Other models\" to find them.\n\n")
 }
 
@@ -266,7 +266,7 @@ func (v *VSCode) Edit(models []LaunchModel) error {
 	filtered = append(filtered, map[string]any{
 		"vendor": "ollama",
 		"name":   "Susan",
-		"url":    envconfig.Host().String(),
+		"url":    envconfig.ConnectableHost().String(),
 	})
 
 	data, err := json.MarshalIndent(filtered, "", "  ")

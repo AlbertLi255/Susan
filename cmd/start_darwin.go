@@ -10,7 +10,7 @@ import (
 	"github.com/ollama/ollama/api"
 )
 
-var errNotRunning = errors.New("could not connect to ollama server, run 'ollama serve' to start it")
+var errNotRunning = errors.New("could not connect to susan server, run 'susan serve' to start it")
 
 func startApp(ctx context.Context, client *api.Client) error {
 	exe, err := os.Executable()
@@ -21,7 +21,7 @@ func startApp(ctx context.Context, client *api.Client) error {
 	if err != nil {
 		return errNotRunning
 	}
-	r := regexp.MustCompile(`^.*/Ollama\s?\d*.app`)
+	r := regexp.MustCompile(`^.*/Susan\s?\d*.app`)
 	m := r.FindStringSubmatch(link)
 	if len(m) != 1 {
 		return errNotRunning

@@ -633,7 +633,7 @@ func writeTestOllamaPrivateKey(t *testing.T, home string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	keyPath := filepath.Join(home, ".ollama", "id_ed25519")
+	keyPath := filepath.Join(home, ".susan", "id_ed25519")
 	if err := os.MkdirAll(filepath.Dir(keyPath), 0o755); err != nil {
 		t.Fatal(err)
 	}

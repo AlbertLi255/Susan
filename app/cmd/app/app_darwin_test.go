@@ -1424,7 +1424,7 @@ func TestApplyClaudeDesktopMappingsRollsBackWhenRestartFails(t *testing.T) {
 	models := proxy.SelectClaudeDesktopModels(proxy.DefaultClaudeDesktopModels(), []string{"glm-5.2:cloud"})
 	gateway, err := proxy.NewClaudeDesktop(proxy.ClaudeDesktopConfig{
 		ListenAddr: "127.0.0.1:0",
-		OllamaURL:  "http://127.0.0.1:11434",
+		OllamaURL:  "http://127.0.0.1:14343",
 		Model:      models[0].OllamaModel,
 		Models:     models,
 	})
@@ -1690,7 +1690,7 @@ func testResetClaudeDesktopMappingsSerializesLifecycleChange(t *testing.T, name 
 	current := proxy.MapClaudeDesktopModels(proxy.DefaultClaudeDesktopModels(), previousMappings)
 	gateway, err := proxy.NewClaudeDesktop(proxy.ClaudeDesktopConfig{
 		ListenAddr: "127.0.0.1:0",
-		OllamaURL:  "http://127.0.0.1:11434",
+		OllamaURL:  "http://127.0.0.1:14343",
 		Model:      current[0].OllamaModel,
 		Models:     current,
 	})
@@ -1916,7 +1916,7 @@ func TestClaudeDesktopIntegrationHistoryPersists(t *testing.T) {
 
 func TestPrepareClaudeDesktopConnectionPreservesFirstUseIntro(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	t.Setenv("OLLAMA_HOST", "127.0.0.1:11434")
+	t.Setenv("OLLAMA_HOST", "127.0.0.1:14343")
 	if err := launch.SaveClaudeDesktopModels([]string{"qwen3:8b"}); err != nil {
 		t.Fatal(err)
 	}
@@ -2435,7 +2435,7 @@ func TestClaudeLocalModels(t *testing.T) {
 
 func TestClaudeGatewayStartupWithLocalSelectionSkipsCloudLookupsButSettingsLoadsCatalog(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	t.Setenv("OLLAMA_HOST", "127.0.0.1:11434")
+	t.Setenv("OLLAMA_HOST", "127.0.0.1:14343")
 	if err := launch.SaveClaudeDesktopModels([]string{"qwen3:8b"}); err != nil {
 		t.Fatal(err)
 	}
@@ -2547,7 +2547,7 @@ func TestClaudeDesktopConnectionStatusPrefersActiveGatewayMappings(t *testing.T)
 	})
 	gateway, err := proxy.NewClaudeDesktop(proxy.ClaudeDesktopConfig{
 		ListenAddr: "127.0.0.1:0",
-		OllamaURL:  "http://127.0.0.1:11434",
+		OllamaURL:  "http://127.0.0.1:14343",
 		Model:      activeModels[0].OllamaModel,
 		Models:     activeModels,
 	})
@@ -2654,7 +2654,7 @@ func TestClaudeGatewayLocalSelectionCatalogPolicy(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Setenv("HOME", t.TempDir())
-			t.Setenv("OLLAMA_HOST", "127.0.0.1:11434")
+			t.Setenv("OLLAMA_HOST", "127.0.0.1:14343")
 			if err := launch.SaveClaudeDesktopModels([]string{"qwen3:8b"}); err != nil {
 				t.Fatal(err)
 			}

@@ -195,7 +195,7 @@ func TestDeepSeekHarnessConfigureSkipsWebSearchWhenCloudDisabled(t *testing.T) {
 
 func TestDeepSeekHarnessCurrentModelRejectsDrift(t *testing.T) {
 	setTestHome(t, t.TempDir())
-	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:11434")
+	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:14343")
 	dsh := &DeepSeekHarness{}
 	if err := dsh.Configure("qwen3.5"); err != nil {
 		t.Fatal(err)
@@ -208,7 +208,7 @@ func TestDeepSeekHarnessCurrentModelRejectsDrift(t *testing.T) {
 
 func TestDeepSeekHarnessCurrentModelRejectsPatchDrift(t *testing.T) {
 	setTestHome(t, t.TempDir())
-	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:11434")
+	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:14343")
 	dsh := &DeepSeekHarness{}
 	if err := dsh.Configure("qwen3.5"); err != nil {
 		t.Fatal(err)

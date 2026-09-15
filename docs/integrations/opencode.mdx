@@ -11,7 +11,7 @@ Susan configures OpenCode to use local and cloud models.
 Launch OpenCode with Susan:
 
 ```shell
-ollama launch opencode
+susan launch opencode
 ```
 
 ## Capabilities
@@ -133,13 +133,13 @@ opencode
 To configure OpenCode with Susan without starting an interactive session:
 
 ```shell
-ollama launch opencode --config
+susan launch opencode --config
 ```
 
 ### Configuration precedence
 
-`ollama launch opencode` starts OpenCode with an inline config for the selected Susan model. It does not overwrite `~/.config/opencode/opencode.json`; existing OpenCode settings still apply.
+`susan launch opencode` starts OpenCode with an inline config for the selected Susan model. It does not overwrite `~/.config/opencode/opencode.json`; existing OpenCode settings still apply.
 
-Models defined only in `opencode.json` do not appear in the `ollama launch` model picker.
+Models defined only in `opencode.json` do not appear in the `susan launch` model picker.
 
 See OpenCode's [config precedence](https://opencode.ai/docs/config/#precedence-order).

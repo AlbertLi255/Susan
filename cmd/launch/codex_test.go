@@ -102,6 +102,7 @@ func TestCodexArgsRejectManagedOverrides(t *testing.T) {
 }
 
 func TestWriteCodexProfileConfig(t *testing.T) {
+	t.Setenv("OLLAMA_HOST", "")
 	t.Run("creates new file when none exists", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		profilePath := filepath.Join(tmpDir, "ollama-launch.config.toml")
@@ -122,8 +123,8 @@ func TestWriteCodexProfileConfig(t *testing.T) {
 			`model_provider = "ollama-launch"`,
 			fmt.Sprintf("model_catalog_json = %q", catalogPath),
 			"[model_providers.ollama-launch]",
-			`name = "Ollama"`,
-			`base_url = "http://127.0.0.1:11434/v1/"`,
+			`name = "Susan"`,
+			`base_url = "http://127.0.0.1:14343/v1/"`,
 			`wire_api = "responses"`,
 		} {
 			if !strings.Contains(content, want) {
@@ -183,7 +184,7 @@ func TestWriteCodexProfileConfig(t *testing.T) {
 	})
 
 	t.Run("uses connectable host for unspecified bind address", func(t *testing.T) {
-		t.Setenv("OLLAMA_HOST", "http://0.0.0.0:11434")
+		t.Setenv("OLLAMA_HOST", "http://0.0.0.0:14343")
 		tmpDir := t.TempDir()
 		profilePath := filepath.Join(tmpDir, "ollama-launch.config.toml")
 
@@ -197,7 +198,7 @@ func TestWriteCodexProfileConfig(t *testing.T) {
 		if strings.Contains(content, "0.0.0.0") {
 			t.Fatalf("config should not write bind-only host, got:\n%s", content)
 		}
-		if !strings.Contains(content, "127.0.0.1:11434/v1/") {
+		if !strings.Contains(content, "127.0.0.1:14343/v1/") {
 			t.Fatalf("expected connectable loopback URL, got:\n%s", content)
 		}
 	})
@@ -429,7 +430,7 @@ func TestCodexRestoreDoesNotRewriteRootConfig(t *testing.T) {
 		fmt.Sprintf("model_catalog_json = %q\n\n", catalogPath) +
 		"[model_providers.ollama-launch]\n" +
 		`name = "Ollama"` + "\n" +
-		`base_url = "http://127.0.0.1:11434/v1/"` + "\n" +
+		`base_url = "http://127.0.0.1:14343/v1/"` + "\n" +
 		`wire_api = "responses"` + "\n\n" +
 		"[profiles.ollama-launch]\n" +
 		`model = "llama3.2"` + "\n\n" +
@@ -482,11 +483,11 @@ func TestCodexRestoreDoesNotTouchCodexAppConfig(t *testing.T) {
 		fmt.Sprintf("model_catalog_json = %q\n\n", appCatalogPath) +
 		codexProviderHeaderFor(codexAppProfileName) + "\n" +
 		`name = "Ollama"` + "\n" +
-		`base_url = "http://127.0.0.1:11434/v1/"` + "\n" +
+		`base_url = "http://127.0.0.1:14343/v1/"` + "\n" +
 		`wire_api = "responses"` + "\n\n" +
 		codexProviderHeader() + "\n" +
 		`name = "Ollama"` + "\n" +
-		`base_url = "http://127.0.0.1:11434/v1/"` + "\n" +
+		`base_url = "http://127.0.0.1:14343/v1/"` + "\n" +
 		`wire_api = "responses"` + "\n"
 	if err := os.WriteFile(configPath, []byte(appManagedConfig), 0o644); err != nil {
 		t.Fatal(err)

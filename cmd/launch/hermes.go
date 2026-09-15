@@ -376,7 +376,7 @@ func (h *Hermes) ensureInstalledFor(command string) error {
 		}
 	}
 	if len(missing) > 0 {
-		return fmt.Errorf("Hermes is not installed and required dependencies are missing\n\nInstall the following first:\n  %s\n\nThen re-run:\n  ollama launch %s", strings.Join(missing, "\n  "), command)
+		return fmt.Errorf("Hermes is not installed and required dependencies are missing\n\nInstall the following first:\n  %s\n\nThen re-run:\n  susan launch %s", strings.Join(missing, "\n  "), command)
 	}
 
 	ok, err := ConfirmPrompt("Hermes is not installed. Install now?")
@@ -836,7 +836,10 @@ func hermesHasManagedCustomProvider(current any) bool {
 
 func hermesManagedCustomProvider(entry map[string]any) bool {
 	name, _ := entry["name"].(string)
-	return strings.EqualFold(strings.TrimSpace(name), hermesProviderName)
+	name = strings.TrimSpace(name)
+	// "Ollama" is the provider display name written by older launcher builds;
+	// recognize it so stale managed entries are migrated instead of duplicated.
+	return strings.EqualFold(name, hermesProviderName) || strings.EqualFold(name, "Ollama")
 }
 
 func hermesNormalizeURL(raw string) string {

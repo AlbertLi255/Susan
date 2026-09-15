@@ -47,8 +47,8 @@ func TestOpenCodeEdit(t *testing.T) {
 		// Verify provider structure
 		provider, _ := cfg["provider"].(map[string]any)
 		ollama, _ := provider["ollama"].(map[string]any)
-		if ollama["name"] != "Ollama" {
-			t.Errorf("provider name = %v, want Ollama", ollama["name"])
+		if ollama["name"] != "Susan" {
+			t.Errorf("provider name = %v, want Susan", ollama["name"])
 		}
 		if ollama["npm"] != "@ai-sdk/openai-compatible" {
 			t.Errorf("npm = %v, want @ai-sdk/openai-compatible", ollama["npm"])

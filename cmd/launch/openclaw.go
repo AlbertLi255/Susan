@@ -67,7 +67,7 @@ func (c *Openclaw) Run(model string, _ []LaunchModel, args []string) error {
 			"--non-interactive",
 			"--accept-risk",
 			"--auth-choice", "ollama",
-			"--custom-base-url", envconfig.Host().String(),
+			"--custom-base-url", envconfig.ConnectableHost().String(),
 			"--custom-model-id", model,
 			// Launch owns the first real gateway startup immediately after onboarding,
 			// so don't let OpenClaw fail the whole first-run flow on a transient
@@ -606,7 +606,7 @@ func ensureOpenclawInstalled() (string, error) {
 		if gitErr != nil {
 			missing = append(missing, "git: https://git-scm.com/")
 		}
-		return "", fmt.Errorf("OpenClaw is not installed and required dependencies are missing\n\nInstall the following first:\n  %s\n\nThen re-run:\n  ollama launch openclaw", strings.Join(missing, "\n  "))
+		return "", fmt.Errorf("OpenClaw is not installed and required dependencies are missing\n\nInstall the following first:\n  %s\n\nThen re-run:\n  susan launch openclaw", strings.Join(missing, "\n  "))
 	}
 
 	ok, err := ConfirmPrompt("OpenClaw is not installed. Install with npm?")
@@ -687,7 +687,7 @@ func (c *Openclaw) Edit(models []LaunchModel) error {
 		ollama = make(map[string]any)
 	}
 
-	ollama["baseUrl"] = envconfig.Host().String()
+	ollama["baseUrl"] = envconfig.ConnectableHost().String()
 	// needed to register provider
 	ollama["apiKey"] = "ollama-local"
 	ollama["api"] = "ollama"

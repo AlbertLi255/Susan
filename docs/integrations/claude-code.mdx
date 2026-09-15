@@ -11,7 +11,7 @@ Susan connects Claude Code to local and cloud models through its Anthropic-compa
 Launch Claude Code with Susan:
 
 ```shell
-ollama launch claude
+susan launch claude
 ```
 
 ## Capabilities
@@ -116,7 +116,7 @@ Choose a model with enough context for your repository.
 Use `--yes` for scripts, Docker, or CI:
 
 ```shell
-ollama launch claude --model gemma4:cloud --yes -- -p "how does this repository work?"
+susan launch claude --model gemma4:cloud --yes -- -p "how does this repository work?"
 ```
 
 The `--yes` flag skips selectors, pulls the model when needed, and requires `--model`. Arguments after `--` are passed directly to Claude Code.
@@ -148,7 +148,7 @@ Examples:
 Connect a Telegram bot to your Claude Code session. Install the [Telegram plugin](https://github.com/anthropics/claude-plugins-official), create a bot with [@BotFather](https://t.me/BotFather), then launch Claude Code:
 
 ```shell
-ollama launch claude -- --channels plugin:telegram@claude-plugins-official
+susan launch claude -- --channels plugin:telegram@claude-plugins-official
 ```
 
 Claude Code prompts for permission on most actions. To allow the bot to work autonomously, configure [permission rules](https://code.claude.com/docs/en/permissions) or pass `--dangerously-skip-permissions` in an isolated environment.

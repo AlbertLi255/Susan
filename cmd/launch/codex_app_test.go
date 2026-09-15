@@ -495,7 +495,7 @@ func TestCodexAppDesktopUsesAndRestoresRegularProfile(t *testing.T) {
 	setTestHome(t, tmpDir)
 	withCodexAppPlatform(t, "darwin")
 	withCodexAppRouterHealth(t, func() error { return nil })
-	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:11434")
+	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:14343")
 
 	configPath := filepath.Join(tmpDir, ".codex", "config.toml")
 	if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
@@ -555,7 +555,7 @@ func TestCodexAppDesktopUpdatesStoppedProfileWithoutOpening(t *testing.T) {
 	setTestHome(t, tmpDir)
 	withCodexAppPlatform(t, "darwin")
 	withCodexAppRouterHealth(t, func() error { return nil })
-	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:11434")
+	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:14343")
 
 	configPath := filepath.Join(tmpDir, ".codex", "config.toml")
 	if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
@@ -591,7 +591,7 @@ func TestCodexAppManagedAuthLifecycle(t *testing.T) {
 	t.Run("signed out user gets local auth that restore removes", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		setTestHome(t, tmpDir)
-		t.Setenv("OLLAMA_HOST", "http://127.0.0.1:11434")
+		t.Setenv("OLLAMA_HOST", "http://127.0.0.1:14343")
 
 		app := &CodexApp{}
 		if err := app.ConfigureWithModels("qwen3:8b", testLaunchModels("qwen3:8b")); err != nil {
@@ -614,8 +614,10 @@ func TestCodexAppManagedAuthLifecycle(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if got := info.Mode().Perm(); got != 0o600 {
-			t.Fatalf("auth mode = %o, want 600", got)
+		if runtime.GOOS != "windows" {
+			if got := info.Mode().Perm(); got != 0o600 {
+				t.Fatalf("auth mode = %o, want 600", got)
+			}
 		}
 
 		if err := restoreCodexAppProfile(); err != nil {
@@ -629,7 +631,7 @@ func TestCodexAppManagedAuthLifecycle(t *testing.T) {
 	t.Run("existing auth is preserved", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		setTestHome(t, tmpDir)
-		t.Setenv("OLLAMA_HOST", "http://127.0.0.1:11434")
+		t.Setenv("OLLAMA_HOST", "http://127.0.0.1:14343")
 		authPath := filepath.Join(tmpDir, ".codex", "auth.json")
 		if err := os.MkdirAll(filepath.Dir(authPath), 0o700); err != nil {
 			t.Fatal(err)
@@ -657,7 +659,7 @@ func TestCodexAppManagedAuthLifecycle(t *testing.T) {
 	t.Run("real login that replaces local auth is preserved", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		setTestHome(t, tmpDir)
-		t.Setenv("OLLAMA_HOST", "http://127.0.0.1:11434")
+		t.Setenv("OLLAMA_HOST", "http://127.0.0.1:14343")
 
 		app := &CodexApp{}
 		if err := app.ConfigureWithModels("qwen3:8b", testLaunchModels("qwen3:8b")); err != nil {
@@ -683,7 +685,7 @@ func TestCodexAppDesktopAppliesProfileAfterRunningAppExits(t *testing.T) {
 	setTestHome(t, tmpDir)
 	withCodexAppPlatform(t, "darwin")
 	withCodexAppRouterHealth(t, func() error { return nil })
-	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:11434")
+	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:14343")
 
 	configPath := filepath.Join(tmpDir, ".codex", "config.toml")
 	if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
@@ -733,7 +735,7 @@ func TestCodexAppDesktopAppliesProfileAfterRunningAppExits(t *testing.T) {
 	if got, ok := codexRootStringValueOK(string(data), codexRootModelProviderKey); ok {
 		t.Fatalf("model provider = %q, want omitted built-in default after exit:\n%s", got, data)
 	}
-	if got := codexRootStringValue(string(data), codexRootOpenAIBaseURLKey); got != "http://127.0.0.1:11434/api/codex/v1" {
+	if got := codexRootStringValue(string(data), codexRootOpenAIBaseURLKey); got != "http://127.0.0.1:14343/api/codex/v1" {
 		t.Fatalf("openai_base_url = %q, want Codex router after exit:\n%s", got, data)
 	}
 }
@@ -742,7 +744,7 @@ func TestCodexAppDesktopRestartRepairsCatalogWithoutLiveInventory(t *testing.T) 
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
 	withCodexAppPlatform(t, "darwin")
-	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:11434")
+	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:14343")
 
 	app := &CodexApp{}
 	if err := app.ConfigureWithModels("qwen3:8b", testLaunchModels("qwen3:8b")); err != nil {
@@ -1531,7 +1533,7 @@ func TestCodexCLIConfigRefreshLeavesCodexAppConfigActive(t *testing.T) {
 func TestCodexAppConfigureUsesConnectableHostForUnspecifiedBindAddress(t *testing.T) {
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
-	t.Setenv("OLLAMA_HOST", "http://0.0.0.0:11434")
+	t.Setenv("OLLAMA_HOST", "http://0.0.0.0:14343")
 
 	if err := (&CodexApp{}).ConfigureWithModels("llama3.2", testLaunchModels("llama3.2")); err != nil {
 		t.Fatalf("ConfigureWithModels returned error: %v", err)
@@ -1549,7 +1551,7 @@ func TestCodexAppConfigureUsesConnectableHostForUnspecifiedBindAddress(t *testin
 	if strings.Contains(content, codexProfileHeaderFor(codexAppProfileName)) {
 		t.Fatalf("legacy app profile section should not be generated, got:\n%s", content)
 	}
-	if got := codexRootStringValue(content, codexRootOpenAIBaseURLKey); got != "http://127.0.0.1:11434/api/codex/v1" {
+	if got := codexRootStringValue(content, codexRootOpenAIBaseURLKey); got != "http://127.0.0.1:14343/api/codex/v1" {
 		t.Fatalf("openai_base_url = %q, want connectable loopback router URL", got)
 	}
 	if got, ok := codexRootStringValueOK(content, codexRootModelProviderKey); ok {
@@ -1575,7 +1577,7 @@ func TestCodexAppHostChangePreservesRestoreState(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:11434")
+	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:14343")
 	app := &CodexApp{}
 	if err := app.ConfigureWithModels("llama3.2", testLaunchModels("llama3.2")); err != nil {
 		t.Fatalf("initial ConfigureWithModels returned error: %v", err)
@@ -1621,14 +1623,14 @@ func TestCodexAppManagedProxyURLRequiresLoopback(t *testing.T) {
 		url  string
 		want bool
 	}{
-		{name: "IPv4 loopback", url: "http://127.0.0.1:11434/api/codex/v1", want: true},
+		{name: "IPv4 loopback", url: "http://127.0.0.1:14343/api/codex/v1", want: true},
 		{name: "localhost", url: "http://localhost:22434/api/codex/v1/", want: true},
-		{name: "IPv6 loopback", url: "https://[::1]:11434/api/codex/v1", want: true},
+		{name: "IPv6 loopback", url: "https://[::1]:14343/api/codex/v1", want: true},
 		{name: "remote hostname", url: "https://example.com/api/codex/v1"},
-		{name: "private address", url: "http://192.168.1.5:11434/api/codex/v1"},
-		{name: "credentials", url: "http://user@127.0.0.1:11434/api/codex/v1"},
-		{name: "query", url: "http://127.0.0.1:11434/api/codex/v1?owned=true"},
-		{name: "wrong path", url: "http://127.0.0.1:11434/v1"},
+		{name: "private address", url: "http://192.168.1.5:14343/api/codex/v1"},
+		{name: "credentials", url: "http://user@127.0.0.1:14343/api/codex/v1"},
+		{name: "query", url: "http://127.0.0.1:14343/api/codex/v1?owned=true"},
+		{name: "wrong path", url: "http://127.0.0.1:14343/v1"},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := codexAppManagedProxyURL(tt.url); got != tt.want {
@@ -1717,7 +1719,7 @@ func TestCodexAppConfigureRejectsMalformedTomlEvenWithExistingRestoreState(t *te
 func TestCodexAppCurrentModelRequiresManagedActiveProfile(t *testing.T) {
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
-	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:11434")
+	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:14343")
 
 	configPath := filepath.Join(tmpDir, ".codex", "config.toml")
 	if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
@@ -1729,7 +1731,7 @@ func TestCodexAppCurrentModelRequiresManagedActiveProfile(t *testing.T) {
 		"model = \"llama3.2\"\n" +
 		fmt.Sprintf("model_provider = %q\n\n", codexAppProfileName) +
 		codexProviderHeaderFor(codexAppProfileName) + "\n" +
-		"base_url = \"http://127.0.0.1:11434/v1/\"\n"
+		"base_url = \"http://127.0.0.1:14343/v1/\"\n"
 	if err := os.WriteFile(configPath, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -1752,7 +1754,7 @@ func TestCodexAppCurrentModelRecognizesManagedRootProviderForms(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
 			setTestHome(t, tmpDir)
-			t.Setenv("OLLAMA_HOST", "http://127.0.0.1:11434")
+			t.Setenv("OLLAMA_HOST", "http://127.0.0.1:14343")
 
 			configPath := filepath.Join(tmpDir, ".codex", "config.toml")
 			if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
@@ -1762,7 +1764,7 @@ func TestCodexAppCurrentModelRecognizesManagedRootProviderForms(t *testing.T) {
 				`model = "qwen3:8b"` + "\n" +
 				tt.providerLine +
 				fmt.Sprintf(`model_catalog_json = %q`, mustWriteCodexAppTestCatalog(t, "qwen3:8b")) + "\n" +
-				`openai_base_url = "http://127.0.0.1:11434/api/codex/v1"` + "\n"
+				`openai_base_url = "http://127.0.0.1:14343/api/codex/v1"` + "\n"
 			if err := os.WriteFile(configPath, []byte(content), 0o644); err != nil {
 				t.Fatal(err)
 			}
@@ -1777,7 +1779,7 @@ func TestCodexAppCurrentModelRecognizesManagedRootProviderForms(t *testing.T) {
 func TestCodexAppOllamaConfiguredKeepsOffSwitchWhenCatalogIsMissing(t *testing.T) {
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
-	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:11434")
+	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:14343")
 
 	configPath := filepath.Join(tmpDir, ".codex", "config.toml")
 	if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
@@ -1786,7 +1788,7 @@ func TestCodexAppOllamaConfiguredKeepsOffSwitchWhenCatalogIsMissing(t *testing.T
 	content := "" +
 		`model = "glm-5.3-flash:cloud"` + "\n" +
 		fmt.Sprintf(`model_catalog_json = %q`, codexAppModelCatalogPathForConfig(configPath)) + "\n" +
-		`openai_base_url = "http://127.0.0.1:11434/api/codex/v1"` + "\n"
+		`openai_base_url = "http://127.0.0.1:14343/api/codex/v1"` + "\n"
 	if err := os.WriteFile(configPath, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -1847,7 +1849,7 @@ func TestCodexAppCurrentModelRequiresHealthyCatalog(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
 			setTestHome(t, tmpDir)
-			t.Setenv("OLLAMA_HOST", "http://127.0.0.1:11434")
+			t.Setenv("OLLAMA_HOST", "http://127.0.0.1:14343")
 
 			configPath := filepath.Join(tmpDir, ".codex", "config.toml")
 			if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
@@ -1874,7 +1876,7 @@ func TestCodexAppCurrentModelRequiresHealthyCatalog(t *testing.T) {
 				fmt.Sprintf(`model_provider = %q`, codexAppProfileName) + "\n" +
 				profileCatalogLine + "\n" +
 				codexProviderHeaderFor(codexAppProfileName) + "\n" +
-				`base_url = "http://127.0.0.1:11434/v1/"` + "\n"
+				`base_url = "http://127.0.0.1:14343/v1/"` + "\n"
 			if err := os.WriteFile(configPath, []byte(content), 0o644); err != nil {
 				t.Fatal(err)
 			}
@@ -1889,7 +1891,7 @@ func TestCodexAppCurrentModelRequiresHealthyCatalog(t *testing.T) {
 func TestCodexAppCurrentModelDetectsDriftedModel(t *testing.T) {
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
-	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:11434")
+	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:14343")
 
 	catalogPath := mustWriteCodexAppTestCatalog(t, "llama3.2")
 	configPath := filepath.Join(tmpDir, ".codex", "config.toml")
@@ -1902,7 +1904,7 @@ func TestCodexAppCurrentModelDetectsDriftedModel(t *testing.T) {
 		fmt.Sprintf(`model_catalog_json = %q`, catalogPath) + "\n\n" +
 		codexProviderHeaderFor(codexAppProfileName) + "\n" +
 		`name = "Ollama"` + "\n" +
-		`base_url = "http://127.0.0.1:11434/v1/"` + "\n" +
+		`base_url = "http://127.0.0.1:14343/v1/"` + "\n" +
 		`wire_api = "responses"` + "\n"
 	if err := os.WriteFile(configPath, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
@@ -1916,7 +1918,7 @@ func TestCodexAppCurrentModelDetectsDriftedModel(t *testing.T) {
 func TestCodexAppCurrentModelAcceptsLatestSuffixDrift(t *testing.T) {
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
-	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:11434")
+	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:14343")
 
 	catalogPath := mustWriteCodexAppTestCatalog(t, "llama3.2")
 	configPath := filepath.Join(tmpDir, ".codex", "config.toml")
@@ -1926,7 +1928,7 @@ func TestCodexAppCurrentModelAcceptsLatestSuffixDrift(t *testing.T) {
 	content := "" +
 		`model = "llama3.2:latest"` + "\n" +
 		fmt.Sprintf(`model_catalog_json = %q`, catalogPath) + "\n" +
-		`openai_base_url = "http://127.0.0.1:11434/api/codex/v1"` + "\n"
+		`openai_base_url = "http://127.0.0.1:14343/api/codex/v1"` + "\n"
 	if err := os.WriteFile(configPath, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -2521,7 +2523,7 @@ func TestCodexAppRestoreRestoresDesktopReasoningEffortsExactly(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
 			setTestHome(t, tmpDir)
-			t.Setenv("OLLAMA_HOST", "http://127.0.0.1:11434")
+			t.Setenv("OLLAMA_HOST", "http://127.0.0.1:14343")
 			withCodexAppPlatform(t, "darwin")
 			withCodexAppProcessHooks(t, func() bool { return false }, func() error { return nil }, func() error { return nil })
 
@@ -2851,7 +2853,7 @@ func TestCodexAppRestoreWithoutStateRemovesManagedRootModel(t *testing.T) {
 		`model = "llama3.2"` + "\n" +
 		fmt.Sprintf(`model_provider = %q`, codexAppProfileName) + "\n\n" +
 		codexProviderHeaderFor(codexAppProfileName) + "\n" +
-		`base_url = "http://127.0.0.1:11434/v1/"` + "\n"
+		`base_url = "http://127.0.0.1:14343/v1/"` + "\n"
 	if err := os.WriteFile(configPath, []byte(existing), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -2918,7 +2920,7 @@ func TestCodexAppRestoreDoesNotStompUserChangedRootConfig(t *testing.T) {
 		`model = "llama3.2"` + "\n" +
 		fmt.Sprintf(`model_catalog_json = %q`, catalogPath) + "\n\n" +
 		codexProviderHeaderFor(codexAppProfileName) + "\n" +
-		`base_url = "http://127.0.0.1:11434/v1/"` + "\n\n" +
+		`base_url = "http://127.0.0.1:14343/v1/"` + "\n\n" +
 		"[profiles.manual]\n" +
 		`model = "gpt-5.5"` + "\n"
 	if err := os.WriteFile(configPath, []byte(existing), 0o644); err != nil {

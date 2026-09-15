@@ -1197,7 +1197,7 @@ func TestPushHandler(t *testing.T) {
 					}
 				},
 			},
-			expectedOutput: "\nYou can find your model at:\n\n\thttps://ollama.com/test-model\n",
+			expectedOutput: "\nYou can find your model at:\n\n\thttps://susan.com/test-model\n",
 		},
 		{
 			name:      "not signed in push",
@@ -2366,17 +2366,17 @@ func TestIsLocalhost(t *testing.T) {
 		{"localhost no port", "localhost", true},
 		{"localhost with port", "localhost:11435", true},
 		{"127.0.0.1 no port", "127.0.0.1", true},
-		{"127.0.0.1 with port", "127.0.0.1:11434", true},
+		{"127.0.0.1 with port", "127.0.0.1:14343", true},
 		{"0.0.0.0 no port", "0.0.0.0", true},
-		{"0.0.0.0 with port", "0.0.0.0:11434", true},
+		{"0.0.0.0 with port", "0.0.0.0:14343", true},
 		{"::1 no port", "::1", true},
-		{"[::1] with port", "[::1]:11434", true},
-		{"loopback with scheme", "http://localhost:11434", true},
+		{"[::1] with port", "[::1]:14343", true},
+		{"loopback with scheme", "http://localhost:14343", true},
 		{"remote hostname", "example.com", false},
-		{"remote hostname with port", "example.com:11434", false},
+		{"remote hostname with port", "example.com:14343", false},
 		{"remote IP", "192.168.1.1", false},
-		{"remote IP with port", "192.168.1.1:11434", false},
-		{"remote with scheme", "http://example.com:11434", false},
+		{"remote IP with port", "192.168.1.1:14343", false},
+		{"remote with scheme", "http://example.com:14343", false},
 		{"https remote", "https://example.com:443", false},
 	}
 

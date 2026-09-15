@@ -676,7 +676,7 @@ func TestSessionCancellationKeepsPartialResultWhenUISinkCancels(t *testing.T) {
 func TestSessionTreatsHTTPContextCanceledStringAsCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	client := &fakeClient{err: errors.New(`Post "http://127.0.0.1:11434/api/chat": context canceled`)}
+	client := &fakeClient{err: errors.New(`Post "http://127.0.0.1:14343/api/chat": context canceled`)}
 	session := &Session{Client: client}
 
 	result, err := session.Run(ctx, RunOptions{

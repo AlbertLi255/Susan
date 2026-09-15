@@ -68,8 +68,8 @@ func TestQwenConfigure(t *testing.T) {
 	if provider["id"] != "gemma4" {
 		t.Fatalf("expected provider id gemma4, got %v", provider["id"])
 	}
-	if provider["name"] != "gemma4 (Ollama)" {
-		t.Fatalf("expected provider name %q, got %v", "gemma4 (Ollama)", provider["name"])
+	if provider["name"] != "gemma4 (Susan)" {
+		t.Fatalf("expected provider name %q, got %v", "gemma4 (Susan)", provider["name"])
 	}
 	if provider["baseUrl"] != qwenBaseURL() {
 		t.Fatalf("expected provider baseUrl %q, got %v", qwenBaseURL(), provider["baseUrl"])

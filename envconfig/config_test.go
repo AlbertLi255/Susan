@@ -17,23 +17,23 @@ func TestHost(t *testing.T) {
 		value  string
 		expect string
 	}{
-		"empty":               {"", "http://127.0.0.1:11434"},
-		"only address":        {"1.2.3.4", "http://1.2.3.4:11434"},
+		"empty":               {"", "http://0.0.0.0:14343"},
+		"only address":        {"1.2.3.4", "http://1.2.3.4:14343"},
 		"only port":           {":1234", "http://:1234"},
 		"address and port":    {"1.2.3.4:1234", "http://1.2.3.4:1234"},
-		"hostname":            {"example.com", "http://example.com:11434"},
+		"hostname":            {"example.com", "http://example.com:14343"},
 		"hostname and port":   {"example.com:1234", "http://example.com:1234"},
 		"zero port":           {":0", "http://:0"},
-		"too large port":      {":66000", "http://:11434"},
-		"too small port":      {":-1", "http://:11434"},
-		"ipv6 localhost":      {"[::1]", "http://[::1]:11434"},
-		"ipv6 world open":     {"[::]", "http://[::]:11434"},
-		"ipv6 no brackets":    {"::1", "http://[::1]:11434"},
+		"too large port":      {":66000", "http://:14343"},
+		"too small port":      {":-1", "http://:14343"},
+		"ipv6 localhost":      {"[::1]", "http://[::1]:14343"},
+		"ipv6 world open":     {"[::]", "http://[::]:14343"},
+		"ipv6 no brackets":    {"::1", "http://[::1]:14343"},
 		"ipv6 + port":         {"[::1]:1337", "http://[::1]:1337"},
-		"extra space":         {" 1.2.3.4 ", "http://1.2.3.4:11434"},
-		"extra quotes":        {"\"1.2.3.4\"", "http://1.2.3.4:11434"},
-		"extra space+quotes":  {" \" 1.2.3.4 \" ", "http://1.2.3.4:11434"},
-		"extra single quotes": {"'1.2.3.4'", "http://1.2.3.4:11434"},
+		"extra space":         {" 1.2.3.4 ", "http://1.2.3.4:14343"},
+		"extra quotes":        {"\"1.2.3.4\"", "http://1.2.3.4:14343"},
+		"extra space+quotes":  {" \" 1.2.3.4 \" ", "http://1.2.3.4:14343"},
+		"extra single quotes": {"'1.2.3.4'", "http://1.2.3.4:14343"},
 		"http":                {"http://1.2.3.4", "http://1.2.3.4:80"},
 		"http port":           {"http://1.2.3.4:4321", "http://1.2.3.4:4321"},
 		"https":               {"https://1.2.3.4", "https://1.2.3.4:443"},
@@ -57,18 +57,18 @@ func TestConnectableHost(t *testing.T) {
 		value  string
 		expect string
 	}{
-		"empty":                    {"", "http://127.0.0.1:11434"},
-		"localhost":                {"127.0.0.1", "http://127.0.0.1:11434"},
+		"empty":                    {"", "http://127.0.0.1:14343"},
+		"localhost":                {"127.0.0.1", "http://127.0.0.1:14343"},
 		"localhost and port":       {"127.0.0.1:1234", "http://127.0.0.1:1234"},
-		"ipv4 unspecified":         {"0.0.0.0", "http://127.0.0.1:11434"},
+		"ipv4 unspecified":         {"0.0.0.0", "http://127.0.0.1:14343"},
 		"ipv4 unspecified + port":  {"0.0.0.0:1234", "http://127.0.0.1:1234"},
-		"ipv6 unspecified":         {"[::]", "http://[::1]:11434"},
+		"ipv6 unspecified":         {"[::]", "http://[::1]:14343"},
 		"ipv6 unspecified + port":  {"[::]:1234", "http://[::1]:1234"},
-		"ipv6 localhost":           {"[::1]", "http://[::1]:11434"},
+		"ipv6 localhost":           {"[::1]", "http://[::1]:14343"},
 		"ipv6 localhost + port":    {"[::1]:1234", "http://[::1]:1234"},
-		"specific address":         {"192.168.1.5", "http://192.168.1.5:11434"},
+		"specific address":         {"192.168.1.5", "http://192.168.1.5:14343"},
 		"specific address + port":  {"192.168.1.5:8080", "http://192.168.1.5:8080"},
-		"hostname":                 {"example.com", "http://example.com:11434"},
+		"hostname":                 {"example.com", "http://example.com:14343"},
 		"hostname and port":        {"example.com:1234", "http://example.com:1234"},
 		"https unspecified + port": {"https://0.0.0.0:4321", "https://127.0.0.1:4321"},
 	}
@@ -209,17 +209,17 @@ func TestUint(t *testing.T) {
 		"1":    1,
 		"1337": 1337,
 		// default values
-		"":       11434,
-		"-1":     11434,
-		"0o10":   11434,
-		"0x10":   11434,
-		"string": 11434,
+		"":       14343,
+		"-1":     14343,
+		"0o10":   14343,
+		"0x10":   14343,
+		"string": 14343,
 	}
 
 	for k, v := range cases {
 		t.Run(k, func(t *testing.T) {
 			t.Setenv("OLLAMA_UINT", k)
-			if i := Uint("OLLAMA_UINT", 11434)(); i != v {
+			if i := Uint("OLLAMA_UINT", 14343)(); i != v {
 				t.Errorf("%s: expected %d, got %d", k, v, i)
 			}
 		})

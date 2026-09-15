@@ -179,7 +179,7 @@ func TestGetIntegrationStatuses(t *testing.T) {
 			t.Errorf("%s installed = %v, want %v", name, item.Installed, want)
 		}
 	}
-	if item, ok := byID["claude"]; !ok || item.Command != "ollama launch claude" {
+	if item, ok := byID["claude"]; !ok || item.Command != "susan launch claude" {
 		t.Fatal("Claude Code should follow Claude Desktop with its launch command")
 	}
 	if _, ok := byID["chatgpt"]; ok {
@@ -190,7 +190,7 @@ func TestGetIntegrationStatuses(t *testing.T) {
 		t.Fatalf("got %d integrations, want %d launcher entries", len(got), wantCount)
 	}
 	terminal := got[len(got)-1]
-	if terminal.ID != "terminal" || terminal.Installed != nil || terminal.Command != "ollama" {
+	if terminal.ID != "terminal" || terminal.Installed != nil || terminal.Command != "susan" {
 		t.Fatalf("last integration = %+v, want Terminal without install status", terminal)
 	}
 }

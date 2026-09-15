@@ -34,7 +34,7 @@ func configPath() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".ollama", "config.json"), nil
+	return filepath.Join(home, ".susan", "config.json"), nil
 }
 
 func legacyConfigPath() (string, error) {
@@ -42,10 +42,10 @@ func legacyConfigPath() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".ollama", "config", "config.json"), nil
+	return filepath.Join(home, ".susan", "config", "config.json"), nil
 }
 
-// migrateConfig moves the config from the legacy path to ~/.ollama/config.json
+// migrateConfig moves the config from the legacy path to ~/.susan/config.json
 func migrateConfig() (bool, error) {
 	oldPath, err := legacyConfigPath()
 	if err != nil {

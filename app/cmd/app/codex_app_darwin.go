@@ -306,7 +306,7 @@ func applyCodexDesktopModelsLocked(selected []string, restartConfirmed, openWhen
 			}
 		}
 		_ = config.SaveIntegration(codexDesktopIntegrationName, previous)
-		return fmt.Errorf("start ChatGPT with selected Ollama models: %w", err)
+		return fmt.Errorf("start ChatGPT with selected Susan models: %w", err)
 	} else {
 		applyErr := err
 		_ = config.SaveIntegration(codexDesktopIntegrationName, previous)
@@ -447,7 +447,7 @@ func loadCodexDesktopModelInventory(ctx context.Context) (codexDesktopModelInven
 	if len(last.Catalog) > 0 {
 		return last, nil
 	}
-	return codexDesktopModelInventory{}, errors.New("no Ollama models are available for ChatGPT")
+	return codexDesktopModelInventory{}, errors.New("no Susan models are available for ChatGPT")
 }
 
 func loadCodexDesktopRecommendations(ctx context.Context) ([]api.ModelRecommendation, error) {

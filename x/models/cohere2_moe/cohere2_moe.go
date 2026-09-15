@@ -538,7 +538,7 @@ func (m *Model) LoadWeights(tensors map[string]*mlx.Array) error {
 			upW := loadStackedExperts(tensors, cfg, useQuantizedExperts, layerPrefix, "up_proj")
 			downW := loadStackedExperts(tensors, cfg, useQuantizedExperts, layerPrefix, "down_proj")
 			if gateW == nil || upW == nil || downW == nil {
-				return fmt.Errorf("layer %d: missing stacked expert weights (import the model with `ollama create`)", i)
+				return fmt.Errorf("layer %d: missing stacked expert weights (import the model with `susan create`)", i)
 			}
 
 			switchMLP := &SwitchMLP{}

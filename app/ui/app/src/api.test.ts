@@ -54,7 +54,7 @@ describe("getIntegrationStatuses", () => {
             id: "opencode",
             name: "OpenCode",
             description: "Open-source coding agent",
-            command: "ollama launch opencode",
+            command: "susan launch opencode",
           },
         ]),
         { status: 200 },
@@ -73,7 +73,7 @@ describe("getIntegrationStatuses", () => {
         id: "opencode",
         name: "OpenCode",
         description: "Open-source coding agent",
-        command: "ollama launch opencode",
+        command: "susan launch opencode",
       },
     ]);
     expect(fetch).toHaveBeenCalledWith(

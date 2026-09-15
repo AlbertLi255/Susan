@@ -832,7 +832,7 @@ func TestGatewayDiscardsRefreshThatRacesWithModelUpdate(t *testing.T) {
 	release := make(chan struct{})
 	p, err := NewClaudeDesktop(ClaudeDesktopConfig{
 		ListenAddr: "127.0.0.1:0",
-		OllamaURL:  "http://127.0.0.1:11434",
+		OllamaURL:  "http://127.0.0.1:14343",
 		Model:      initial[0].OllamaModel,
 		Models:     initial,
 		RefreshModels: func(_ context.Context, current []ClaudeDesktopModel) ([]ClaudeDesktopModel, error) {
@@ -947,7 +947,7 @@ func TestGatewayContinuesTokenCountWhenSlotChangesDuringRefresh(t *testing.T) {
 	release := make(chan struct{})
 	p, err := NewClaudeDesktop(ClaudeDesktopConfig{
 		ListenAddr: "127.0.0.1:0",
-		OllamaURL:  "http://127.0.0.1:11434",
+		OllamaURL:  "http://127.0.0.1:14343",
 		Model:      initial[0].OllamaModel,
 		Models:     initial,
 		RefreshModels: func(_ context.Context, current []ClaudeDesktopModel) ([]ClaudeDesktopModel, error) {
@@ -1040,7 +1040,7 @@ func TestGatewayRoutesAdmittedRequestAfterSlotReassignment(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			p, err := NewClaudeDesktop(ClaudeDesktopConfig{
 				ListenAddr: "127.0.0.1:0",
-				OllamaURL:  "http://127.0.0.1:11434",
+				OllamaURL:  "http://127.0.0.1:14343",
 				Model:      tt.initial[0].OllamaModel,
 				Models:     tt.initial,
 			})

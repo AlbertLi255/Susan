@@ -1644,7 +1644,7 @@ func TestCodexDesktopRecordsMidstreamAbortWithoutPanicking(t *testing.T) {
 	activityLogPath := filepath.Join(t.TempDir(), "codex-proxy.log")
 	streamErr := errors.New("upstream stream failed")
 	handler, err := NewCodexDesktop(CodexDesktopConfig{
-		OllamaURL:          "http://127.0.0.1:11434",
+		OllamaURL:          "http://127.0.0.1:14343",
 		ChatGPTURL:         "https://chatgpt.com/backend-api/codex",
 		RoutingCatalogPath: writeCatalog(t, "glm-5.3-flash:cloud"),
 		ActivityLogPath:    activityLogPath,
@@ -1704,7 +1704,7 @@ func TestCodexDesktopRecordsMidstreamAbortWithoutPanicking(t *testing.T) {
 func TestCodexDesktopRecordsClientCanceledStream(t *testing.T) {
 	activityLogPath := filepath.Join(t.TempDir(), "codex-proxy.log")
 	handler, err := NewCodexDesktop(CodexDesktopConfig{
-		OllamaURL:          "http://127.0.0.1:11434",
+		OllamaURL:          "http://127.0.0.1:14343",
 		ChatGPTURL:         "https://chatgpt.com/backend-api/codex",
 		RoutingCatalogPath: writeCatalog(t, "glm-5.3-flash:cloud"),
 		ActivityLogPath:    activityLogPath,
@@ -1752,7 +1752,7 @@ func TestCodexDesktopRecordsClientCanceledStream(t *testing.T) {
 }
 
 func TestCodexDesktopRejectsNonLoopbackClients(t *testing.T) {
-	handler := newTestCodexDesktop(t, "http://127.0.0.1:11434", "https://chatgpt.com/backend-api/codex", writeCatalog(t, "glm"))
+	handler := newTestCodexDesktop(t, "http://127.0.0.1:14343", "https://chatgpt.com/backend-api/codex", writeCatalog(t, "glm"))
 	req := httptest.NewRequest(http.MethodGet, "http://example.test"+CodexDesktopPathPrefix+"/_health", nil)
 	req.RemoteAddr = "192.0.2.10:1234"
 	recorder := httptest.NewRecorder()
@@ -1764,7 +1764,7 @@ func TestCodexDesktopRejectsNonLoopbackClients(t *testing.T) {
 }
 
 func TestCodexDesktopFailsClosedWhenCatalogIsMissing(t *testing.T) {
-	handler := newTestCodexDesktop(t, "http://127.0.0.1:11434", "https://chatgpt.com/backend-api/codex", filepath.Join(t.TempDir(), "missing.json"))
+	handler := newTestCodexDesktop(t, "http://127.0.0.1:14343", "https://chatgpt.com/backend-api/codex", filepath.Join(t.TempDir(), "missing.json"))
 	req := httptest.NewRequest(http.MethodPost, "http://localhost"+CodexDesktopPathPrefix+"/v1/responses", strings.NewReader(`{"model":"glm"}`))
 	req.RemoteAddr = "127.0.0.1:1234"
 	recorder := httptest.NewRecorder()

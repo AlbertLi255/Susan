@@ -4,7 +4,7 @@ title: Windows
 
 Susan runs as a native Windows application, including NVIDIA and AMD Radeon GPU support.
 After installing Susan for Windows, Susan will run in the background and
-the `ollama` command line is available in `cmd`, `powershell` or your favorite
+the `susan` command line is available in `cmd`, `powershell` or your favorite
 terminal application. As usual the Susan [API](/api) will be served on
 `http://localhost:14343`.
 
@@ -68,7 +68,7 @@ the explorer window by hitting `<Ctrl>+R` and type in:
   - _server.log_ contains the most recent server logs
   - _upgrade.log_ contains log output for upgrades
 - `explorer %LOCALAPPDATA%\Programs\Susan` contains the binaries (The installer adds this to your user PATH)
-- `explorer %HOMEPATH%\.ollama` contains models and configuration
+- `explorer %HOMEPATH%\.susan` contains models and configuration
 - `explorer %TEMP%` contains temporary executable files in one or more `ollama*` directories
 
 ## Uninstall
@@ -95,7 +95,7 @@ need to download and extract additional packages into the same directory:
 - **MLX (CUDA)**: `ollama-windows-amd64-mlx.zip`
 
 This allows for embedding Susan in existing applications, or
-running it as a system service via `ollama serve` with tools such as
+running it as a system service via `susan serve` with tools such as
 [NSSM](https://nssm.cc/).
 
 <Note>

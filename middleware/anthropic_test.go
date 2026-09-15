@@ -1801,7 +1801,7 @@ func TestWebSearchCloudModelGating(t *testing.T) {
 		if err := json.Unmarshal(resp.Body.Bytes(), &errResp); err != nil {
 			t.Fatalf("failed to parse error response: %v", err)
 		}
-		if !strings.Contains(errResp.Error.Message, "ollama cloud is disabled") {
+		if !strings.Contains(errResp.Error.Message, "susan cloud is disabled") {
 			t.Fatalf("expected cloud disabled error, got: %q", errResp.Error.Message)
 		}
 	})

@@ -36,7 +36,7 @@ func TestServerCmd(t *testing.T) {
 	var defaultModels string
 	home, err := os.UserHomeDir()
 	if err == nil {
-		defaultModels = filepath.Join(home, ".ollama", "models")
+		defaultModels = filepath.Join(home, ".susan", "models")
 		os.MkdirAll(defaultModels, 0o755)
 	}
 
@@ -172,7 +172,7 @@ func TestServerCmdCloudSettingEnv(t *testing.T) {
 			t.Setenv("OLLAMA_NO_CLOUD", tt.envValue)
 
 			if tt.configContent != "" {
-				configDir := filepath.Join(tmpHome, ".ollama")
+				configDir := filepath.Join(tmpHome, ".susan")
 				if err := os.MkdirAll(configDir, 0o755); err != nil {
 					t.Fatalf("mkdir config dir: %v", err)
 				}

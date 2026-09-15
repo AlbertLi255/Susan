@@ -42,7 +42,7 @@ import {
   type ReactNode,
 } from "react";
 
-export const FIRST_MODEL_COMMAND = "ollama";
+export const FIRST_MODEL_COMMAND = "susan";
 
 type ClaudeConnectPhase =
   | "idle"

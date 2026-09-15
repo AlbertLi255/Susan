@@ -187,15 +187,134 @@
 - A3：`ollama` CLI → `susan` CLI
 - 端口改造：11434 → 14343，默认监听 0.0.0.0（含测试文件联动）
 
-### 批次 3：模块路径 + 构建脚本 + 环境变量联动（最后做）
+### 批次 3：dev 环境启动链路 pre-existing bug 根治
+
+批次 2 验证期间在 dev 环境启动链路上发现两个 pre-existing bug，都会阻塞用户首次启动体验，集中在本批次修复。两项均为原 ollama 代码遗留问题，批次 2 仅替换品牌字符串，未动相关实现。
+
+#### 3.1 resolvePath Windows .exe 扩展名缺失
+- **背景**：dev 环境下 `dist/susan-app.exe` 无法自动 spawn `susan.exe serve` 子进程，导致 UI 起来后端口 14343 不绑定、API 不可用
+- **根因**：[app/server/server.go:54-84](file:///d:/projects/susanAssist/susanPlatform/Susan/app/server/server.go#L54-L84) 的 `resolvePath(name)` 在 Windows 上用 `os.Stat(filepath.Join(dir, name))` 检查（`name="susan"`，无 `.exe` 后缀）；Windows 不像 POSIX 自动补 `.exe`，三步查找全部 miss，最后返回字面量 `"susan"`，`exec.Command("susan", "serve")` 失败
+- **确认方式**：原 ollama 代码逻辑结构一致，批次 2 只替换字符串 `"ollama"` → `"susan"`，未动 `resolvePath` 实现；正式安装版靠 Inno Setup 把 `susan.exe` 装入 `C:\Program Files\Susan\` 并加 PATH，走 `exec.LookPath` 兜底才能跑
+- **修复内容**：采用"双候选查找"写法，Windows 上同时尝试 `name` 和 `name+".exe"`（仅当 `filepath.Ext(name) == ""` 才追加，避免 `susan.exe` → `susan.exe.exe`）。具体实现：
+
+  ```go
+  func resolvePath(name string) string {
+      candidates := []string{name}
+      if runtime.GOOS == "windows" && filepath.Ext(name) == "" {
+          candidates = append(candidates, name+".exe")
+      }
+      tryCandidates := func(dir string) string {
+          for _, c := range candidates {
+              if _, err := os.Stat(filepath.Join(dir, c)); err == nil {
+                  return filepath.Join(dir, c)
+              }
+          }
+          return ""
+      }
+
+      if exe, _ := os.Executable(); exe != "" {
+          var dir string
+          if runtime.GOOS == "windows" {
+              dir = filepath.Dir(exe)
+          } else {
+              dir = filepath.Join(filepath.Dir(exe), "..", "Resources")
+          }
+          if p := tryCandidates(dir); p != "" {
+              return p
+          }
+      }
+
+      for _, dir := range []string{
+          filepath.Join("dist", runtime.GOOS),
+          filepath.Join("dist", runtime.GOOS+"-"+runtime.GOARCH),
+      } {
+          if p := tryCandidates(dir); p != "" {
+              return p
+          }
+      }
+
+      if p, _ := exec.LookPath(name); p != "" {
+          return p
+      }
+
+      return name
+  }
+  ```
+
+- **设计要点**（避开 3 个边角问题）：
+  - 用 `filepath.Ext(name) == ""` 门控，**不无条件追加** `.exe`，避免未来调用方传入 `susan.exe` 变成 `susan.exe.exe`
+  - Step 3 `exec.LookPath` 保持不变：Windows 上 Go 的 LookPath 自动按 PATHEXT 尝试 `.exe`/`.com`/`.bat`，无需改
+  - 优先匹配无扩展名的 `name`（保留原行为），找不到才试 `name+".exe"`，向后兼容
+  - macOS/Linux 不进 Windows 分支，零影响
+- **联动检查**：`ollamaServeArgs`（[server.go:64-69](file:///d:/projects/susanAssist/susanPlatform/Susan/app/server/server.go#L64-L69)）已 `switch "susan", "susan.exe"` 双形式接受；`server_windows.go` 中 `wmic ... name='susan.exe'` 是查询字符串与 resolvePath 无关，无需改
+- **验证标准**：dev 环境下 `./dist/susan-app.exe` 启动后，端口 14343 自动绑定，`http://127.0.0.1:14343/` 返回 `Susan is running`，无需手动 `susan.exe serve`
+- **关联代码**：[app/server/server.go](file:///d:/projects/susanAssist/susanPlatform/Susan/app/server/server.go)、[app/server/server_windows.go](file:///d:/projects/susanAssist/susanPlatform/Susan/app/server/server_windows.go)
+
+#### 3.2 useHealth 失败后不轮询导致永久 Loading
+- **背景**：批次 2 验证期间遇到一次蓝屏重启，Windows 自启的 susan-app 实例因用户级 `OLLAMA_HOST=http://localhost:11434` 遗留连不上 server，UI 健康检查失败后**永久卡在 "Loading..."**，即使 server 后来在 14343 端口恢复也不会自愈，必须手动重启窗口
+- **根因**：[app/ui/app/src/hooks/useHealth.ts:8-12](file:///d:/projects/susanAssist/susanPlatform/Susan/app/ui/app/src/hooks/useHealth.ts#L8-L12) 的轮询条件有逻辑 bug：
+  ```ts
+  refetchInterval: (query) => {
+    return query.state.data === false ? 10 : false;
+  },
+  retry: false,
+  ```
+  请求**失败**时 react-query 的 `query.state.data` 是 `undefined`（不是 `false`），所以 `data === false` 永远不成立 → `refetchInterval` 返回 `false` → 失败后停止轮询。结果：启动那一刻没连上 server，就永久卡死，即使 server 后来恢复也不重试
+- **确认方式**：原 ollama 代码即如此，与批次 2 改造无关；批次 2 验证期间通过截图确认修复后窗口恢复正常，反向证明根因正确
+- **修复内容**：把轮询条件改为"非 true 就重试"，例如：
+  ```ts
+  refetchInterval: (query) => {
+    return query.state.data !== true ? 1000 : false;
+  },
+  retry: true,
+  ```
+  让 `undefined`（失败）和 `false`（明确不健康）两种状态都能持续重试，server 恢复后自动恢复
+- **验证标准**：
+  - 启动 susan-app 时 server 未就绪，UI 显示 "Loading..."，启动 server 后**无需重启窗口**，1 秒内自动恢复为 "Select a model"
+  - 模拟 server 中途 kill，UI 应每秒重试，server 重启后自动恢复
+- **关联代码**：[app/ui/app/src/hooks/useHealth.ts](file:///d:/projects/susanAssist/susanPlatform/Susan/app/ui/app/src/hooks/useHealth.ts)、[app/ui/app/src/components/ModelPicker.tsx](file:///d:/projects/susanAssist/susanPlatform/Susan/app/ui/app/src/components/ModelPicker.tsx#L167-L169)（消费 `isDisabled` 显示 Loading 文案）
+
+### 批次 4：模块路径 + 构建脚本 + 环境变量联动（最后做）
 - A1：go.mod + 全仓 import 路径替换
 - G：构建脚本产物名、iss、install.ps1、Dockerfile、CI 联动
 - I：环境变量前缀 OLLAMA_ → SUSAN_
 
-### 批次 4：Cloud 后端
+### 批次 5：Cloud 后端
 - D1-D3：cloud_proxy.go URL 替换
 - H4：自建云推理代理服务
 
-### 批次 5：官网 + Model Hub（新仓库 susan_web）
+### 批次 6：官网 + Model Hub（新仓库 susan_web）
 - H1、H2、H5、H6
 - H3 Registry 后端延后（先用 ollama registry）
+
+---
+
+## 已知 Pre-existing 技术债（批次 2 验证期间发现，非本次改动引入）
+
+下列两项问题在批次 2 测试联动阶段暴露，经 `git stash` 回到批次 2 之前的 HEAD 重跑同一用例复现相同错误，确认是**批次 2 之前就存在的 bug**，与品牌改造（数据目录改名 / CLI 改名 / 端口改造）无关，留待后续单独修复。批次 2 不处理，以避免越界改动无关代码。
+
+| 编号 | 测试用例 | 现象 | 根因摘要 | 建议修复方向 |
+|---|---|---|---|---|
+| P1 | `TestCodexAppManagedAuthLifecycle` | `auth mode = 666, want 600` | Windows 文件系统不实现 POSIX 权限位，`os.Chmod(path, 0o600)` 为 no-op，`os.Stat().Mode()` 返回默认 `0666` | 测试内对 `runtime.GOOS == "windows"` 做 skip 或调整断言；或改用平台感知的权限校验（Windows 走 ACL，POSIX 走 mode） |
+| P2 | `app/ui/app/src/components/__tests__/Onboarding.test.tsx`（5 个用例） | `expected '<main...' to contain 'Use Susan models in Claude Desktop'`、`No apps found` | 测试渲染 Onboarding 组件时 `apps` 数组为空，相关分支未渲染；组件 mock 上下文/数据源缺失 | 在测试 setup 中补齐 `apps` mock 数据；或调整组件默认值，使无 apps 时也能渲染兜底文案 |
+
+### P1 Windows 不支持 POSIX 文件权限位
+
+- **测试用例**：`TestCodexAppManagedAuthLifecycle`
+- **现象**：断言失败 `auth mode = 666, want 600`
+- **根因**：
+  - 测试期望私钥文件 `~/.susan/id_ed25519` 的权限位是 `0o600`
+  - 代码通过 `os.Chmod(path, 0o600)` 设置权限，但 Windows 文件系统不实现 POSIX 权限位，该调用为 no-op
+  - Windows 上 `os.Stat().Mode()` 返回默认 `0666`，断言恒为 `666 != 600`
+- **关联代码**：[auth/auth.go](file:///d:/projects/susanAssist/susanPlatform/Susan/auth/auth.go)（私钥写入与 chmod）
+
+### P2 前端 Onboarding 组件测试 mock 缺失
+
+- **测试用例**：`app/ui/app/src/components/__tests__/Onboarding.test.tsx`（共 5 个用例）
+- **现象**：
+  - `expected '<main...' to contain 'Use Susan models in Claude Desktop'`
+  - `No apps found`
+- **根因**：
+  - 测试渲染 Onboarding 组件时 `apps` 数组为空，导致相关分支未渲染
+  - 是组件 mock 上下文/数据源缺失，与品牌字符串替换（`ollama` → `susan`）无关
+- **关联代码**：[app/ui/app/src/components/Onboarding.tsx](file:///d:/projects/susanAssist/susanPlatform/Susan/app/ui/app/src/components/Onboarding.tsx)

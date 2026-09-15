@@ -83,14 +83,14 @@ describe("Onboarding", () => {
               id: "claude",
               name: "Claude Code",
               description: "Anthropic's coding tool with subagents",
-              command: "ollama launch claude",
+              command: "susan launch claude",
             },
             {
               id: "chatgpt",
               name: "ChatGPT",
               description: "Use Susan models in ChatGPT",
               installed: true,
-              command: "ollama launch chatgpt",
+              command: "susan launch chatgpt",
             },
           ]}
         />,
@@ -99,9 +99,9 @@ describe("Onboarding", () => {
       expect(html).not.toContain('id="desktop-heading"');
       expect(html).not.toContain("Use Susan models in Claude Desktop");
       expect(html).not.toContain("Use Susan models in ChatGPT");
-      expect(html).not.toContain("ollama launch chatgpt");
+      expect(html).not.toContain("susan launch chatgpt");
       expect(html).toContain('id="terminal-heading"');
-      expect(html).toContain("ollama launch claude");
+      expect(html).toContain("susan launch claude");
     } finally {
       vi.unstubAllGlobals();
     }
@@ -500,7 +500,7 @@ describe("Onboarding", () => {
         description: "Anthropic's coding tool with subagents",
         installed: true,
         action: "copy",
-        command: "ollama launch claude",
+        command: "susan launch claude",
       },
       {
         id: "codex",
@@ -508,7 +508,7 @@ describe("Onboarding", () => {
         description: "OpenAI's open-source coding agent",
         installed: true,
         action: "copy",
-        command: "ollama launch codex",
+        command: "susan launch codex",
       },
       {
         id: "openclaw",
@@ -516,7 +516,7 @@ describe("Onboarding", () => {
         description: "Personal AI with 100+ skills",
         installed: true,
         action: "copy",
-        command: "ollama launch openclaw",
+        command: "susan launch openclaw",
       },
       {
         id: "opencode",
@@ -524,7 +524,7 @@ describe("Onboarding", () => {
         description: "Anomaly's open-source coding agent",
         installed: false,
         action: "copy",
-        command: "ollama launch opencode",
+        command: "susan launch opencode",
       },
       {
         id: "droid",
@@ -532,7 +532,7 @@ describe("Onboarding", () => {
         description: "AI software engineering agent",
         installed: false,
         action: "copy",
-        command: "ollama launch droid",
+        command: "susan launch droid",
       },
       {
         id: "dsh",
@@ -540,7 +540,7 @@ describe("Onboarding", () => {
         description: "DeepSeek's open-source agent harness",
         installed: false,
         action: "copy",
-        command: "ollama launch dsh",
+        command: "susan launch dsh",
       },
       {
         id: "cline",
@@ -548,14 +548,14 @@ describe("Onboarding", () => {
         description: "Autonomous coding agent",
         installed: false,
         action: "copy",
-        command: "ollama launch cline",
+        command: "susan launch cline",
       },
       {
         id: "terminal",
         name: "Terminal",
         description: "Run local models from your terminal",
         action: "copy",
-        command: "ollama",
+        command: "susan",
       },
     ];
     const html = renderToStaticMarkup(
@@ -584,7 +584,7 @@ describe("Onboarding", () => {
       html.indexOf("Use Susan models in Claude Desktop"),
     );
     expect(html).not.toContain(">Command</th>");
-    expect(html).toContain("ollama launch claude");
+    expect(html).toContain("susan launch claude");
     expect(html).not.toContain("Installed");
     expect(html).toContain("Use Susan models in ChatGPT");
     expect(html).toContain('aria-label="Connect Claude"');
@@ -640,7 +640,7 @@ describe("Onboarding", () => {
             id: "codex",
             name: "Codex CLI",
             description: "OpenAI's coding agent",
-            command: "ollama launch codex",
+            command: "susan launch codex",
           },
         ]}
         initialCodexStatus={{
@@ -689,7 +689,7 @@ describe("Onboarding", () => {
             description: "OpenAI's open-source coding agent",
             installed: true,
             action: "copy",
-            command: "ollama launch codex",
+            command: "susan launch codex",
           },
         ]}
       />,
@@ -830,28 +830,28 @@ describe("Onboarding", () => {
             name: "Cline",
             description: "Autonomous coding agent",
             action: "copy",
-            command: "ollama launch cline",
+            command: "susan launch cline",
           },
           {
             id: "omp",
             name: "Oh My Pi",
             description: "AI coding agent",
             action: "copy",
-            command: "ollama launch omp",
+            command: "susan launch omp",
           },
           {
             id: "pool",
             name: "Poolside",
             description: "Poolside's coding agent",
             action: "copy",
-            command: "ollama launch pool",
+            command: "susan launch pool",
           },
           {
             id: "qwen",
             name: "Qwen Code",
             description: "Qwen's coding agent",
             action: "copy",
-            command: "ollama launch qwen",
+            command: "susan launch qwen",
           },
         ]}
       />,

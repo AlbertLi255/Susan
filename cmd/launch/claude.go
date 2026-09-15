@@ -66,7 +66,7 @@ func (c *Claude) Run(model string, _ []LaunchModel, args []string) error {
 
 func (c *Claude) envVars(model string) []string {
 	env := []string{
-		"ANTHROPIC_BASE_URL=" + envconfig.Host().String(),
+		"ANTHROPIC_BASE_URL=" + envconfig.ConnectableHost().String(),
 		"ANTHROPIC_API_KEY=",
 		"ANTHROPIC_AUTH_TOKEN=ollama",
 		"CLAUDE_CODE_ATTRIBUTION_HEADER=0",
@@ -124,7 +124,7 @@ func checkClaudeInstallerDependencies() error {
 	switch runtime.GOOS {
 	case "windows":
 		if _, err := exec.LookPath("powershell"); err != nil {
-			return fmt.Errorf("claude is not installed and required dependencies are missing\n\nInstall the following first:\n  PowerShell: https://learn.microsoft.com/powershell/\n\nThen re-run:\n  ollama launch claude")
+			return fmt.Errorf("claude is not installed and required dependencies are missing\n\nInstall the following first:\n  PowerShell: https://learn.microsoft.com/powershell/\n\nThen re-run:\n  susan launch claude")
 		}
 	default:
 		var missing []string
@@ -135,7 +135,7 @@ func checkClaudeInstallerDependencies() error {
 			missing = append(missing, "bash: https://www.gnu.org/software/bash/")
 		}
 		if len(missing) > 0 {
-			return fmt.Errorf("claude is not installed and required dependencies are missing\n\nInstall the following first:\n  %s\n\nThen re-run:\n  ollama launch claude", strings.Join(missing, "\n  "))
+			return fmt.Errorf("claude is not installed and required dependencies are missing\n\nInstall the following first:\n  %s\n\nThen re-run:\n  susan launch claude", strings.Join(missing, "\n  "))
 		}
 	}
 	return nil

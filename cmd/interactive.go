@@ -83,7 +83,7 @@ func generateInteractive(cmd *cobra.Command, opts runOptions) error {
 		fmt.Fprintln(os.Stderr, "  Ctrl + l            Clear the screen")
 		fmt.Fprintln(os.Stderr, "  Ctrl + g            Open default editor to compose a prompt")
 		fmt.Fprintln(os.Stderr, "  Ctrl + c            Stop the model from responding")
-		fmt.Fprintln(os.Stderr, "  Ctrl + d            Exit ollama (/bye)")
+		fmt.Fprintln(os.Stderr, "  Ctrl + d            Exit susan (/bye)")
 		fmt.Fprintln(os.Stderr, "")
 	}
 
@@ -216,7 +216,7 @@ func generateInteractive(cmd *cobra.Command, opts runOptions) error {
 
 			client, err := api.ClientFromEnvironment()
 			if err != nil {
-				fmt.Println("error: couldn't connect to ollama server")
+				fmt.Println("error: couldn't connect to susan server")
 				return err
 			}
 
@@ -260,7 +260,7 @@ func generateInteractive(cmd *cobra.Command, opts runOptions) error {
 
 			client, err := api.ClientFromEnvironment()
 			if err != nil {
-				fmt.Println("error: couldn't connect to ollama server")
+				fmt.Println("error: couldn't connect to susan server")
 				return err
 			}
 
@@ -409,7 +409,7 @@ func generateInteractive(cmd *cobra.Command, opts runOptions) error {
 			if len(args) > 1 {
 				client, err := api.ClientFromEnvironment()
 				if err != nil {
-					fmt.Println("error: couldn't connect to ollama server")
+					fmt.Println("error: couldn't connect to susan server")
 					return err
 				}
 				req := &api.ShowRequest{

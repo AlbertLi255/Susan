@@ -151,8 +151,8 @@ func TestNormalizePullName(t *testing.T) {
 		},
 		{
 			name:      "host port without tag keeps host port and appends cloud tag",
-			input:     "localhost:11434/library/foo:cloud",
-			wantName:  "localhost:11434/library/foo:cloud",
+			input:     "localhost:14343/library/foo:cloud",
+			wantName:  "localhost:14343/library/foo:cloud",
 			wantCloud: true,
 		},
 		{
