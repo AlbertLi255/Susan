@@ -1,0 +1,396 @@
+================================================================================
+Susan Windows 桌面 App：编译、构建、启动保姆级教程
+================================================================================
+
+适用环境：Windows 10/11，64 位
+教程依据：在仓库根目录
+          D:\projects\susanAssist\susanPlatform\Susan
+          实际执行过的一次完整流程（2026-09-15）。
+
+这份教程只讲「桌面窗口 App」，不是「susan serve 命令行服务」。
+两者入口不同，不要混用。
+
+
+--------------------------------------------------------------------------------
+0. 先分清三个入口（必读）
+--------------------------------------------------------------------------------
+
+  A. 桌面 App（本教程目标）
+     入口：仓库里的 Go 包  ./app/cmd/app
+     产物：dist\susan-app.exe
+     现象：系统托盘图标 + 聊天窗口（WebView）
+     启动后会自己再拉起一份 susan 服务进程。
+
+  B. 命令行 API 服务（不是窗口）
+     入口：仓库根目录  go run . serve
+           或          .\susan.exe serve
+           或          .\dist\susan.exe serve
+     现象：终端打日志，监听端口（默认 0.0.0.0:14343）
+     浏览器打开 http://127.0.0.1:14343 只会看到
+     「Susan is running」，那不是桌面 UI。
+
+  C. 终端 TUI 菜单（也不是桌面窗口）
+     入口：go run .     或     susan
+     （不带子命令）
+     现象：终端里的交互菜单。
+
+记住：要窗口，必须编并运行  app/cmd/app。
+
+
+--------------------------------------------------------------------------------
+1. 需要事先装好的工具
+--------------------------------------------------------------------------------
+
+打开 PowerShell，逐条检查。有输出就算装好了。
+
+  1.1 Go
+      go version
+      示例：go version go1.26.4 windows/amd64
+      没有的话：https://go.dev/dl/ 安装 Windows amd64 安装包。
+
+  1.2 Node.js 和 npm（编前端 UI 用）
+      node -v
+      npm -v
+      示例：v24.18.0    和    11.16.0
+      没有的话：https://nodejs.org/
+
+  1.3 C/C++ 编译器（桌面 App 用了 WebView，必须开 CGO）
+      gcc --version
+      g++ --version
+      本次实操用的是 Scoop 安装的 GCC：
+      C:\Users\albert\scoop\apps\gcc\current\bin\gcc.exe
+      g++.exe (GCC) 15.2.0
+
+      也可以用 Visual Studio 2022「使用 C++ 的桌面开发」里的 cl.exe。
+      若用 VS，请在「Developer PowerShell for VS 2022」里编译。
+
+  1.4 本次没有用到、但完整推理可能需要
+      CMake、Ninja、VS 2022、可选 CUDA/Vulkan。
+      只为了「先弹出窗口」，有 Go + Node + gcc/g++ 即可。
+      桌面 App 会去调用旁边的 susan.exe 做推理；
+      susan.exe 本身若是之前编好的，可以直接复用。
+
+
+--------------------------------------------------------------------------------
+2. 进入仓库根目录
+--------------------------------------------------------------------------------
+
+  cd D:\projects\susanAssist\susanPlatform\Susan
+
+后面所有相对路径都相对这个根目录。
+
+
+--------------------------------------------------------------------------------
+3. 第一步：编译前端 UI（生成可嵌入的 dist）
+--------------------------------------------------------------------------------
+
+桌面 App 的 Go 代码里有：
+
+  //go:embed app/dist
+  （文件位置：app\ui\app.go，相对 app\ui 包，实际目录是 app\ui\app\dist）
+
+没有这份前端产物，go build ./app/cmd/app 会失败或窗口空白。
+
+  3.1 进入前端目录
+
+      cd app\ui\app
+
+  3.2 安装依赖（第一次，或 package.json 变过时）
+
+      npm install
+
+      若 node_modules 已经存在，可以跳过。
+      本次实操时 node_modules 已在，直接进入下一步。
+
+  3.3 生产构建
+
+      npm run build
+
+      实际执行的是：
+      tsc -b && vite build
+
+  3.4 成功长什么样
+
+      终端最后类似：
+      ✓ built in 54.14s
+
+      生成目录：
+      D:\projects\susanAssist\susanPlatform\Susan\app\ui\app\dist
+      里面应有 index.html 和 assets\ 等文件。
+
+  3.5 回到仓库根目录
+
+      cd D:\projects\susanAssist\susanPlatform\Susan
+
+说明：
+  - 这是「把 React 打成静态文件，嵌进 exe」的路径。
+  - 开发热更新是另一条路：npm run dev + 桌面端加 --dev。
+    本教程按「编出 exe 再启动」记录，不走 --dev。
+
+
+--------------------------------------------------------------------------------
+4. 第二步：用 CGO 编译桌面 App
+--------------------------------------------------------------------------------
+
+必须在仓库根目录执行。
+
+  4.1 打开 CGO，并指定 gcc/g++（PowerShell）
+
+      $env:CGO_ENABLED = "1"
+      $env:CC = "gcc"
+      $env:CXX = "g++"
+
+  4.2 确保输出目录存在
+
+      New-Item -ItemType Directory -Force -Path dist | Out-Null
+
+  4.3 编译
+
+      go build -trimpath -o dist\susan-app.exe ./app/cmd/app/
+
+      第一次会下载 Go 模块，可能要一两分钟。
+      本次实操大约 2 分钟量级，产物约 42 MB。
+
+  4.4 确认产物
+
+      Get-Item dist\susan-app.exe | Format-Table Name,Length,LastWriteTime
+
+      示例：
+      Name            Length     LastWriteTime
+      susan-app.exe   42783189   2026/9/15 16:11:57
+
+说明：
+  - 官方安装包脚本 scripts\build_windows.ps1 会再加
+    -H windowsgui（没有控制台窗口）和 ldflags 版本号。
+  - 本次为了方便看日志，没有加 -H windowsgui。
+    所以启动时同一个终端里会打印日志，同时弹出/托盘运行 App。
+  - 不要用  go run .  来编桌面端，那是 CLI。
+
+
+--------------------------------------------------------------------------------
+5. 第三步：保证旁边有 susan.exe（App 会拉起它当服务）
+--------------------------------------------------------------------------------
+
+桌面 App 内部会找名为 susan 的可执行文件，然后执行：
+
+      susan serve
+
+查找顺序（简化）：
+  1) 和 susan-app.exe 同一目录下的 susan
+  2) dist\windows\susan 等开发路径
+  3) PATH 里的 susan.exe
+
+本次实操时 dist 目录里已经有：
+
+      dist\susan.exe     （约 76 MB，此前编过的 CLI）
+      dist\susan-app.exe （刚编的桌面端）
+
+如果你没有 susan.exe，先在仓库根目录编一份 CLI：
+
+      go build -o dist\susan.exe .
+
+完整带 GPU 的 susan.exe 需要 CMake 原生库，见 product\recordGouJian.md。
+只验证窗口时，现有的 dist\susan.exe 即可。
+
+
+--------------------------------------------------------------------------------
+6. 第四步：启动桌面 App
+--------------------------------------------------------------------------------
+
+仍在仓库根目录。
+
+  6.1 建议先看有没有旧进程占着
+
+      Get-Process susan*, "susan app" -ErrorAction SilentlyContinue
+
+      本次启动前已经有一个：
+      susan  PID=13916  路径=...\dist\susan.exe
+
+      旧服务占着端口时，新 App 仍会开托盘/窗口，
+      但日志里可能出现：
+      susan server not ready, continuing anyway
+      timeout waiting for Susan server to be ready
+
+      若要干净启动，可先结束旧进程（注意会停掉你正在用的服务）：
+
+      Stop-Process -Name susan,susan-app -Force -ErrorAction SilentlyContinue
+
+  6.2 把 dist 放到 PATH 最前面，并打开调试日志
+
+      $env:PATH = (Resolve-Path dist).Path + ";" + $env:PATH
+      $env:OLLAMA_DEBUG = "1"
+
+      说明：环境变量名仍是 OLLAMA_DEBUG（批次 3 才会改成 SUSAN_*）。
+
+      若本机用户环境里设置了 OLLAMA_HOST（例如 localhost:11434），
+      健康检查会去连那个地址，容易和默认端口 14343 对不上。
+      需要时在当前窗口清空：
+
+      Remove-Item Env:OLLAMA_HOST -ErrorAction SilentlyContinue
+
+  6.3 启动
+
+      & ".\dist\susan-app.exe"
+
+      成功时日志里会看到类似：
+
+      starting Susan  app=...\Susan\dist  OS=Windows/...
+      initialized tools registry
+      starting susan server
+      starting ui server  port=65292
+      waiting for susan server to be ready
+
+      UI 服务端口是随机的（本次是 65292），不是 14343。
+      14343 是推理 API；65292 是桌面窗口里的 Web UI。
+
+  6.4 窗口怎么找
+
+      Windows 上窗口会先隐藏，等前端 JS 调用 ready 后再显示。
+      同时会在右下角托盘放图标。
+
+      若任务栏没有大窗口：
+      1) 看托盘（右下角 ^ 箭头）里的 Susan 图标，点击打开。
+      2) 任务管理器里应有 susan-app.exe。
+
+      本次实操：
+      susan-app.exe 已在运行（PID 示例 13632）。
+      因旧 susan.exe 仍在、以及服务就绪超时，
+      窗口可能先以托盘形式存在，需点托盘图标。
+
+
+--------------------------------------------------------------------------------
+7. 怎么确认它活着
+--------------------------------------------------------------------------------
+
+  7.1 进程
+
+      Get-Process susan-app -ErrorAction SilentlyContinue
+
+  7.2 桌面 UI 日志（本次启动打在启动它的那个终端里）
+      若以后用 -H windowsgui 编，控制台没有输出，可看：
+      代码里还有应用日志路径（Windows 上常见为用户目录下 .susan\logs）。
+      服务日志：
+      %LOCALAPPDATA%\Susan\server.log
+
+  7.3 推理 API（服务起来之后）
+
+      Invoke-WebRequest -Uri "http://127.0.0.1:14343/api/version" -Method GET
+
+      默认端口是 14343，不是旧 Ollama 的 11434。
+      如果设置了 OLLAMA_HOST，以环境变量为准。
+
+
+--------------------------------------------------------------------------------
+8. 怎么停
+--------------------------------------------------------------------------------
+
+  方法一：托盘图标右键 Quit。
+
+  方法二：PowerShell
+
+      Stop-Process -Name susan-app -Force -ErrorAction SilentlyContinue
+
+      若还要停掉它拉起的服务：
+
+      Stop-Process -Name susan -Force -ErrorAction SilentlyContinue
+
+  不要用 Ctrl+C 去停「别人终端里的 susan serve」，
+  除非你确认那个进程就是当前这次启动的。
+
+
+--------------------------------------------------------------------------------
+9. 一条龙命令（复制用）
+--------------------------------------------------------------------------------
+
+把下面整段贴进 PowerShell（已安装 Go / Node / gcc）。
+
+  cd D:\projects\susanAssist\susanPlatform\Susan
+
+  cd app\ui\app
+  npm install
+  npm run build
+  cd D:\projects\susanAssist\susanPlatform\Susan
+
+  $env:CGO_ENABLED = "1"
+  $env:CC = "gcc"
+  $env:CXX = "g++"
+  New-Item -ItemType Directory -Force -Path dist | Out-Null
+  go build -o dist\susan.exe .
+  go build -trimpath -o dist\susan-app.exe ./app/cmd/app/
+
+  Remove-Item Env:OLLAMA_HOST -ErrorAction SilentlyContinue
+  $env:PATH = (Resolve-Path dist).Path + ";" + $env:PATH
+  $env:OLLAMA_DEBUG = "1"
+  & ".\dist\susan-app.exe"
+
+
+--------------------------------------------------------------------------------
+10. 常见问题
+--------------------------------------------------------------------------------
+
+  Q：go run . serve 没有窗口？
+  A：正常。那是 API 服务。窗口必须 susan-app.exe / ./app/cmd/app。
+
+  Q：go build ./app/cmd/app 报 CGO / gcc / g++？
+  A：没装 C 编译器，或没设 CGO_ENABLED=1。
+     用 Scoop gcc，或改到 VS Developer PowerShell。
+
+  Q：embed / app/dist 找不到？
+  A：没跑 npm run build，或在错的目录跑的。
+     正确目录是 app\ui\app，产物是 app\ui\app\dist。
+
+  Q：日志 timeout waiting for Susan server？
+  A：端口被占用、OLLAMA_HOST 指错、或找不到 susan.exe。
+     先 Get-Process susan，再检查 dist\susan.exe 和 OLLAMA_HOST。
+     App 仍可能继续跑托盘，点图标看窗口。
+
+  Q：窗口一闪或一直看不见？
+  A：设计上先 hide，等页面 JS 调 ready 再 show。
+     点托盘图标。确认 susan-app 进程还在。
+
+  Q：弹出 Ollama 的更新提示？
+  A：更新检查 URL 仍指向 ollama.com，属于后续 Cloud/品牌批次，
+     不影响本次本地窗口是否能开。
+
+  Q：和已安装的 Ollama 冲突？
+  A：Ollama 默认 11434 和数据目录 Ollama；
+     Susan 默认 14343 和 %LOCALAPPDATA%\Susan。
+     一般可并存。不要把两个都指到同一端口。
+
+
+--------------------------------------------------------------------------------
+11. 和「开发模式热更新」的区别（可选）
+--------------------------------------------------------------------------------
+
+改前端时不想每次 npm run build，可以用：
+
+  终端 1：
+    cd app\ui\app
+    npm run dev
+    （Vite，端口 5173）
+
+  终端 2：
+    cd 仓库根目录
+    $env:CGO_ENABLED = "1"
+    go run ./app/cmd/app --dev
+
+  --dev 会去连 localhost:5173。
+  5173 没起来时，进程会直接退出并提示去跑 npm run dev。
+
+本教程记录的是「打进 exe 的生产嵌入」，不是 --dev。
+
+
+--------------------------------------------------------------------------------
+12. 本次实操摘要
+--------------------------------------------------------------------------------
+
+  检查：Go 1.26.4、Node v24.18.0、npm 11.16.0、g++ 15.2.0（Scoop GCC）
+  前端：在 app\ui\app 执行 npm run build，约 54 秒，成功
+  桌面：CGO_ENABLED=1 编译 ./app/cmd/app 到 dist\susan-app.exe，约 42 MB
+  CLI ：复用已有 dist\susan.exe，约 76 MB
+  启动：.\dist\susan-app.exe ，日志显示 starting ui server port=65292
+  注意：当时已有旧 susan.exe 在跑，出现过 server not ready 超时
+
+================================================================================
+完
+================================================================================
