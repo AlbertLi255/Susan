@@ -18,22 +18,22 @@ npm install -g @openai/codex
 ### Quick setup
 
 ```
-ollama launch codex
+susan launch codex
 ```
 
-When launched through `ollama launch codex`, Susan refreshes the model catalog
+When launched through `susan launch codex`, Susan refreshes the model catalog
 and uses a dedicated Codex profile for that session.
 
 To configure without launching:
 
 ```shell
-ollama launch codex --config
+susan launch codex --config
 ```
 
 To remove the Susan launch profile and generated model catalog:
 
 ```shell
-ollama launch codex --restore
+susan launch codex --restore
 ```
 
 ### Manual setup
@@ -80,7 +80,7 @@ codex --profile ollama-launch
 ## Web search
 
 Codex web-search requests sent through the Susan profile are executed by
-Susan for both local and cloud models. Sign in with `ollama signin` to use the
+Susan for both local and cloud models. Sign in with `susan signin` to use the
 web-search service.
 
 To disable web search for a Codex session:

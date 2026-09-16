@@ -1048,7 +1048,7 @@ func TestPiEdit(t *testing.T) {
 		existingConfig := `{
 			"providers": {
 				"ollama": {
-					"baseUrl": "http://localhost:11434/v1",
+					"baseUrl": "http://localhost:14343/v1",
 					"api": "openai-completions",
 					"apiKey": "ollama",
 					"models": [
@@ -1091,7 +1091,7 @@ func TestPiEdit(t *testing.T) {
 		existingConfig := `{
 			"providers": {
 				"ollama": {
-					"baseUrl": "http://localhost:11434/v1",
+					"baseUrl": "http://localhost:14343/v1",
 					"api": "openai-completions",
 					"apiKey": "ollama",
 					"models": [
@@ -1142,7 +1142,7 @@ func TestPiEdit(t *testing.T) {
 		existingConfig := `{
 			"providers": {
 				"ollama": {
-					"baseUrl": "http://localhost:11434/v1",
+					"baseUrl": "http://localhost:14343/v1",
 					"api": "openai-completions",
 					"apiKey": "ollama",
 					"models": [
@@ -1226,7 +1226,7 @@ func TestPiEdit(t *testing.T) {
 		existingConfig := `{
 			"providers": {
 				"ollama": {
-					"baseUrl": "http://localhost:11434/v1",
+					"baseUrl": "http://localhost:14343/v1",
 					"api": "openai-completions",
 					"apiKey": "ollama",
 					"models": [
@@ -1597,7 +1597,7 @@ func TestPiModels(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// OLLAMA_HOST defaults to 127.0.0.1:11434, which differs from the
+		// OLLAMA_HOST defaults to 127.0.0.1:14343, which differs from the
 		// baseUrl in the config, so Models() should return nil.
 		models := pi.Models()
 		if models != nil {

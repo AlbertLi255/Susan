@@ -43,7 +43,7 @@ func TestCodexProxyWebSocketUpgradeRequestsHTTPFallback(t *testing.T) {
 
 func TestCodexProxyRemainsLocalOnExposedOllamaListener(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	handler, err := (&Server{addr: &net.TCPAddr{IP: net.IPv4zero, Port: 11434}}).GenerateRoutes()
+	handler, err := (&Server{addr: &net.TCPAddr{IP: net.IPv4zero, Port: 14343}}).GenerateRoutes()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,7 +55,7 @@ func TestCodexProxyRemainsLocalOnExposedOllamaListener(t *testing.T) {
 		{path: "/", want: http.StatusOK},
 		{path: "/api/codex/_health", want: http.StatusForbidden},
 	} {
-		req := httptest.NewRequest(http.MethodGet, "http://192.0.2.1:11434"+tt.path, nil)
+		req := httptest.NewRequest(http.MethodGet, "http://192.0.2.1:14343"+tt.path, nil)
 		req.RemoteAddr = "192.0.2.10:1234"
 		recorder := httptest.NewRecorder()
 

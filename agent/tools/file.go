@@ -488,7 +488,7 @@ func writeFileAtomic(workingDir, path string, data []byte, perm os.FileMode) err
 	}
 
 	parent, name := filepath.Split(rel)
-	tmpBase := fmt.Sprintf(".%s.ollama-tmp-%d", name, os.Getpid())
+	tmpBase := fmt.Sprintf(".%s.susan-tmp-%d", name, os.Getpid())
 	for i := 0; ; i++ {
 		candidateName := tmpBase
 		if i > 0 {

@@ -20,7 +20,7 @@ Install the [Codex App](https://developers.openai.com/codex/quickstart/) for mac
 ## Quick setup
 
 ```shell
-ollama launch codex-app
+susan launch codex-app
 ```
 
 Once Codex App opens, start a task or open a repository as usual.
@@ -48,35 +48,35 @@ Use review mode to inspect code changes, leave comments, and iterate on fixes wi
 ### Run directly with a model
 
 ```shell
-ollama launch codex-app --model kimi-k2.6:cloud
+susan launch codex-app --model kimi-k2.6:cloud
 ```
 
 Use a local model by passing its model name:
 
 ```shell
-ollama launch codex-app --model gemma4:31b
+susan launch codex-app --model gemma4:31b
 ```
 
-Running `ollama launch codex-app` is persistent and will have your model selected next time you open Codex.
+Running `susan launch codex-app` is persistent and will have your model selected next time you open Codex.
 
 
 ### Restore Codex App
 
-To switch Codex App back to the profile you were using before `ollama launch codex-app`, run:
+To switch Codex App back to the profile you were using before `susan launch codex-app`, run:
 
 ```shell
-ollama launch codex-app --restore
+susan launch codex-app --restore
 ```
 
 Susan restores Codex App's settings and configs. If Codex App is open, Susan asks before restarting it.
 
 
-The Codex CLI profile managed by `ollama launch codex` is left separate from the Codex App profile.
+The Codex CLI profile managed by `susan launch codex` is left separate from the Codex App profile.
 
-Before overwriting Codex App config files, Susan Launch saves backups under `~/.ollama/backup/codex-app/`. On Windows, `~` resolves to your user profile directory.
+Before overwriting Codex App config files, Susan Launch saves backups under `~/.susan/backup/codex-app/`. On Windows, `~` resolves to your user profile directory.
 
 ## Troubleshooting
 
-If Codex App does not open after setup, open Codex manually once and run `ollama launch codex-app` again.
+If Codex App does not open after setup, open Codex manually once and run `susan launch codex-app` again.
 
-If Codex App is already running and does not switch models, allow Susan to restart it when prompted, or quit Codex App and run `ollama launch codex-app` again.
+If Codex App is already running and does not switch models, allow Susan to restart it when prompted, or quit Codex App and run `susan launch codex-app` again.

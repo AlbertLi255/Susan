@@ -316,7 +316,7 @@ func TestOMPFindPath(t *testing.T) {
 func TestOMPConfigureWithModelsWritesModelsYML(t *testing.T) {
 	home := t.TempDir()
 	setOMPTestHome(t, home)
-	t.Setenv("OLLAMA_HOST", "http://0.0.0.0:11434")
+	t.Setenv("OLLAMA_HOST", "http://0.0.0.0:14343")
 
 	o := &OMP{}
 	models := []LaunchModel{
@@ -342,7 +342,7 @@ func TestOMPConfigureWithModelsWritesModelsYML(t *testing.T) {
 
 	cfg := parseOMPConfigYAML(t, data)
 	provider := ompProviderFromYAML(t, cfg)
-	if provider["baseUrl"] != "http://127.0.0.1:11434/v1" {
+	if provider["baseUrl"] != "http://127.0.0.1:14343/v1" {
 		t.Fatalf("baseUrl = %v, want connectable OpenAI-compatible host", provider["baseUrl"])
 	}
 	if provider["api"] != "openai-responses" {
@@ -393,6 +393,7 @@ func TestOMPConfigureWithModelsWritesModelsYML(t *testing.T) {
 func TestOMPConfigureWithModelsPreservesExistingConfig(t *testing.T) {
 	home := t.TempDir()
 	setOMPTestHome(t, home)
+	t.Setenv("OLLAMA_HOST", "")
 
 	modelsPath := filepath.Join(home, ".omp", "agent", "models.yml")
 	if err := os.MkdirAll(filepath.Dir(modelsPath), 0o755); err != nil {
@@ -441,7 +442,7 @@ theme: monochrome
 	}
 
 	provider := ompProviderFromYAML(t, cfg)
-	if provider["baseUrl"] != "http://127.0.0.1:11434/v1" {
+	if provider["baseUrl"] != "http://127.0.0.1:14343/v1" {
 		t.Fatalf("baseUrl = %v, want repaired OpenAI-compatible host", provider["baseUrl"])
 	}
 
@@ -557,7 +558,7 @@ func TestOMPConfigureWithModelsRespectsPiCodingAgentDir(t *testing.T) {
 func TestOMPCurrentModelRequiresHealthyProvider(t *testing.T) {
 	home := t.TempDir()
 	setOMPTestHome(t, home)
-	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:11434")
+	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:14343")
 
 	modelsPath := filepath.Join(home, ".omp", "agent", "models.yml")
 	if err := os.MkdirAll(filepath.Dir(modelsPath), 0o755); err != nil {
@@ -580,7 +581,7 @@ func TestOMPCurrentModelRequiresHealthyProvider(t *testing.T) {
 		{
 			name: "wrong api",
 			provider: "" +
-				"    baseUrl: http://127.0.0.1:11434/v1\n" +
+				"    baseUrl: http://127.0.0.1:14343/v1\n" +
 				"    api: openai-chat\n" +
 				"    auth: none\n" +
 				"    discovery:\n" +
@@ -589,7 +590,7 @@ func TestOMPCurrentModelRequiresHealthyProvider(t *testing.T) {
 		{
 			name: "wrong auth",
 			provider: "" +
-				"    baseUrl: http://127.0.0.1:11434/v1\n" +
+				"    baseUrl: http://127.0.0.1:14343/v1\n" +
 				"    api: openai-responses\n" +
 				"    auth: api-key\n" +
 				"    discovery:\n" +
@@ -598,7 +599,7 @@ func TestOMPCurrentModelRequiresHealthyProvider(t *testing.T) {
 		{
 			name: "wrong discovery",
 			provider: "" +
-				"    baseUrl: http://127.0.0.1:11434/v1\n" +
+				"    baseUrl: http://127.0.0.1:14343/v1\n" +
 				"    api: openai-responses\n" +
 				"    auth: none\n" +
 				"    discovery:\n" +

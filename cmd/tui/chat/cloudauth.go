@@ -22,7 +22,7 @@ const (
 	cloudAuthChecking cloudAuthKind = "checking"
 )
 
-const cloudPlanVerificationUnavailable = "Could not verify Ollama plan. Try again in a moment or use a local model."
+const cloudPlanVerificationUnavailable = "Could not verify Susan plan. Try again in a moment or use a local model."
 
 // Sign-in/upgrade verification polling bounds. While the check is healthy but
 // the user hasn't signed in yet, polling stays prompt so completion is detected
@@ -392,7 +392,7 @@ func (m chatModel) renderCloudAuthPrompt(width int) string {
 		b.WriteString("\n\n")
 		b.WriteString(chatPickerMetaStyle.Render("esc cancel"))
 	case cloudAuthUpgrade:
-		fmt.Fprintf(&b, "To use %s, upgrade your Ollama plan.\n\n", chatPickerSelectedStyle.Render(p.modelName))
+		fmt.Fprintf(&b, "To use %s, upgrade your Susan plan.\n\n", chatPickerSelectedStyle.Render(p.modelName))
 		if !p.polling {
 			var yesBtn, noBtn string
 			if p.openNow {

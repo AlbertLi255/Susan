@@ -176,7 +176,7 @@ func TestValidateKimiPassthroughArgs_RejectsConflicts(t *testing.T) {
 }
 
 func TestBuildKimiInlineConfig(t *testing.T) {
-	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:11434")
+	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:14343")
 
 	cfg, err := buildKimiInlineConfig("llama3.2", 65536)
 	if err != nil {
@@ -203,8 +203,8 @@ func TestBuildKimiInlineConfig(t *testing.T) {
 	if ollamaProvider["type"] != "openai_legacy" {
 		t.Fatalf("provider type = %v, want openai_legacy", ollamaProvider["type"])
 	}
-	if ollamaProvider["base_url"] != "http://127.0.0.1:11434/v1" {
-		t.Fatalf("provider base_url = %v, want http://127.0.0.1:11434/v1", ollamaProvider["base_url"])
+	if ollamaProvider["base_url"] != "http://127.0.0.1:14343/v1" {
+		t.Fatalf("provider base_url = %v, want http://127.0.0.1:14343/v1", ollamaProvider["base_url"])
 	}
 	if ollamaProvider["api_key"] != "ollama" {
 		t.Fatalf("provider api_key = %v, want ollama", ollamaProvider["api_key"])
@@ -230,7 +230,7 @@ func TestBuildKimiInlineConfig(t *testing.T) {
 }
 
 func TestBuildKimiInlineConfig_UsesConnectableHostForUnspecifiedBind(t *testing.T) {
-	t.Setenv("OLLAMA_HOST", "http://0.0.0.0:11434")
+	t.Setenv("OLLAMA_HOST", "http://0.0.0.0:14343")
 
 	cfg, err := buildKimiInlineConfig("llama3.2", 65536)
 	if err != nil {
@@ -251,8 +251,8 @@ func TestBuildKimiInlineConfig_UsesConnectableHostForUnspecifiedBind(t *testing.
 	if !ok {
 		t.Fatalf("providers.ollama missing or wrong type: %T", providers["ollama"])
 	}
-	if got, _ := ollamaProvider["base_url"].(string); got != "http://127.0.0.1:11434/v1" {
-		t.Fatalf("provider base_url = %q, want %q", got, "http://127.0.0.1:11434/v1")
+	if got, _ := ollamaProvider["base_url"].(string); got != "http://127.0.0.1:14343/v1" {
+		t.Fatalf("provider base_url = %q, want %q", got, "http://127.0.0.1:14343/v1")
 	}
 }
 

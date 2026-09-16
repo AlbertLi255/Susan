@@ -27,13 +27,13 @@ Change the slider in the Susan app under settings to your desired context length
 ### CLI
 If editing the context length for Susan is not possible, the context length can also be updated when serving Susan.  
 ```
-OLLAMA_CONTEXT_LENGTH=64000 ollama serve
+OLLAMA_CONTEXT_LENGTH=64000 susan serve
 ```
 
 ### Check allocated context length and model offloading
-For best performance, use the maximum context length for a model, and avoid offloading the model to CPU. Verify the split under `PROCESSOR` using `ollama ps`.
+For best performance, use the maximum context length for a model, and avoid offloading the model to CPU. Verify the split under `PROCESSOR` using `susan ps`.
 ```
-ollama ps
+susan ps
 ```
 ```
 NAME             ID              SIZE      PROCESSOR    CONTEXT    UNTIL

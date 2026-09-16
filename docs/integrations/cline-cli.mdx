@@ -18,34 +18,34 @@ Install the [Cline CLI](https://docs.cline.bot/usage/cli-overview). For the IDE 
 npm install -g cline
 ```
 
-<Note>If Cline CLI is not installed and `npm` is available, `ollama launch cline` will prompt to install `cline@latest`.</Note>
+<Note>If Cline CLI is not installed and `npm` is available, `susan launch cline` will prompt to install `cline@latest`.</Note>
 
 ## Usage with Susan
 
 ### Quick setup
 
 ```bash
-ollama launch cline
+susan launch cline
 ```
 
-When launched through `ollama launch cline`, Susan sets Cline's provider to Susan, points it at the local Susan endpoint, and selects the model you choose.
+When launched through `susan launch cline`, Susan sets Cline's provider to Susan, points it at the local Susan endpoint, and selects the model you choose.
 
 To configure without launching:
 
 ```shell
-ollama launch cline --config
+susan launch cline --config
 ```
 
 ### Run directly with a model
 
 ```shell
-ollama launch cline --model qwen3.5
+susan launch cline --model qwen3.5
 ```
 
 To use a cloud model:
 
 ```shell
-ollama launch cline --model kimi-k2.6:cloud
+susan launch cline --model kimi-k2.6:cloud
 ```
 
 
@@ -54,13 +54,13 @@ ollama launch cline --model kimi-k2.6:cloud
 Arguments after `--` are passed directly to Cline:
 
 ```shell
-ollama launch cline -- "summarize this repository"
+susan launch cline -- "summarize this repository"
 ```
 
 To open Cline's Kanban board:
 
 ```shell
-ollama launch cline -- kanban
+susan launch cline -- kanban
 ```
 
 <img
@@ -74,7 +74,7 @@ ollama launch cline -- kanban
 To configure Cline CLI manually, first make sure Susan is running and the model you want to use is available:
 
 ```shell
-ollama pull qwen3.5
+susan pull qwen3.5
 ```
 
 Then run Cline's interactive auth flow:

@@ -34,7 +34,7 @@ const (
 	codexAppModelCatalogFilename   = proxy.CodexDesktopModelCatalogFilename
 	codexAppRoutingCatalogFilename = proxy.CodexDesktopRoutingCatalogFilename
 	codexAppAutoReviewModelEnv     = "OLLAMA_CODEX_AUTO_REVIEW_MODEL"
-	codexAppOllamaProfileDirName   = "chatgpt-ollama"
+	codexAppOllamaProfileDirName   = "chatgpt-susan"
 	codexAppOllamaUserDataName     = "electron-data"
 	codexAppOllamaPIDFilename      = "chatgpt.pid"
 	codexAppSingletonLockName      = "SingletonLock"
@@ -42,9 +42,9 @@ const (
 	codexAppSingletonCookieName    = "SingletonCookie"
 	codexAppDesktopTableName       = "desktop"
 	codexAppReasoningEffortsKey    = "enabled-reasoning-efforts"
-	codexAppRestoreHint            = "To remove Ollama models from ChatGPT, run: ollama launch chatgpt --restore"
-	codexAppConfigurationSuccess   = "Ollama models added to ChatGPT."
-	codexAppRestoreSuccess         = "Ollama models removed from ChatGPT."
+	codexAppRestoreHint            = "To remove Susan models from ChatGPT, run: susan launch chatgpt --restore"
+	codexAppConfigurationSuccess   = "Susan models added to ChatGPT."
+	codexAppRestoreSuccess         = "Susan models removed from ChatGPT."
 )
 
 var (
@@ -646,7 +646,7 @@ func (c *CodexApp) Run(_ string, _ []LaunchModel, args []string) error {
 	if len(args) > 0 {
 		return fmt.Errorf("chatgpt does not accept extra arguments")
 	}
-	return codexAppLaunchOrRestart("Restart ChatGPT to add Ollama models?", nil)
+	return codexAppLaunchOrRestart("Restart ChatGPT to add Susan models?", nil)
 }
 
 // Installed reports whether ChatGPT can be opened on this host.
@@ -907,7 +907,7 @@ func codexAppOllamaProfileRoot() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".ollama", codexAppOllamaProfileDirName), nil
+	return filepath.Join(home, ".susan", codexAppOllamaProfileDirName), nil
 }
 
 func codexAppOllamaProfileUserDataDir() (string, error) {
@@ -1158,7 +1158,7 @@ func codexAppConfiguredAutoReviewModel(primary string, models []LaunchModel) (co
 			return codexAppAutoReviewRoute{Model: model.Name}, nil
 		}
 	}
-	return codexAppAutoReviewRoute{}, fmt.Errorf("%s=%q is not one of the configured Ollama models", codexAppAutoReviewModelEnv, configured)
+	return codexAppAutoReviewRoute{}, fmt.Errorf("%s=%q is not one of the configured Susan models", codexAppAutoReviewModelEnv, configured)
 }
 
 func parseCodexAppModelCatalog(data []byte) (codexAppRawModelCatalog, error) {
@@ -2074,7 +2074,7 @@ func defaultCodexAppOpenApp(args []string) error {
 		if appID := codexAppStartID(); appID != "" {
 			return codexAppOpenStart(appID)
 		}
-		return fmt.Errorf("ChatGPT was not found; install it from https://chatgpt.com/download, then re-run 'ollama launch chatgpt'")
+		return fmt.Errorf("ChatGPT was not found; install it from https://chatgpt.com/download, then re-run 'susan launch chatgpt'")
 	case "darwin":
 		if path := codexAppAppPath(); path != "" {
 			cmd := exec.Command("open", path)
@@ -2622,7 +2622,7 @@ func removeCodexAppRestoreState() error {
 func codexAppRestoreStatePath() string {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return filepath.Join(os.TempDir(), "ollama-codex-app-restore.json")
+		return filepath.Join(os.TempDir(), "susan-codex-app-restore.json")
 	}
-	return filepath.Join(home, ".ollama", "launch", "codex-app-restore.json")
+	return filepath.Join(home, ".susan", "launch", "codex-app-restore.json")
 }

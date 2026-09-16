@@ -308,18 +308,18 @@ Susan supports the [OpenAI Responses API](https://platform.openai.com/docs/api-r
 
 ## Models
 
-Before using a model, pull it locally `ollama pull`:
+Before using a model, pull it locally `susan pull`:
 
 ```shell
-ollama pull llama3.2
+susan pull llama3.2
 ```
 
 ### Default model names
 
-For tooling that relies on default OpenAI model names such as `gpt-3.5-turbo`, use `ollama cp` to copy an existing model name to a temporary name:
+For tooling that relies on default OpenAI model names such as `gpt-3.5-turbo`, use `susan cp` to copy an existing model name to a temporary name:
 
 ```shell
-ollama cp llama3.2 gpt-3.5-turbo
+susan cp llama3.2 gpt-3.5-turbo
 ```
 
 Afterwards, this new model name can be specified the `model` field:
@@ -347,7 +347,7 @@ FROM <some model>
 PARAMETER num_ctx <context size>
 ```
 
-Use the `ollama create mymodel` command to create a new model with the updated context size. Call the API with the updated model name:
+Use the `susan create mymodel` command to create a new model with the updated context size. Call the API with the updated model name:
 
 ```shell
 curl http://localhost:14343/v1/chat/completions \

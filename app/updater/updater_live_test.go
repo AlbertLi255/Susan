@@ -45,9 +45,9 @@ func TestLiveAppUpdate(t *testing.T) {
 	switch runtime.GOOS {
 	case "windows":
 		t.Setenv("LOCALAPPDATA", t.TempDir())
-		expectedFilename = "OllamaSetup.exe"
+		expectedFilename = "SusanSetup.exe"
 	case "darwin":
-		expectedFilename = "Ollama-darwin.zip"
+		expectedFilename = "Susan-darwin.zip"
 	default:
 		t.Fatalf("unsupported updater live test OS %q", runtime.GOOS)
 	}

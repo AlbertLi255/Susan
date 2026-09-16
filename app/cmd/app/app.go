@@ -70,7 +70,7 @@ func main() {
 			}
 			switch arg {
 			case "serve":
-				fmt.Fprintln(os.Stderr, "serve command not supported, use ollama")
+				fmt.Fprintln(os.Stderr, "serve command not supported, use susan")
 				os.Exit(1)
 			case "version", "-v", "--version":
 				fmt.Println(version.Version)
@@ -88,7 +88,7 @@ func main() {
 			case "hidden", "-j", "--hide":
 				// startHidden suppresses the UI on startup, and can be triggered multiple ways
 				// On windows, path based via login startup detection
-				// On MacOS via [NSApp isHidden] from `open -j -a /Applications/Ollama.app` or equivalent
+				// On MacOS via [NSApp isHidden] from `open -j -a /Applications/Susan.app` or equivalent
 				// On both via the "hidden" command line argument
 				startHidden = true
 			case "--fast-startup":
@@ -250,7 +250,7 @@ func main() {
 	done := make(chan error, 1)
 	osrv := server.New(st, devMode)
 	go func() {
-		slog.Info("starting ollama server")
+		slog.Info("starting susan server")
 		done <- osrv.Run(octx)
 	}()
 
@@ -336,9 +336,9 @@ func main() {
 	}
 
 	go func() {
-		slog.Debug("waiting for ollama server to be ready")
+		slog.Debug("waiting for susan server to be ready")
 		if err := ui.WaitForServer(ctx, 10*time.Second); err != nil {
-			slog.Warn("ollama server not ready, continuing anyway", "error", err)
+			slog.Warn("susan server not ready, continuing anyway", "error", err)
 		}
 
 		if _, err := uiServer.UserData(ctx); err != nil {
@@ -359,7 +359,7 @@ func main() {
 		slog.Warn("error shutting down desktop server", "error", err)
 	}
 
-	slog.Info("shutting down ollama server")
+	slog.Info("shutting down susan server")
 	cancel()
 	<-done
 }

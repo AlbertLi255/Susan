@@ -9,7 +9,7 @@ Hermes Desktop is a native AI assistant app by Nous Research. It provides a desk
 ## Quick start
 
 ```bash
-ollama launch hermes-desktop
+susan launch hermes-desktop
 ```
 
 Susan handles the setup flow automatically:
@@ -22,17 +22,17 @@ Susan handles the setup flow automatically:
 ## Run directly with a model
 
 ```bash
-ollama launch hermes-desktop --model <model>
+susan launch hermes-desktop --model <model>
 ```
 
-Run `ollama launch hermes-desktop` again to switch models later.
+Run `susan launch hermes-desktop` again to switch models later.
 
 ## Install Hermes Desktop directly
 
-On macOS and Windows, the Hermes Desktop installer is the recommended upstream installation path. It installs the desktop app and Hermes Agent together. If you prefer the command line, `ollama launch hermes-desktop` remains the explicit Susan-managed path and uses the same Hermes configuration, sessions, skills, and memory as the CLI.
+On macOS and Windows, the Hermes Desktop installer is the recommended upstream installation path. It installs the desktop app and Hermes Agent together. If you prefer the command line, `susan launch hermes-desktop` remains the explicit Susan-managed path and uses the same Hermes configuration, sessions, skills, and memory as the CLI.
 
 To force Hermes to rebuild its packaged desktop app:
 
 ```bash
-ollama launch hermes-desktop -- --force-build
+susan launch hermes-desktop -- --force-build
 ```

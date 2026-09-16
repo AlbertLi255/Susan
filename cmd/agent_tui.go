@@ -48,7 +48,7 @@ func saveLastAgentModel(model string) error {
 }
 
 func prepareAgentModel(cmd *cobra.Command, client *api.Client, opts *agentTUIOptions, thinkExplicit bool) (*api.ShowResponse, error) {
-	// Unlike `ollama run`, the bare `ollama` root command doesn't define
+	// Unlike `susan run`, the bare `susan` root command doesn't define
 	// --insecure, so GetBool would error; treat it as false.
 	insecure, _ := cmd.Flags().GetBool("insecure")
 	info, resolved, err := showOrPullModel(cmd, client, opts.Model, insecure, "run")
@@ -216,7 +216,7 @@ func agentDefaultSystemPromptWithWorkingDir(now time.Time, modelName string, wor
 		shellName = "PowerShell"
 	}
 	parts := []string{
-		"You are running in Ollama, in a harness to help the user accomplish tasks, and the model is " + modelName + ".",
+		"You are running in Susan, in a harness to help the user accomplish tasks, and the model is " + modelName + ".",
 		"",
 		"Current date: " + date + ".",
 		"",

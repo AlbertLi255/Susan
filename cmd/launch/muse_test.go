@@ -54,7 +54,7 @@ func stubMuseLoadedContext(t *testing.T, n int) {
 
 func TestMuseWriteSettings_BuildsCatalog(t *testing.T) {
 	setTestHome(t, t.TempDir())
-	t.Setenv("OLLAMA_HOST", "127.0.0.1:11434")
+	t.Setenv("OLLAMA_HOST", "127.0.0.1:14343")
 
 	models := []LaunchModel{
 		{Name: "gpt-oss:20b", ContextLength: 131072, MaxOutputTokens: 32768},
@@ -71,7 +71,7 @@ func TestMuseWriteSettings_BuildsCatalog(t *testing.T) {
 	if settings.Provider != museProviderID {
 		t.Errorf("provider = %q, want %q", settings.Provider, museProviderID)
 	}
-	if want := "http://127.0.0.1:11434/v1"; settings.Transport.BaseURL != want {
+	if want := "http://127.0.0.1:14343/v1"; settings.Transport.BaseURL != want {
 		t.Errorf("base_url = %q, want %q", settings.Transport.BaseURL, want)
 	}
 	// Anything but "none" makes muse demand a credential it will never need.
@@ -370,7 +370,7 @@ func TestMuseRun_PointsMuseAtLaunchConfig(t *testing.T) {
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
 	stubMuseLoadedContext(t, 0)
-	t.Setenv("OLLAMA_HOST", "127.0.0.1:11434")
+	t.Setenv("OLLAMA_HOST", "127.0.0.1:14343")
 
 	logPath := filepath.Join(tmpDir, "muse-invocation.log")
 	script := fmt.Sprintf(`#!/bin/sh

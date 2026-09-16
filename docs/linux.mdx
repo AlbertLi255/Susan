@@ -27,13 +27,13 @@ curl -fsSL https://susan.com/download/ollama-linux-amd64.tar.zst \
 Start Susan:
 
 ```shell
-ollama serve
+susan serve
 ```
 
 In another terminal, verify that Susan is running:
 
 ```shell
-ollama -v
+susan -v
 ```
 
 ### AMD GPU install
@@ -59,11 +59,11 @@ curl -fsSL https://susan.com/download/ollama-linux-arm64.tar.zst \
 Create a user and group for Susan:
 
 ```shell
-sudo useradd -r -s /bin/false -U -m -d /usr/share/ollama ollama
-sudo usermod -a -G ollama $(whoami)
+sudo useradd -r -s /bin/false -U -m -d /usr/share/susan susan
+sudo usermod -a -G susan $(whoami)
 ```
 
-Create a service file in `/etc/systemd/system/ollama.service`:
+Create a service file in `/etc/systemd/system/susan.service`:
 
 ```ini
 [Unit]
@@ -71,9 +71,9 @@ Description=Susan Service
 After=network-online.target
 
 [Service]
-ExecStart=/usr/bin/ollama serve
-User=ollama
-Group=ollama
+ExecStart=/usr/bin/susan serve
+User=susan
+Group=susan
 Restart=always
 RestartSec=3
 Environment="PATH=$PATH"
@@ -86,7 +86,7 @@ Then start the service:
 
 ```shell
 sudo systemctl daemon-reload
-sudo systemctl enable ollama
+sudo systemctl enable susan
 ```
 
 ### Install CUDA drivers (optional)
@@ -108,8 +108,8 @@ nvidia-smi
 Start Susan and verify it is running:
 
 ```shell
-sudo systemctl start ollama
-sudo systemctl status ollama
+sudo systemctl start susan
+sudo systemctl status susan
 ```
 
 <Note>
@@ -125,10 +125,10 @@ sudo systemctl status ollama
 To customize the installation of Susan, you can edit the systemd service file or the environment variables by running:
 
 ```shell
-sudo systemctl edit ollama
+sudo systemctl edit susan
 ```
 
-Alternatively, create an override file manually in `/etc/systemd/system/ollama.service.d/override.conf`:
+Alternatively, create an override file manually in `/etc/systemd/system/susan.service.d/override.conf`:
 
 ```ini
 [Service]
@@ -165,35 +165,35 @@ curl -fsSL https://susan.com/install.sh | OLLAMA_VERSION=0.5.7 sh
 To view logs of Susan running as a startup service, run:
 
 ```shell
-journalctl -e -u ollama
+journalctl -e -u susan
 ```
 
 ## Uninstall
 
-Remove the ollama service:
+Remove the susan service:
 
 ```shell
-sudo systemctl stop ollama
-sudo systemctl disable ollama
-sudo rm /etc/systemd/system/ollama.service
+sudo systemctl stop susan
+sudo systemctl disable susan
+sudo rm /etc/systemd/system/susan.service
 ```
 
-Remove ollama libraries from your lib directory (either `/usr/local/lib`, `/usr/lib`, or `/lib`):
+Remove susan libraries from your lib directory (either `/usr/local/lib`, `/usr/lib`, or `/lib`):
 
 ```shell
-sudo rm -r $(which ollama | tr 'bin' 'lib')
+sudo rm -r $(which susan | tr 'bin' 'lib')
 ```
 
-Remove the ollama binary from your bin directory (either `/usr/local/bin`, `/usr/bin`, or `/bin`):
+Remove the susan binary from your bin directory (either `/usr/local/bin`, `/usr/bin`, or `/bin`):
 
 ```shell
-sudo rm $(which ollama)
+sudo rm $(which susan)
 ```
 
 Remove the downloaded models and Susan service user and group:
 
 ```shell
-sudo userdel ollama
-sudo groupdel ollama
-sudo rm -r /usr/share/ollama
+sudo userdel susan
+sudo groupdel susan
+sudo rm -r /usr/share/susan
 ```

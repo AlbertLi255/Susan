@@ -19,7 +19,7 @@ const (
 	webFetchTimeout         = 30 * time.Second
 )
 
-var ErrWebAuthRequired = errors.New("Not authenticated. Run `ollama signin` and try again.")
+var ErrWebAuthRequired = errors.New("Not authenticated. Run `susan signin` and try again.")
 
 type WebSearch struct{}
 

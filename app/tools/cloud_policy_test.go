@@ -12,7 +12,7 @@ import (
 
 func TestEnsureCloudEnabledForTool(t *testing.T) {
 	const op = "web search is unavailable"
-	const disabledPrefix = "ollama cloud is disabled: web search is unavailable"
+	const disabledPrefix = "susan cloud is disabled: web search is unavailable"
 
 	t.Run("enabled allows tool execution", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

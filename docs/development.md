@@ -23,7 +23,7 @@ For a fresh checkout, or after changing native code, build from the repository r
 ```shell
 cmake -B build .
 cmake --build build --parallel 8
-./ollama serve
+./susan serve
 ```
 
 To install into a standard prefix layout:

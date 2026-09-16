@@ -35,7 +35,7 @@ func TestInferenceRequestLoggerMiddlewareWritesReplayArtifacts(t *testing.T) {
 	})
 
 	req := httptest.NewRequest(http.MethodPost, route, strings.NewReader(requestBody))
-	req.Host = "127.0.0.1:11434"
+	req.Host = "127.0.0.1:14343"
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -78,7 +78,7 @@ func TestInferenceRequestLoggerMiddlewareWritesReplayArtifacts(t *testing.T) {
 	}
 
 	curlString := string(curlData)
-	if !strings.Contains(curlString, "http://127.0.0.1:11434"+route) {
+	if !strings.Contains(curlString, "http://127.0.0.1:14343"+route) {
 		t.Fatalf("curl log does not contain expected route URL: %s", curlString)
 	}
 

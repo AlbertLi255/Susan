@@ -185,7 +185,7 @@ func checkQwenInstallerDependencies() error {
 	switch qwenGOOS {
 	case "windows":
 		if _, err := exec.LookPath("powershell"); err != nil {
-			return fmt.Errorf("qwen is not installed and required dependencies are missing\n\nInstall the following first:\n  PowerShell: https://learn.microsoft.com/powershell/\n\nThen re-run:\n  ollama launch qwen")
+			return fmt.Errorf("qwen is not installed and required dependencies are missing\n\nInstall the following first:\n  PowerShell: https://learn.microsoft.com/powershell/\n\nThen re-run:\n  susan launch qwen")
 		}
 	default:
 		var missing []string
@@ -196,7 +196,7 @@ func checkQwenInstallerDependencies() error {
 			missing = append(missing, "bash: https://www.gnu.org/software/bash/")
 		}
 		if len(missing) > 0 {
-			return fmt.Errorf("qwen is not installed and required dependencies are missing\n\nInstall the following first:\n  %s\n\nThen re-run:\n  ollama launch qwen", strings.Join(missing, "\n  "))
+			return fmt.Errorf("qwen is not installed and required dependencies are missing\n\nInstall the following first:\n  %s\n\nThen re-run:\n  susan launch qwen", strings.Join(missing, "\n  "))
 		}
 	}
 	return nil
@@ -404,13 +404,13 @@ func (q *Qwen) readConfig() (map[string]any, error) {
 }
 
 func qwenBaseURL() string {
-	return strings.TrimRight(envconfig.Host().String(), "/") + "/v1"
+	return strings.TrimRight(envconfig.ConnectableHost().String(), "/") + "/v1"
 }
 
 func qwenProvider(model string) map[string]any {
 	return map[string]any{
 		"id":      model,
-		"name":    fmt.Sprintf("%s (Ollama)", model),
+		"name":    fmt.Sprintf("%s (Susan)", model),
 		"baseUrl": qwenBaseURL(),
 		"envKey":  qwenOllamaEnvKey,
 	}

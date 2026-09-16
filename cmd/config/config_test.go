@@ -309,7 +309,7 @@ func TestConfigPath(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := filepath.Join(tmpDir, ".ollama", "config.json")
+	expected := filepath.Join(tmpDir, ".susan", "config.json")
 	if path != expected {
 		t.Errorf("expected %s, got %s", expected, path)
 	}
@@ -369,7 +369,7 @@ func TestMigrateConfig(t *testing.T) {
 		tmpDir := t.TempDir()
 		setTestHome(t, tmpDir)
 
-		legacyDir := filepath.Join(tmpDir, ".ollama", "config")
+		legacyDir := filepath.Join(tmpDir, ".susan", "config")
 		os.MkdirAll(legacyDir, 0o755)
 		data := []byte(`{"integrations":{"claude":{"models":["llama3.2"]}}}`)
 		os.WriteFile(filepath.Join(legacyDir, "config.json"), data, 0o644)
@@ -417,7 +417,7 @@ func TestMigrateConfig(t *testing.T) {
 		tmpDir := t.TempDir()
 		setTestHome(t, tmpDir)
 
-		legacyDir := filepath.Join(tmpDir, ".ollama", "config")
+		legacyDir := filepath.Join(tmpDir, ".susan", "config")
 		os.MkdirAll(legacyDir, 0o755)
 		os.WriteFile(filepath.Join(legacyDir, "config.json"), []byte(`{corrupt`), 0o644)
 
@@ -438,11 +438,11 @@ func TestMigrateConfig(t *testing.T) {
 		tmpDir := t.TempDir()
 		setTestHome(t, tmpDir)
 
-		legacyDir := filepath.Join(tmpDir, ".ollama", "config")
+		legacyDir := filepath.Join(tmpDir, ".susan", "config")
 		os.MkdirAll(legacyDir, 0o755)
 		os.WriteFile(filepath.Join(legacyDir, "config.json"), []byte(`{"integrations":{"old":{"models":["old-model"]}}}`), 0o644)
 
-		newDir := filepath.Join(tmpDir, ".ollama")
+		newDir := filepath.Join(tmpDir, ".susan")
 		os.WriteFile(filepath.Join(newDir, "config.json"), []byte(`{"integrations":{"new":{"models":["new-model"]}}}`), 0o644)
 
 		cfg, err := load()
@@ -461,7 +461,7 @@ func TestMigrateConfig(t *testing.T) {
 		tmpDir := t.TempDir()
 		setTestHome(t, tmpDir)
 
-		legacyDir := filepath.Join(tmpDir, ".ollama", "config")
+		legacyDir := filepath.Join(tmpDir, ".susan", "config")
 		os.MkdirAll(legacyDir, 0o755)
 		os.WriteFile(filepath.Join(legacyDir, "config.json"), []byte(`{"integrations":{}}`), 0o644)
 
@@ -482,7 +482,7 @@ func TestMigrateConfig(t *testing.T) {
 		tmpDir := t.TempDir()
 		setTestHome(t, tmpDir)
 
-		legacyDir := filepath.Join(tmpDir, ".ollama", "config")
+		legacyDir := filepath.Join(tmpDir, ".susan", "config")
 		os.MkdirAll(legacyDir, 0o755)
 		os.WriteFile(filepath.Join(legacyDir, "config.json"), []byte(`{"integrations":{}}`), 0o644)
 		os.WriteFile(filepath.Join(legacyDir, "other-file.txt"), []byte("keep me"), 0o644)
@@ -503,7 +503,7 @@ func TestMigrateConfig(t *testing.T) {
 		tmpDir := t.TempDir()
 		setTestHome(t, tmpDir)
 
-		legacyDir := filepath.Join(tmpDir, ".ollama", "config")
+		legacyDir := filepath.Join(tmpDir, ".susan", "config")
 		os.MkdirAll(legacyDir, 0o755)
 		os.WriteFile(filepath.Join(legacyDir, "config.json"), []byte(`{"integrations":{"claude":{"models":["llama3.2"]}}}`), 0o644)
 
@@ -512,7 +512,7 @@ func TestMigrateConfig(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		newPath := filepath.Join(tmpDir, ".ollama", "config.json")
+		newPath := filepath.Join(tmpDir, ".susan", "config.json")
 		if _, err := os.Stat(newPath); os.IsNotExist(err) {
 			t.Error("save should write to new path")
 		}
@@ -527,7 +527,7 @@ func TestMigrateConfig(t *testing.T) {
 		tmpDir := t.TempDir()
 		setTestHome(t, tmpDir)
 
-		legacyDir := filepath.Join(tmpDir, ".ollama", "config")
+		legacyDir := filepath.Join(tmpDir, ".susan", "config")
 		os.MkdirAll(legacyDir, 0o755)
 		os.WriteFile(filepath.Join(legacyDir, "config.json"), []byte(`{"integrations":{"claude":{"models":["llama3.2"]}}}`), 0o644)
 

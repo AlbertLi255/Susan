@@ -250,8 +250,8 @@ func assertOllamaVendorConfigured(t *testing.T, data []byte) {
 
 	for _, entry := range entries {
 		if vendor, _ := entry["vendor"].(string); vendor == "ollama" {
-			if name, _ := entry["name"].(string); name != "Ollama" {
-				t.Errorf("expected name \"Ollama\", got %q", name)
+			if name, _ := entry["name"].(string); name != "Susan" {
+				t.Errorf("expected name \"Susan\", got %q", name)
 			}
 			if url, _ := entry["url"].(string); url == "" {
 				t.Error("url not set")

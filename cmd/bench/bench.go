@@ -288,7 +288,7 @@ func BenchmarkModel(fOpt flagOptions) error {
 
 	client, err := api.ClientFromEnvironment()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: Couldn't create ollama client: %v\n", err)
+		fmt.Fprintf(os.Stderr, "ERROR: Couldn't create susan client: %v\n", err)
 		return err
 	}
 

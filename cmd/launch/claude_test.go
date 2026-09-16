@@ -349,7 +349,7 @@ func TestClaudeEnvVars(t *testing.T) {
 
 	got := envMap(c.envVars("llama3.2"))
 	for key, want := range map[string]string{
-		"ANTHROPIC_BASE_URL":                  envconfig.Host().String(),
+		"ANTHROPIC_BASE_URL":                  envconfig.ConnectableHost().String(),
 		"ANTHROPIC_API_KEY":                   "",
 		"ANTHROPIC_AUTH_TOKEN":                "ollama",
 		"CLAUDE_CODE_ATTRIBUTION_HEADER":      "0",

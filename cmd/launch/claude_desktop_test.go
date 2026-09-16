@@ -122,7 +122,7 @@ func TestClaudeDesktopIntegration(t *testing.T) {
 	t.Run("has success messages", func(t *testing.T) {
 		var _ ConfigurationSuccessIntegration = c
 		var _ RestoreSuccessIntegration = c
-		if got := c.ConfigurationSuccessMessage(); got != "Claude Desktop profile changed to Ollama.\nTo restore the usual Claude profile, run: ollama launch claude-desktop --restore" {
+		if got := c.ConfigurationSuccessMessage(); got != "Claude Desktop profile changed to Susan.\nTo restore the usual Claude profile, run: susan launch claude-desktop --restore" {
 			t.Fatalf("configuration success message = %q", got)
 		}
 		if got := c.RestoreSuccessMessage(); got != "Claude Desktop restored to the usual Claude profile." {
@@ -151,7 +151,7 @@ func TestClaudeDesktopConfigureRequiresOllamaGateway(t *testing.T) {
 	}
 
 	err := (&ClaudeDesktop{}).ConfigureAutodiscovery()
-	if err == nil || !strings.Contains(err.Error(), "restart Ollama and try again") {
+	if err == nil || !strings.Contains(err.Error(), "restart Susan and try again") {
 		t.Fatalf("ConfigureAutodiscovery error = %v, want gateway recovery guidance", err)
 	}
 }
@@ -267,8 +267,8 @@ func TestClaudeDesktopConfigureWritesOllamaCloudProfile(t *testing.T) {
 	if profile["inferenceGatewayAuthScheme"] != "bearer" {
 		t.Fatalf("auth scheme = %v, want bearer", profile["inferenceGatewayAuthScheme"])
 	}
-	if profile["deploymentDisplayName"] != "Ollama" {
-		t.Fatalf("deployment display name = %v, want Ollama", profile["deploymentDisplayName"])
+	if profile["deploymentDisplayName"] != "Susan" {
+		t.Fatalf("deployment display name = %v, want Susan", profile["deploymentDisplayName"])
 	}
 	if profile["disableDeploymentModeChooser"] != true {
 		t.Fatalf("disableDeploymentModeChooser = %v, want true", profile["disableDeploymentModeChooser"])
@@ -492,7 +492,7 @@ func TestClaudeDesktopConfigurePreservesProfileWhenAutoModePreferenceIsUnreadabl
 	if err := os.WriteFile(paths.profile, original, 0o644); err != nil {
 		t.Fatal(err)
 	}
-	configPath := filepath.Join(tmpDir, ".ollama", "config.json")
+	configPath := filepath.Join(tmpDir, ".susan", "config.json")
 	if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -972,7 +972,7 @@ func TestClaudeDesktopUsesOllamaGatewayRequiresCoreRoutingSettings(t *testing.T)
 			name: "gateway base URL",
 			mutate: func() error {
 				profile := claudeDesktopReadJSON(t, paths.profile)
-				profile["inferenceGatewayBaseUrl"] = "http://127.0.0.1:11434"
+				profile["inferenceGatewayBaseUrl"] = "http://127.0.0.1:14343"
 				return writeClaudeDesktopJSON(paths.profile, profile)
 			},
 		},
@@ -1422,7 +1422,7 @@ func TestClaudeDesktopSetInstalledFromDesktopDoesNotOpenStoppedAppWhenDisabled(t
 		func() error { t.Fatal("stopped Claude should not be quit"); return nil },
 		func() error { t.Fatal("disabling should not open stopped Claude"); return nil },
 	)
-	configPath := filepath.Join(tmpDir, ".ollama", "config.json")
+	configPath := filepath.Join(tmpDir, ".susan", "config.json")
 	if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
 		t.Fatal(err)
 	}

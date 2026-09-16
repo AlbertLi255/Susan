@@ -168,7 +168,7 @@ func TestCloudMigrationFromAirplaneMode(t *testing.T) {
 		t.Fatal("expected cloud to be disabled after migrating airplane_mode=true")
 	}
 
-	configPath := filepath.Join(tmpHome, ".ollama", serverConfigFilename)
+	configPath := filepath.Join(tmpHome, ".susan", serverConfigFilename)
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		t.Fatalf("failed to read migrated server config: %v", err)

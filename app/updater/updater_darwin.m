@@ -15,7 +15,7 @@ void appLogDebug(NSString *msg) {
     goLogDebug([msg UTF8String]);
 }
 
-NSString *SystemWidePath = @"/Applications/Ollama.app";
+NSString *SystemWidePath = @"/Applications/Susan.app";
 
 // TODO - how to detect if the user has admin access?
 // Possible APIs to explore:
@@ -91,7 +91,7 @@ AuthorizationRef getAuthorization(NSString *authorizationPrompt,
 
 AuthorizationRef getAppInstallAuthorization() {
     return getAuthorization(
-        @"Ollama needs additional permission to move or update itself as a "
+        @"Susan needs additional permission to move or update itself as a "
          "system-wide Application",
         @"systemApplication");
 }

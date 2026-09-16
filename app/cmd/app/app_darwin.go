@@ -79,7 +79,7 @@ type claudeDesktopController interface {
 var (
 	isApp              = updater.BundlePath != ""
 	appLogPath         = filepath.Join(os.Getenv("HOME"), ".susan", "logs", "app.log")
-	launchAgentPath    = filepath.Join(os.Getenv("HOME"), "Library", "LaunchAgents", "com.ollama.ollama.plist")
+	launchAgentPath    = filepath.Join(os.Getenv("HOME"), "Library", "LaunchAgents", "com.susan.susan.plist")
 	claudeAppProxy     *proxy.ClaudeDesktop
 	claudeProxyStartMu sync.Mutex
 	// Serialize default resets with connect, disconnect, and shutdown decisions.
@@ -119,7 +119,7 @@ var (
 	claudeLocalModelsResolver = currentClaudeDesktopLocalModels
 )
 
-var errClaudeDesktopAccessUnavailable = errors.New("Ollama couldn't verify the selected models. Try again")
+var errClaudeDesktopAccessUnavailable = errors.New("Susan couldn't verify the selected models. Try again")
 
 // TODO(jmorganca): pre-create the window and pass
 // it to the webview instead of using the internal one

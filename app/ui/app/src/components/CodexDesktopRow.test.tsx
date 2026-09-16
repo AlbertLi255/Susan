@@ -15,7 +15,7 @@ const integration: IntegrationStatus = {
   name: "ChatGPT",
   description: "Use Susan models in ChatGPT",
   installed: true,
-  command: "ollama launch chatgpt",
+  command: "susan launch chatgpt",
 };
 
 function status(

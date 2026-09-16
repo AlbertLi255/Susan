@@ -136,7 +136,7 @@ func FindPort() string {
 }
 
 func GetTestEndpoint() (*api.Client, string) {
-	defaultPort := "11434"
+	defaultPort := "14343"
 	ollamaHost := os.Getenv("OLLAMA_HOST")
 
 	scheme, hostport, ok := strings.Cut(ollamaHost, "://")
@@ -182,7 +182,7 @@ var (
 
 func startServer(t *testing.T, ctx context.Context, ollamaHost string) error {
 	// Make sure the server has been built
-	CLIName, err := filepath.Abs("../ollama")
+	CLIName, err := filepath.Abs("../susan")
 	if err != nil {
 		return fmt.Errorf("failed to get absolute path: %w", err)
 	}

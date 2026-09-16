@@ -1037,7 +1037,7 @@ const testOpenclawFixture = `{
     "providers": {
       "anthropic": {"apiKey": "xxx"},
       "ollama": {
-        "baseUrl": "http://127.0.0.1:11434",
+        "baseUrl": "http://127.0.0.1:14343",
         "models": [{"id": "old-model", "customField": "preserved"}]
       }
     }
@@ -2408,7 +2408,7 @@ func TestIntegrationOnboarded(t *testing.T) {
 	t.Run("returns true after integrationOnboarded", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		setTestHome(t, tmpDir)
-		os.MkdirAll(filepath.Join(tmpDir, ".ollama"), 0o755)
+		os.MkdirAll(filepath.Join(tmpDir, ".susan"), 0o755)
 
 		if err := integrationOnboarded("openclaw"); err != nil {
 			t.Fatal(err)
@@ -2422,7 +2422,7 @@ func TestIntegrationOnboarded(t *testing.T) {
 	t.Run("is case insensitive", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		setTestHome(t, tmpDir)
-		os.MkdirAll(filepath.Join(tmpDir, ".ollama"), 0o755)
+		os.MkdirAll(filepath.Join(tmpDir, ".susan"), 0o755)
 
 		if err := integrationOnboarded("OpenClaw"); err != nil {
 			t.Fatal(err)
@@ -2436,7 +2436,7 @@ func TestIntegrationOnboarded(t *testing.T) {
 	t.Run("preserves existing integration data", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		setTestHome(t, tmpDir)
-		os.MkdirAll(filepath.Join(tmpDir, ".ollama"), 0o755)
+		os.MkdirAll(filepath.Join(tmpDir, ".susan"), 0o755)
 
 		if err := SaveIntegration("openclaw", []string{"llama3.2", "mistral"}); err != nil {
 			t.Fatal(err)

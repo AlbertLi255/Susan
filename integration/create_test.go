@@ -89,19 +89,19 @@ func downloadHFModel(t *testing.T, repo, destDir string, extraArgs ...string) {
 	}
 }
 
-// ollamaBin returns the path to the ollama binary to use for tests.
-// Prefers OLLAMA_BIN env, then falls back to the built binary at ../ollama
+// ollamaBin returns the path to the susan binary to use for tests.
+// Prefers OLLAMA_BIN env, then falls back to the built binary at ../susan
 // (same binary the integration test server uses).
 func ollamaBin() string {
 	if bin := os.Getenv("OLLAMA_BIN"); bin != "" {
 		return bin
 	}
-	if abs, err := filepath.Abs("../ollama"); err == nil {
+	if abs, err := filepath.Abs("../susan"); err == nil {
 		if _, err := os.Stat(abs); err == nil {
 			return abs
 		}
 	}
-	return "ollama"
+	return "susan"
 }
 
 // ensureMLXLibraryPath sets OLLAMA_LIBRARY_PATH so the MLX dynamic library
@@ -120,7 +120,7 @@ func ensureMLXLibraryPath(t *testing.T) {
 	}
 }
 
-// runOllamaCreate runs "ollama create" as a subprocess. Skips the test if
+// runOllamaCreate runs "susan create" as a subprocess. Skips the test if
 // the error indicates the server is remote.
 func runOllamaCreate(ctx context.Context, t *testing.T, args ...string) {
 	t.Helper()
@@ -132,7 +132,7 @@ func runOllamaCreate(ctx context.Context, t *testing.T, args ...string) {
 		if strings.Contains(createStderr.String(), "remote") {
 			t.Skip("safetensors creation requires a local server")
 		}
-		t.Fatalf("ollama create failed: %v", err)
+		t.Fatalf("susan create failed: %v", err)
 	}
 }
 
@@ -262,7 +262,7 @@ func runCreateGGUF(t *testing.T) {
 	createCmd.Stdout = os.Stdout
 	createCmd.Stderr = os.Stderr
 	if err := createCmd.Run(); err != nil {
-		t.Fatalf("ollama create failed: %v", err)
+		t.Fatalf("susan create failed: %v", err)
 	}
 
 	// Verify model exists

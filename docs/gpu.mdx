@@ -150,7 +150,7 @@ multiple options for Vulkan drivers between Mesa and GPU Vendor specific package
 - Linux Intel GPU Instructions - https://dgpu-docs.intel.com/driver/client/overview.html
 - Linux AMD GPU Instructions - https://amdgpu-install.readthedocs.io/en/latest/install-script.html#specifying-a-vulkan-implementation
 
-For AMD GPUs on some Linux distributions, you may need to add the `ollama` user to the `render` group.
+For AMD GPUs on some Linux distributions, you may need to add the `susan` user to the `render` group.
 
 The Susan scheduler leverages available VRAM data reported by the GPU libraries to
 make optimal scheduling decisions.  Vulkan requires additional capabilities or
@@ -159,7 +159,7 @@ capability are granted, Susan will use approximate sizes of the models
 to make best effort scheduling decisions.
 
 ```bash
-sudo setcap cap_perfmon+ep /usr/local/bin/ollama
+sudo setcap cap_perfmon+ep /usr/local/bin/susan
 ```
 
 ### GPU Selection

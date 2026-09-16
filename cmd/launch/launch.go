@@ -280,10 +280,10 @@ func LaunchCmd(checkServerHeartbeat func(cmd *cobra.Command, args []string) erro
 
 	cmd := &cobra.Command{
 		Use:   "launch [INTEGRATION] [-- [EXTRA_ARGS...]]",
-		Short: "Launch the Ollama menu or an integration",
-		Long: `Launch the Ollama interactive menu, or directly launch a specific integration.
+		Short: "Launch the Susan menu or an integration",
+		Long: `Launch the Susan interactive menu, or directly launch a specific integration.
 
-Without arguments, this is equivalent to running 'ollama' directly.
+Without arguments, this is equivalent to running 'susan' directly.
 Flags and extra arguments require an integration name.
 
 Supported integrations:
@@ -307,25 +307,25 @@ Supported integrations:
   vscode          VS Code (aliases: code)
 
 Examples:
-  ollama launch
-  ollama launch claude-desktop --restore
-  ollama launch claude
-  ollama launch claude --model <model>
-  ollama launch chatgpt
-  ollama launch chatgpt --restore
-  ollama launch hermes
-  ollama launch hermes-desktop
-  ollama launch dsh
-  ollama launch droid --config (does not auto-launch)
-  ollama launch codex --restore
-  ollama launch codex -- --sandbox workspace-write`,
+  susan launch
+  susan launch claude-desktop --restore
+  susan launch claude
+  susan launch claude --model <model>
+  susan launch chatgpt
+  susan launch chatgpt --restore
+  susan launch hermes
+  susan launch hermes-desktop
+  susan launch dsh
+  susan launch droid --config (does not auto-launch)
+  susan launch codex --restore
+  susan launch codex -- --sandbox workspace-write`,
 		Args: cobra.ArbitraryArgs,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if restoreFlag {
 				return nil
 			}
 			if len(args) > 0 && launchCommandIsClaudeDesktop(args[0]) {
-				return fmt.Errorf("Claude Desktop can only be restored from the command line: ollama launch claude-desktop --restore")
+				return fmt.Errorf("Claude Desktop can only be restored from the command line: susan launch claude-desktop --restore")
 			}
 			return checkServerHeartbeat(cmd, args)
 		},
@@ -358,7 +358,7 @@ Examples:
 
 			if name == "" {
 				if cmd.Flags().Changed("model") || cmd.Flags().Changed("config") || cmd.Flags().Changed("yes") || cmd.Flags().Changed("restore") || len(passArgs) > 0 {
-					return fmt.Errorf("flags and extra args require an integration name, for example: 'ollama launch claude --model qwen3.5'")
+					return fmt.Errorf("flags and extra args require an integration name, for example: 'susan launch claude --model qwen3.5'")
 				}
 				runTUI(cmd)
 				return nil
@@ -542,7 +542,7 @@ func restoreIntegration(name string, runner Runner, req IntegrationLaunchRequest
 }
 
 func launchIntegrationPolicy(req IntegrationLaunchRequest) LaunchPolicy {
-	// TUI does not set a policy, whereas ollama launch <app> does as it can
+	// TUI does not set a policy, whereas susan launch <app> does as it can
 	// have flags which change the behavior.
 	if req.Policy != nil {
 		return *req.Policy
@@ -820,7 +820,7 @@ func (c *launcherClient) launchManagedSingleIntegration(ctx context.Context, nam
 
 	if !managedIntegrationOnboarded(saved, managed) {
 		if !isInteractiveSession() && managedRequiresInteractiveOnboarding(managed) {
-			return fmt.Errorf("%s still needs interactive gateway setup; run 'ollama launch %s' in a terminal to finish onboarding", runner, name)
+			return fmt.Errorf("%s still needs interactive gateway setup; run 'susan launch %s' in a terminal to finish onboarding", runner, name)
 		}
 		if err := managed.Onboard(); err != nil {
 			return err
@@ -864,7 +864,7 @@ func (c *launcherClient) launchManagedAutodiscoveryIntegration(ctx context.Conte
 
 	if !managedIntegrationOnboarded(saved, autodiscovery) {
 		if !isInteractiveSession() && managedRequiresInteractiveOnboarding(autodiscovery) {
-			return fmt.Errorf("%s still needs interactive gateway setup; run 'ollama launch %s' in a terminal to finish onboarding", runner, name)
+			return fmt.Errorf("%s still needs interactive gateway setup; run 'susan launch %s' in a terminal to finish onboarding", runner, name)
 		}
 		if err := autodiscovery.Onboard(); err != nil {
 			return err
@@ -1036,7 +1036,7 @@ func managedRequiresInteractiveOnboarding(managed any) bool {
 }
 
 func (c *launcherClient) selectSingleModelWithSelector(ctx context.Context, title, current string, selector SingleSelector) (string, error) {
-	return c.selectSingleModelWithSelectorReady(ctx, title, current, selector, true, "ollama launch", "")
+	return c.selectSingleModelWithSelectorReady(ctx, title, current, selector, true, "susan launch", "")
 }
 
 func (c *launcherClient) latestAccountState() *AccountState {
@@ -1051,7 +1051,7 @@ func (c *launcherClient) selectSingleModelWithSelectorReady(ctx context.Context,
 		return "", fmt.Errorf("no selector configured")
 	}
 
-	items, _, err := c.loadSelectableModels(ctx, nil, current, "no models available, run 'ollama pull <model>' first")
+	items, _, err := c.loadSelectableModels(ctx, nil, current, "no models available, run 'susan pull <model>' first")
 	if err != nil {
 		return "", err
 	}
@@ -1236,7 +1236,7 @@ func (c *launcherClient) requestRecommendations(ctx context.Context) ([]ModelIte
 }
 
 func (c *launcherClient) ensureModelsReady(ctx context.Context, models []string) error {
-	return c.ensureModelsReadyFor(ctx, models, "ollama launch", "")
+	return c.ensureModelsReadyFor(ctx, models, "susan launch", "")
 }
 
 func (c *launcherClient) ensureModelsReadyFor(ctx context.Context, models []string, label, commandName string) error {

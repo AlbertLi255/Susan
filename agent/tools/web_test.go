@@ -108,7 +108,7 @@ func TestWebToolsIgnoreInheritedCloudPolicy(t *testing.T) {
 	t.Cleanup(envconfig.ReloadServerConfig)
 
 	home := t.TempDir()
-	configPath := filepath.Join(home, ".ollama", "server.json")
+	configPath := filepath.Join(home, ".susan", "server.json")
 	if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
 		t.Fatal(err)
 	}
