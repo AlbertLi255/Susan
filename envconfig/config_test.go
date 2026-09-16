@@ -17,7 +17,7 @@ func TestHost(t *testing.T) {
 		value  string
 		expect string
 	}{
-		"empty":               {"", "http://0.0.0.0:14343"},
+		"empty":               {"", "http://127.0.0.1:14343"},
 		"only address":        {"1.2.3.4", "http://1.2.3.4:14343"},
 		"only port":           {":1234", "http://:1234"},
 		"address and port":    {"1.2.3.4:1234", "http://1.2.3.4:1234"},

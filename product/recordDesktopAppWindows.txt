@@ -25,7 +25,7 @@ Susan Windows 桌面 App：编译、构建、启动保姆级教程
      入口：仓库根目录  go run . serve
            或          .\susan.exe serve
            或          .\dist\susan.exe serve
-     现象：终端打日志，监听端口（默认 0.0.0.0:14343）
+     现象：终端打日志，监听端口（默认 127.0.0.1:14343）
      浏览器打开 http://127.0.0.1:14343 只会看到
      「Susan is running」，那不是桌面 UI。
 

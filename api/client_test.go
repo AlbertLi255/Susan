@@ -20,7 +20,7 @@ func TestClientFromEnvironment(t *testing.T) {
 	}
 
 	testCases := map[string]*testCase{
-		"empty":                      {value: "", expect: "http://0.0.0.0:14343"},
+		"empty":                      {value: "", expect: "http://127.0.0.1:14343"},
 		"only address":               {value: "1.2.3.4", expect: "http://1.2.3.4:14343"},
 		"only port":                  {value: ":1234", expect: "http://:1234"},
 		"address and port":           {value: "1.2.3.4:1234", expect: "http://1.2.3.4:1234"},

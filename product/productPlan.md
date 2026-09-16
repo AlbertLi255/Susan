@@ -42,16 +42,20 @@
 - `ollama` / `ollama.exe` → `susan` / `susan.exe`
 - 影响：cmd/ 入口、PATH 调用、API 文档示例、安装脚本
 
-### 3.5. 端口改造（11434 → 14343，默认监听 0.0.0.0）
-- [envconfig/config.go:23](file:///d:/projects/susanAssist/susanPlatform/Susan/envconfig/config.go#L23)：`defaultPort := "11434"` → `"14343"`
-- [envconfig/config.go:42](file:///d:/projects/susanAssist/susanPlatform/Susan/envconfig/config.go#L42)：默认 host `"127.0.0.1"` → `"0.0.0.0"`（允许外部 IP 访问）
-- [envconfig/config.go:21, 322](file:///d:/projects/susanAssist/susanPlatform/Susan/envconfig/config.go#L21)：注释/环境变量说明同步更新
-- 测试文件批量替换 `11434 → 14343`：
-  - `envconfig/config_test.go`、`api/client_test.go`、`cmd/cmd_test.go`
-  - `internal/proxy/*_test.go`、`integration/utils_test.go:139`、`internal/modelref/modelref_test.go`
-- 文档站 `docs/` 下所有 .mdx 中的 `11434` → `14343`（API 示例、curl 命令）
-- **已验证**：14343 端口在本机空闲可用
-- 注意：改完后默认监听 `0.0.0.0:14343`，需配合 Windows 防火墙放行 14343 入站规则（install.ps1 或安装包中添加）
+### 3.5. 端口改造（只改端口号 11434 → 14343，其余沿用 Ollama 设计）
+- **产品决策**：只把默认端口从 `11434` 改成 `14343`，避免和本机 Ollama 抢端口。
+- **不改默认监听地址**：继续与 Ollama 一致，未设置 `OLLAMA_HOST` 时默认为 **`127.0.0.1:14343`**（仅本机 loopback）。不要把默认 host 改成 `0.0.0.0`。
+- **Ollama 原设计（保持）**：
+  - `Host()` 由环境变量 `OLLAMA_HOST` 同时驱动服务端 `Listen` 和客户端连接 URL。
+  - 默认 `127.0.0.1`，外网/局域网进不来。
+  - 用户要对外提供 API 时，自行设置 `OLLAMA_HOST=0.0.0.0:14343`（bind 语义：所有网卡）。
+  - 客户端不要直连 `0.0.0.0`：继续用已有的 `ConnectableHost()`，把未指定地址换成 `127.0.0.1` / `::1`（Windows 上直连 `0.0.0.0` 会失败）。
+- 代码：
+  - [envconfig/config.go](file:///d:/projects/susanAssist/susanPlatform/Susan/envconfig/config.go)：`defaultPort := "14343"`；默认 host 保持 `"127.0.0.1"`。
+  - 注释/环境变量说明表同步为 `127.0.0.1:14343`。
+- 测试与文档：把示例里的 **`11434` 换成 `14343`**；FAQ 里「如何对外暴露」仍可写 `OLLAMA_HOST=0.0.0.0:14343`，那是用户显式配置，不是默认值。
+- **已验证**：14343 端口在本机空闲可用。
+- 误改记录：批次 2 曾把默认 host 改成 `0.0.0.0`（文档写错）。已改回 `127.0.0.1`，与 Ollama 一致。
 
 ### 4. B CLI 文案 + User-Agent
 - [api/client.go:116-140, 181-205](file:///d:/projects/susanAssist/susanPlatform/Susan/api/client.go#L116-L140)：`User-Agent: ollama/<version>` → `susan/<version>`
@@ -82,7 +86,7 @@
 - 统一改为 `SUSAN_` 前缀：`SUSAN_HOST`、`SUSAN_MODELS`、`SUSAN_ORIGINS`、`SUSAN_KEEP_ALIVE`、`SUSAN_DEBUG` 等
 - 改动点：[envconfig/config.go](file:///d:/projects/susanAssist/susanPlatform/Susan/envconfig/config.go) 中所有 `Var("OLLAMA_*")` 调用，以及 [config.go:322](file:///d:/projects/susanAssist/susanPlatform/Susan/envconfig/config.go#L322) 的环境变量说明表
 - 联动：测试文件里的 `t.Setenv("OLLAMA_*", ...)` → `t.Setenv("SUSAN_*", ...)`、文档站里的环境变量说明
-- 改后用户配置示例：`SUSAN_HOST=0.0.0.0:14343`
+- 改后默认示例：`SUSAN_HOST=127.0.0.1:14343`；若要对外监听再设 `SUSAN_HOST=0.0.0.0:14343`
 
 ---
 
@@ -185,7 +189,7 @@
 ### 批次 2：数据目录改名 + 二进制名 + 端口
 - A2：所有 `"Ollama"` 数据目录引用 → `"Susan"`（不写迁移）
 - A3：`ollama` CLI → `susan` CLI
-- 端口改造：11434 → 14343，默认监听 0.0.0.0（含测试文件联动）
+- 端口改造：**只改端口号** 11434 → 14343；默认仍监听 `127.0.0.1`（与 Ollama 一致，含测试文件联动）
 
 ### 批次 3：dev 环境启动链路 pre-existing bug 根治
 
