@@ -1,17 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchHealth } from "@/api";
 
+export function healthRefetchInterval(query: {
+  state: { data?: boolean };
+}): number {
+  // Failed requests leave data undefined; an unhealthy server returns false.
+  // Poll until healthy so the UI can leave Loading without a window restart.
+  // Keep a slower poll after success so a later server crash still self-heals.
+  return query.state.data === true ? 5000 : 1000;
+}
+
 export function useHealth() {
   const healthQuery = useQuery({
     queryKey: ["health"],
     queryFn: fetchHealth,
-    refetchInterval: (query) => {
-      // If the server is not healthy, poll every 10ms
-      // Once healthy, stop polling
-      return query.state.data === false ? 10 : false;
-    },
+    refetchInterval: healthRefetchInterval,
     refetchIntervalInBackground: true,
-    retry: false, // Don't retry, just return false
+    retry: true,
     staleTime: 0, // Always consider stale so we keep polling
   });
 

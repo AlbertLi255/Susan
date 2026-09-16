@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -205,6 +206,58 @@ func TestServerCmdCloudSettingEnv(t *testing.T) {
 	}
 }
 
+func TestResolvePathWindowsExe(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("Windows .exe lookup")
+	}
+
+	exe, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir := filepath.Dir(exe)
+	name := "susan-resolve-test"
+	exePath := filepath.Join(dir, name+".exe")
+	if err := os.WriteFile(exePath, []byte{}, 0o644); err != nil {
+		t.Fatalf("write sibling exe: %v", err)
+	}
+	t.Cleanup(func() { os.Remove(exePath) })
+
+	got := resolvePath(name)
+	if got != exePath {
+		t.Fatalf("resolvePath(%q) = %q, want %q", name, got, exePath)
+	}
+
+	got = resolvePath(name + ".exe")
+	if got != exePath {
+		t.Fatalf("resolvePath(%q) = %q, want %q (no .exe.exe)", name+".exe", got, exePath)
+	}
+}
+
+func TestResolvePathDevDist(t *testing.T) {
+	tmp := t.TempDir()
+	t.Chdir(tmp)
+
+	name := "susan-dist-test"
+	fileName := name
+	if runtime.GOOS == "windows" {
+		fileName = name + ".exe"
+	}
+	distDir := filepath.Join("dist", runtime.GOOS)
+	if err := os.MkdirAll(distDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	want := filepath.Join(distDir, fileName)
+	if err := os.WriteFile(want, []byte{}, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	got := resolvePath(name)
+	if got != want {
+		t.Fatalf("resolvePath(%q) = %q, want %q", name, got, want)
+	}
+}
+
 func TestOllamaServeArgs(t *testing.T) {
 	tests := []struct {
 		name string
@@ -214,6 +267,11 @@ func TestOllamaServeArgs(t *testing.T) {
 		{
 			name: "system susan serve",
 			args: []string{"susan", "serve"},
+			want: true,
+		},
+		{
+			name: "windows susan.exe serve",
+			args: []string{"susan.exe", "serve"},
 			want: true,
 		},
 		{
