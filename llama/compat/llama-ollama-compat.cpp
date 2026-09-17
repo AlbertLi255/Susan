@@ -66,7 +66,8 @@ TransformTiming record_transform_timing(size_t bytes, double ms) {
 }
 
 bool compat_disabled() {
-    const char * value = std::getenv("OLLAMA_LLAMA_CPP_COMPAT");
+    // Must match server.llamaCppCompatEnv ("SUSAN_LLAMA_CPP_COMPAT").
+    const char * value = std::getenv("SUSAN_LLAMA_CPP_COMPAT");
     return value && std::strcmp(value, "0") == 0;
 }
 

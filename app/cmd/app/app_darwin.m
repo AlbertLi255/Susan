@@ -1330,7 +1330,7 @@ didCompleteWithError:(NSError *)error {
                         ? @"Unable to use Ollama with Claude"
                         : @"Unable to remove Ollama from Claude")];
                 [alert setInformativeText:portConflict
-                    ? [NSString stringWithFormat:@"Change OLLAMA_HOST or quit the app using port %d, then try again.", ClaudeGatewayPort()]
+                    ? [NSString stringWithFormat:@"Change SUSAN_HOST or quit the app using port %d, then try again.", ClaudeGatewayPort()]
                     : (gatewayError.length > 0
                         ? gatewayError
                         : @"Ollama could not update Claude. Check the Ollama log for details.")];
