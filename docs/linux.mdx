@@ -132,7 +132,7 @@ Alternatively, create an override file manually in `/etc/systemd/system/susan.se
 
 ```ini
 [Service]
-Environment="OLLAMA_DEBUG=1"
+Environment="SUSAN_DEBUG=1"
 ```
 
 ## Updating
@@ -152,12 +152,12 @@ curl -fsSL https://susan.com/download/ollama-linux-amd64.tar.zst \
 
 ## Installing specific versions
 
-Use `OLLAMA_VERSION` environment variable with the install script to install a specific version of Susan, including pre-releases. You can find the version numbers in the [releases page](https://github.com/ollama/ollama/releases).
+Use `SUSAN_VERSION` environment variable with the install script to install a specific version of Susan, including pre-releases. You can find the version numbers in the [releases page](https://github.com/ollama/ollama/releases).
 
 For example:
 
 ```shell
-curl -fsSL https://susan.com/install.sh | OLLAMA_VERSION=0.5.7 sh
+curl -fsSL https://susan.com/install.sh | SUSAN_VERSION=0.5.7 sh
 ```
 
 ## Viewing logs

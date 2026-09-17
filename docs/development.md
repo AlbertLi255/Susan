@@ -119,7 +119,7 @@ Additional prerequisites:
 
 ## MLX Engine (Optional)
 
-The MLX engine enables running safetensor based models. On macOS arm64, MLX is enabled by default. On other platforms, MLX backends are selected with `OLLAMA_MLX_BACKENDS`.
+The MLX engine enables running safetensor based models. On macOS arm64, MLX is enabled by default. On other platforms, MLX backends are selected with `SUSAN_MLX_BACKENDS`.
 
 ### CUDA
 
@@ -135,22 +135,22 @@ cmake --build build --parallel 8
 To build against a local checkout of MLX and/or MLX-C (useful for development), set environment variables before running CMake:
 
 ```shell
-export OLLAMA_MLX_SOURCE=/path/to/mlx
-export OLLAMA_MLX_C_SOURCE=/path/to/mlx-c
+export SUSAN_MLX_SOURCE=/path/to/mlx
+export SUSAN_MLX_C_SOURCE=/path/to/mlx-c
 ```
 
 On macOS arm64:
 
 ```shell
-OLLAMA_MLX_SOURCE=../mlx OLLAMA_MLX_C_SOURCE=../mlx-c cmake -B build .
+SUSAN_MLX_SOURCE=../mlx SUSAN_MLX_C_SOURCE=../mlx-c cmake -B build .
 cmake --build build --parallel 8
 ```
 
 For CUDA:
 
 ```powershell
-$env:OLLAMA_MLX_SOURCE="../mlx"
-$env:OLLAMA_MLX_C_SOURCE="../mlx-c"
+$env:SUSAN_MLX_SOURCE="../mlx"
+$env:SUSAN_MLX_C_SOURCE="../mlx-c"
 cmake -B build . -DOLLAMA_MLX_BACKENDS=cuda_v13
 cmake --build build --parallel 8
 ```

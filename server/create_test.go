@@ -14,7 +14,7 @@ import (
 )
 
 func TestConvertFromSafetensors(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	// Helper function to create a new layer and return its digest
 	makeTemp := func(content string) string {
@@ -258,7 +258,7 @@ func TestRemoteURL_Idempotent(t *testing.T) {
 }
 
 func TestSetTemplate(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	t.Run("valid template", func(t *testing.T) {
 		layers, err := setTemplate(nil, "{{ .Prompt }}")

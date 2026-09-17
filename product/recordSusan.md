@@ -121,14 +121,14 @@ taskkill /IM "ollama app.exe" /F
 # 打开"服务"管理器，找到Ollama相关服务并停止
 
 # 验证端口已释放
-netstat -ano | findstr :11434
+netstat -ano | findstr :14343
 # 应该没有输出或显示不同的进程
 ```
 
 **方法2：使用不同端口启动Susan服务**
 ```powershell
 # 设置环境变量指定不同端口
-$env:OLLAMA_HOST = "localhost:11435"
+$env:SUSAN_HOST = "localhost:11435"
 
 # 启动Susan服务
 .\susan.exe serve
@@ -142,7 +142,7 @@ $env:OLLAMA_HOST = "localhost:11435"
 .\susan.exe serve
 
 # 或者使用不同端口（如果方法2）
-$env:OLLAMA_HOST = "localhost:11435"
+$env:SUSAN_HOST = "localhost:11435"
 .\susan.exe serve
 
 # 服务将在后台运行，保持此PowerShell窗口打开
@@ -156,14 +156,14 @@ $env:OLLAMA_HOST = "localhost:11435"
 **如果使用默认端口11434：**
 ```powershell
 # 测试健康检查 - 获取模型标签（正确的list端点）
-Invoke-WebRequest -Uri "http://localhost:11434/api/tags" -Method GET
+Invoke-WebRequest -Uri "http://localhost:14343/api/tags" -Method GET
 
 # 测试版本信息
-Invoke-WebRequest -Uri "http://localhost:11434/api/version" -Method GET
+Invoke-WebRequest -Uri "http://localhost:14343/api/version" -Method GET
 
 # 测试模型信息
 $body = '{"name":"gemma2:9b"}' | ConvertTo-Json
-Invoke-WebRequest -Uri "http://localhost:11434/api/show" -Method POST -Body $body -ContentType "application/json"
+Invoke-WebRequest -Uri "http://localhost:14343/api/show" -Method POST -Body $body -ContentType "application/json"
 
 # 测试聊天接口（注意：先设置变量，然后使用）
 $chatBody = @{
@@ -171,7 +171,7 @@ $chatBody = @{
     messages = @(@{role = "user"; content = "Hello Susan"})
     stream = $false
 } | ConvertTo-Json -Depth 10
-Invoke-WebRequest -Uri "http://localhost:11434/api/chat" -Method POST -Body $chatBody -ContentType "application/json"
+Invoke-WebRequest -Uri "http://localhost:14343/api/chat" -Method POST -Body $chatBody -ContentType "application/json"
 
 # 测试生成接口
 $generateBody = @{
@@ -179,17 +179,17 @@ $generateBody = @{
     prompt = "Hello Susan"
     stream = $false
 } | ConvertTo-Json -Depth 10
-Invoke-WebRequest -Uri "http://localhost:11434/api/generate" -Method POST -Body $generateBody -ContentType "application/json"
+Invoke-WebRequest -Uri "http://localhost:14343/api/generate" -Method POST -Body $generateBody -ContentType "application/json"
 
 # 测试运行中的模型
-Invoke-WebRequest -Uri "http://localhost:11434/api/ps" -Method GET
+Invoke-WebRequest -Uri "http://localhost:14343/api/ps" -Method GET
 
 # 测试嵌入
 $embedBody = @{
     model = "gemma2:9b"
     input = "Hello Susan"
 } | ConvertTo-Json -Depth 10
-Invoke-WebRequest -Uri "http://localhost:11434/api/embed" -Method POST -Body $embedBody -ContentType "application/json"
+Invoke-WebRequest -Uri "http://localhost:14343/api/embed" -Method POST -Body $embedBody -ContentType "application/json"
 ```
 
 **如果使用端口11435：**
@@ -317,11 +317,11 @@ tasklist | findstr susan
 # 应该看到susan.exe进程
 
 # 检查响应头中的品牌信息
-curl -I http://localhost:11434/api/tags
+curl -I http://localhost:14343/api/tags
 # 查看响应头，确认是Susan服务
 
 # 或者检查版本信息
-curl http://localhost:11434/api/version
+curl http://localhost:14343/api/version
 # 确认版本信息正确
 ```
 
@@ -419,7 +419,7 @@ where cl
 ### 常见问题4: 服务启动失败
 ```powershell
 # 检查端口占用
-netstat -ano | findstr :11434
+netstat -ano | findstr :14343
 
 # 如果被占用，终止进程
 taskkill /PID <进程ID> /F
@@ -574,14 +574,14 @@ taskkill /IM "ollama app.exe" /F
 # 打开"服务"管理器，找到Ollama相关服务并停止
 
 # 验证端口已释放
-netstat -ano | findstr :11434
+netstat -ano | findstr :14343
 # 应该没有输出或显示不同的进程
 ```
 
 **方法2：使用不同端口启动Susan服务**
 ```powershell
 # 设置环境变量指定不同端口
-$env:OLLAMA_HOST = "localhost:11435"
+$env:SUSAN_HOST = "localhost:11435"
 
 # 启动Susan服务
 .\susan.exe serve
@@ -595,7 +595,7 @@ $env:OLLAMA_HOST = "localhost:11435"
 .\susan.exe serve
 
 # 或者使用不同端口（如果方法2）
-$env:OLLAMA_HOST = "localhost:11435"
+$env:SUSAN_HOST = "localhost:11435"
 .\susan.exe serve
 
 # 服务将在后台运行，保持此PowerShell窗口打开
@@ -609,11 +609,11 @@ $env:OLLAMA_HOST = "localhost:11435"
 **如果使用默认端口11434：**
 ```powershell
 # 测试健康检查 - 获取模型标签
-Invoke-WebRequest -Uri "http://localhost:11434/api/tags" -Method GET
+Invoke-WebRequest -Uri "http://localhost:14343/api/tags" -Method GET
 
 # 测试模型信息
 $body = '{"name":"gemma2:9b"} | ConvertTo-Json
-Invoke-WebRequest -Uri "http://localhost:11434/api/show" -Method POST -Body $body -ContentType "application/json"
+Invoke-WebRequest -Uri "http://localhost:14343/api/show" -Method POST -Body $body -ContentType "application/json"
 
 # 测试聊天接口
 $chatBody = @{
@@ -621,7 +621,7 @@ $chatBody = @{
     messages = @(@{role = "user"; content = "Hello Susan"})
     stream = $false
 } | ConvertTo-Json -Depth 10
-Invoke-WebRequest -Uri "http://localhost:11434/api/chat" -Method POST -Body $chatBody -ContentType "application/json"
+Invoke-WebRequest -Uri "http://localhost:14343/api/chat" -Method POST -Body $chatBody -ContentType "application/json"
 ```
 
 **如果使用端口11435：**
@@ -662,11 +662,11 @@ tasklist | findstr susan
 # 应该看到susan.exe进程
 
 # 检查响应头中的品牌信息
-curl -I http://localhost:11434/api/tags
+curl -I http://localhost:14343/api/tags
 # 查看响应头，确认是Susan服务
 
 # 或者检查版本信息
-curl http://localhost:11434/api/version
+curl http://localhost:14343/api/version
 # 确认版本信息正确
 ```
 
@@ -764,7 +764,7 @@ where cl
 ### 常见问题4: 服务启动失败
 ```powershell
 # 检查端口占用
-netstat -ano | findstr :11434
+netstat -ano | findstr :14343
 
 # 如果被占用，终止进程
 taskkill /PID <进程ID> /F
@@ -919,14 +919,14 @@ taskkill /IM "ollama app.exe" /F
 # 打开"服务"管理器，找到Ollama相关服务并停止
 
 # 验证端口已释放
-netstat -ano | findstr :11434
+netstat -ano | findstr :14343
 # 应该没有输出或显示不同的进程
 ```
 
 **方法2：使用不同端口启动Susan服务**
 ```powershell
 # 设置环境变量指定不同端口
-$env:OLLAMA_HOST = "localhost:11435"
+$env:SUSAN_HOST = "localhost:11435"
 
 # 启动Susan服务
 .\susan.exe serve
@@ -940,7 +940,7 @@ $env:OLLAMA_HOST = "localhost:11435"
 .\susan.exe serve
 
 # 或者使用不同端口（如果方法2）
-$env:OLLAMA_HOST = "localhost:11435"
+$env:SUSAN_HOST = "localhost:11435"
 .\susan.exe serve
 
 # 服务将在后台运行，保持此PowerShell窗口打开
@@ -952,13 +952,13 @@ $env:OLLAMA_HOST = "localhost:11435"
 **如果使用默认端口11434：**
 ```powershell
 # 测试健康检查 - 获取模型标签（正确的API端点）
-curl http://localhost:11434/api/tags
+curl http://localhost:14343/api/tags
 
 # 测试模型信息（使用正确的API端点）
-curl http://localhost:11434/api/show -d '{"name":"gemma2:9b"}'
+curl http://localhost:14343/api/show -d '{"name":"gemma2:9b"}'
 
 # 如果有模型，测试聊天接口（使用已存在的模型）
-curl http://localhost:11434/api/chat -d '{
+curl http://localhost:14343/api/chat -d '{
   "model": "gemma2:9b",
   "messages": [{"role": "user", "content": "Hello Susan"}],
   "stream": false
@@ -993,11 +993,11 @@ tasklist | findstr susan
 # 应该看到susan.exe进程
 
 # 检查响应头中的品牌信息
-curl -I http://localhost:11434/api/tags
+curl -I http://localhost:14343/api/tags
 # 查看响应头，确认是Susan服务
 
 # 或者检查版本信息
-curl http://localhost:11434/api/version
+curl http://localhost:14343/api/version
 # 确认版本信息正确
 ```
 
@@ -1095,7 +1095,7 @@ where cl
 ### 常见问题4: 服务启动失败
 ```powershell
 # 检查端口占用
-netstat -ano | findstr :11434
+netstat -ano | findstr :14343
 
 # 如果被占用，终止进程
 taskkill /PID <进程ID> /F
@@ -1250,14 +1250,14 @@ taskkill /IM "ollama app.exe" /F
 # 打开"服务"管理器，找到Ollama相关服务并停止
 
 # 验证端口已释放
-netstat -ano | findstr :11434
+netstat -ano | findstr :14343
 # 应该没有输出或显示不同的进程
 ```
 
 **方法2：使用不同端口启动Susan服务**
 ```powershell
 # 设置环境变量指定不同端口
-$env:OLLAMA_HOST = "localhost:11435"
+$env:SUSAN_HOST = "localhost:11435"
 
 # 启动Susan服务
 .\susan.exe serve
@@ -1271,7 +1271,7 @@ $env:OLLAMA_HOST = "localhost:11435"
 .\susan.exe serve
 
 # 或者使用不同端口（如果方法2）
-$env:OLLAMA_HOST = "localhost:11435"
+$env:SUSAN_HOST = "localhost:11435"
 .\susan.exe serve
 
 # 服务将在后台运行，保持此PowerShell窗口打开
@@ -1283,13 +1283,13 @@ $env:OLLAMA_HOST = "localhost:11435"
 **如果使用默认端口11434：**
 ```powershell
 # 测试健康检查
-curl http://localhost:11434/api/tags
+curl http://localhost:14343/api/tags
 
 # 测试模型列表（应该为空或显示已安装的模型）
-curl http://localhost:11434/api/list
+curl http://localhost:14343/api/list
 
 # 如果有模型，测试聊天接口
-curl http://localhost:11434/api/chat -d '{
+curl http://localhost:14343/api/chat -d '{
   "model": "gemma4",
   "messages": [{"role": "user", "content": "Hello"}],
   "stream": false
@@ -1319,11 +1319,11 @@ tasklist | findstr susan
 # 应该看到susan.exe进程
 
 # 检查响应头中的品牌信息
-curl -I http://localhost:11434/api/tags
+curl -I http://localhost:14343/api/tags
 # 查看响应头，确认是Susan服务
 
 # 或者检查版本信息
-curl http://localhost:11434/api/version
+curl http://localhost:14343/api/version
 # 确认版本信息正确
 ```
 
@@ -1421,7 +1421,7 @@ where cl
 ### 常见问题4: 服务启动失败
 ```powershell
 # 检查端口占用
-netstat -ano | findstr :11434
+netstat -ano | findstr :14343
 
 # 如果被占用，终止进程
 taskkill /PID <进程ID> /F
@@ -1571,7 +1571,7 @@ dir build\lib\ollama
 # 启动Susan服务
 .\susan.exe serve
 
-# 服务将在后台运行，监听 http://localhost:11434
+# 服务将在后台运行，监听 http://localhost:14343
 # 保持此PowerShell窗口打开
 ```
 
@@ -1580,13 +1580,13 @@ dir build\lib\ollama
 
 ```powershell
 # 测试健康检查
-curl http://localhost:11434/api/tags
+curl http://localhost:14343/api/tags
 
 # 测试模型列表（应该为空或显示已安装的模型）
-curl http://localhost:11434/api/list
+curl http://localhost:14343/api/list
 
 # 如果有模型，测试聊天接口
-curl http://localhost:11434/api/chat -d '{
+curl http://localhost:14343/api/chat -d '{
   "model": "gemma4",
   "messages": [{"role": "user", "content": "Hello"}],
   "stream": false
@@ -1687,7 +1687,7 @@ where cl
 ### 常见问题4: 服务启动失败
 ```powershell
 # 检查端口占用
-netstat -ano | findstr :11434
+netstat -ano | findstr :14343
 
 # 如果被占用，终止进程
 taskkill /PID <进程ID> /F

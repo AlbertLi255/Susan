@@ -37,7 +37,7 @@ var webToolCases = []struct {
 }
 
 // enableWebToolsForTest isolates web tool tests from the runner's cloud
-// policy. In particular, Windows can inherit both OLLAMA_NO_CLOUD and a
+// policy. In particular, Windows can inherit both SUSAN_NO_CLOUD and a
 // server.json from USERPROFILE.
 func enableWebToolsForTest(t *testing.T) {
 	t.Helper()
@@ -49,7 +49,7 @@ func enableWebToolsForTest(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
 	t.Setenv("USERPROFILE", home)
-	t.Setenv("OLLAMA_NO_CLOUD", "")
+	t.Setenv("SUSAN_NO_CLOUD", "")
 	envconfig.ReloadServerConfig()
 }
 
@@ -66,7 +66,7 @@ func runWebTool(t *testing.T, tool coreagent.Tool, args map[string]any, path str
 		_, _ = w.Write([]byte(body))
 	}))
 	t.Cleanup(ts.Close)
-	t.Setenv("OLLAMA_HOST", ts.URL)
+	t.Setenv("SUSAN_HOST", ts.URL)
 	_, err := tool.Execute(t.Context(), coreagent.ToolContext{}, args)
 	return err
 }
@@ -117,7 +117,7 @@ func TestWebToolsIgnoreInheritedCloudPolicy(t *testing.T) {
 	}
 	t.Setenv("HOME", home)
 	t.Setenv("USERPROFILE", home)
-	t.Setenv("OLLAMA_NO_CLOUD", "1")
+	t.Setenv("SUSAN_NO_CLOUD", "1")
 	envconfig.ReloadServerConfig()
 
 	enableWebToolsForTest(t)
@@ -181,7 +181,7 @@ func TestWebFetchBoundsContentBeforeReturning(t *testing.T) {
 		}
 	}))
 	defer ts.Close()
-	t.Setenv("OLLAMA_HOST", ts.URL)
+	t.Setenv("SUSAN_HOST", ts.URL)
 
 	result, err := (&WebFetch{}).Execute(t.Context(), coreagent.ToolContext{}, map[string]any{
 		"url": "https://ollama.com",
@@ -200,7 +200,7 @@ func TestWebFetchBoundsContentBeforeReturning(t *testing.T) {
 }
 
 func TestWebToolsRejectWhenCloudDisabled(t *testing.T) {
-	t.Setenv("OLLAMA_NO_CLOUD", "1")
+	t.Setenv("SUSAN_NO_CLOUD", "1")
 
 	for _, tt := range webToolCases {
 		t.Run(tt.name, func(t *testing.T) {

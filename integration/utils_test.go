@@ -31,10 +31,10 @@ import (
 )
 
 var (
-	// testModel is set via OLLAMA_TEST_MODEL env var. When set, all tests
+	// testModel is set via SUSAN_TEST_MODEL env var. When set, all tests
 	// that loop over model lists will test only this model, and smol is
 	// also overridden to use it.
-	testModel = os.Getenv("OLLAMA_TEST_MODEL")
+	testModel = os.Getenv("SUSAN_TEST_MODEL")
 
 	smol   = defaultTestModel("llama3.2:1b")
 	stream = false
@@ -75,7 +75,7 @@ func defaultTestModel(model string) string {
 }
 
 // testModels returns the override model as a single-element slice when
-// OLLAMA_TEST_MODEL is set, otherwise returns the provided default list.
+// SUSAN_TEST_MODEL is set, otherwise returns the provided default list.
 func testModels(defaults []string) []string {
 	if testModel != "" {
 		return []string{testModel}
@@ -137,7 +137,7 @@ func FindPort() string {
 
 func GetTestEndpoint() (*api.Client, string) {
 	defaultPort := "14343"
-	ollamaHost := os.Getenv("OLLAMA_HOST")
+	ollamaHost := os.Getenv("SUSAN_HOST")
 
 	scheme, hostport, ok := strings.Cut(ollamaHost, "://")
 	if !ok {
@@ -157,7 +157,7 @@ func GetTestEndpoint() (*api.Client, string) {
 		}
 	}
 
-	if os.Getenv("OLLAMA_TEST_EXISTING") == "" && runtime.GOOS != "windows" && port == defaultPort {
+	if os.Getenv("SUSAN_TEST_EXISTING") == "" && runtime.GOOS != "windows" && port == defaultPort {
 		port = FindPort()
 	}
 
@@ -202,9 +202,9 @@ func startServer(t *testing.T, ctx context.Context, ollamaHost string) error {
 	serverDone = make(chan int)
 	serverLog.Reset()
 
-	if tmp := os.Getenv("OLLAMA_HOST"); tmp != ollamaHost {
-		slog.Info("setting env", "OLLAMA_HOST", ollamaHost)
-		t.Setenv("OLLAMA_HOST", ollamaHost)
+	if tmp := os.Getenv("SUSAN_HOST"); tmp != ollamaHost {
+		slog.Info("setting env", "SUSAN_HOST", ollamaHost)
+		t.Setenv("SUSAN_HOST", ollamaHost)
 	}
 
 	serverCmd = exec.Command(CLIName, "serve")
@@ -289,7 +289,7 @@ var serverProcMutex sync.Mutex
 func InitServerConnection(ctx context.Context, t *testing.T) (*api.Client, string, func()) {
 	client, testEndpoint := GetTestEndpoint()
 	cleanup := func() {}
-	if os.Getenv("OLLAMA_TEST_EXISTING") == "" && runtime.GOOS != "windows" {
+	if os.Getenv("SUSAN_TEST_EXISTING") == "" && runtime.GOOS != "windows" {
 		var err error
 		err = startServer(t, ctx, testEndpoint)
 		if err != nil {
@@ -306,7 +306,7 @@ func InitServerConnection(ctx context.Context, t *testing.T) (*api.Client, strin
 			<-serverDone
 			slog.Info("terminate complete")
 
-			if t.Failed() || os.Getenv("OLLAMA_TEST_LOG_SERVER") != "" {
+			if t.Failed() || os.Getenv("SUSAN_TEST_LOG_SERVER") != "" {
 				slog.Warn("SERVER LOG FOLLOWS")
 				io.Copy(os.Stderr, bytes.NewReader(serverLog.Bytes()))
 				slog.Warn("END OF SERVER")
@@ -636,8 +636,8 @@ func skipIfMLXUnsupported(t *testing.T, err error) {
 }
 
 func targetPlatform() (goos, goarch string) {
-	goos = normalizeTargetGOOS(os.Getenv("OLLAMA_TEST_HOST_OS"))
-	goarch = normalizeTargetGOARCH(os.Getenv("OLLAMA_TEST_HOST_ARCH"))
+	goos = normalizeTargetGOOS(os.Getenv("SUSAN_TEST_HOST_OS"))
+	goarch = normalizeTargetGOARCH(os.Getenv("SUSAN_TEST_HOST_ARCH"))
 	if goos == "" {
 		goos = runtime.GOOS
 	}
@@ -672,19 +672,19 @@ func normalizeTargetGOARCH(goarch string) string {
 }
 
 // skipIfModelTooLargeForVRAM skips the test when the model's on-disk size
-// is larger than OLLAMA_MAX_VRAM by enough that even partial GPU offload
+// is larger than SUSAN_MAX_VRAM by enough that even partial GPU offload
 // won't help. The 0.75x gate keeps vision/audio tests runnable on systems
 // where the model is slightly over VRAM and a portion legitimately spills to
-// CPU. No-op when OLLAMA_MAX_VRAM is unset.
+// CPU. No-op when SUSAN_MAX_VRAM is unset.
 func skipIfModelTooLargeForVRAM(ctx context.Context, t *testing.T, client *api.Client, modelName string) {
 	t.Helper()
-	s := os.Getenv("OLLAMA_MAX_VRAM")
+	s := os.Getenv("SUSAN_MAX_VRAM")
 	if s == "" {
 		return
 	}
 	maxVram, err := strconv.ParseUint(s, 10, 64)
 	if err != nil {
-		t.Fatalf("invalid OLLAMA_MAX_VRAM %v", err)
+		t.Fatalf("invalid SUSAN_MAX_VRAM %v", err)
 	}
 	resp, err := client.List(ctx)
 	if err != nil {
@@ -699,7 +699,7 @@ func skipIfModelTooLargeForVRAM(ctx context.Context, t *testing.T, client *api.C
 
 func skipUnderMinVRAM(t *testing.T, gb uint64) {
 	// TODO use info API in the future
-	if s := os.Getenv("OLLAMA_MAX_VRAM"); s != "" {
+	if s := os.Getenv("SUSAN_MAX_VRAM"); s != "" {
 		maxVram, err := strconv.ParseUint(s, 10, 64)
 		if err != nil {
 			t.Fatal(err)

@@ -20,7 +20,7 @@ const (
 	deepSeekHarnessIntegrationName = "dsh"
 	deepSeekHarnessNpmPackage      = "@deepseek-ai/dsh@latest"
 	deepSeekHarnessProvider        = "ollama"
-	deepSeekHarnessAPIKeyEnv       = "OLLAMA_LAUNCH_DSH_API_KEY"
+	deepSeekHarnessAPIKeyEnv       = "SUSAN_LAUNCH_DSH_API_KEY"
 	deepSeekHarnessWebSettings     = "web-search-deepseek"
 )
 

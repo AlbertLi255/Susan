@@ -38,7 +38,7 @@ npm run dev
 
 ```bash
 go generate ./... &&
-OLLAMA_DEBUG=1 go run ./cmd/app -dev
+SUSAN_DEBUG=1 go run ./cmd/app -dev
 ```
 
 The `-dev` flag enables:

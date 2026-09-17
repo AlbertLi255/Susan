@@ -37,7 +37,7 @@ func (s *Server) initRequestLogging() error {
 
 	requestLogger, err := newInferenceRequestLogger()
 	if err != nil {
-		return fmt.Errorf("enable OLLAMA_DEBUG_LOG_REQUESTS: %w", err)
+		return fmt.Errorf("enable SUSAN_DEBUG_LOG_REQUESTS: %w", err)
 	}
 
 	s.requestLogger = requestLogger

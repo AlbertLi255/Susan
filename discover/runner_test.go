@@ -143,7 +143,7 @@ func TestFilterIntegratedGPUs(t *testing.T) {
 	}
 
 	if runtime.GOOS == "darwin" && runtime.GOARCH == "arm64" {
-		t.Setenv("OLLAMA_IGPU_ENABLE", "false")
+		t.Setenv("SUSAN_IGPU_ENABLE", "false")
 		got := filterIntegratedGPUs(append([]ml.DeviceInfo{}, devices...))
 		want := []ml.DeviceID{
 			{Library: "CUDA", ID: "0"},
@@ -168,7 +168,7 @@ func TestFilterIntegratedGPUs(t *testing.T) {
 	})
 
 	t.Run("explicit true admits all integrated GPUs", func(t *testing.T) {
-		t.Setenv("OLLAMA_IGPU_ENABLE", "true")
+		t.Setenv("SUSAN_IGPU_ENABLE", "true")
 		got := filterIntegratedGPUs(append([]ml.DeviceInfo{}, devices...))
 		want := []ml.DeviceID{
 			{Library: "CUDA", ID: "0"},
@@ -182,7 +182,7 @@ func TestFilterIntegratedGPUs(t *testing.T) {
 	})
 
 	t.Run("explicit false drops integrated GPUs", func(t *testing.T) {
-		t.Setenv("OLLAMA_IGPU_ENABLE", "false")
+		t.Setenv("SUSAN_IGPU_ENABLE", "false")
 		got := filterIntegratedGPUs(append([]ml.DeviceInfo{}, devices...))
 		want := []ml.DeviceID{{Library: "Vulkan", ID: "1"}}
 		assertDeviceIDs(t, got, want)

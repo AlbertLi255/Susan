@@ -209,7 +209,7 @@ cmake --build build --parallel 8
 .\susan.exe serve
 
 # 使用不同端口（避免与已安装的Ollama冲突）
-$env:OLLAMA_HOST = "localhost:11435"
+$env:SUSAN_HOST = "localhost:11435"
 .\susan.exe serve
 ```
 
@@ -218,13 +218,13 @@ $env:OLLAMA_HOST = "localhost:11435"
 
 ```powershell
 # 测试版本信息
-Invoke-WebRequest -Uri "http://localhost:11434/api/version" -Method GET
+Invoke-WebRequest -Uri "http://localhost:14343/api/version" -Method GET
 
 # 测试模型列表
-Invoke-WebRequest -Uri "http://localhost:11434/api/tags" -Method GET
+Invoke-WebRequest -Uri "http://localhost:14343/api/tags" -Method GET
 
 # 测试健康检查
-Invoke-WebRequest -Uri "http://localhost:11434/api/ps" -Method GET
+Invoke-WebRequest -Uri "http://localhost:14343/api/ps" -Method GET
 ```
 
 #### 3.3 运行单元测试
@@ -267,13 +267,13 @@ go build -o susan.exe .
 **解决**：
 ```powershell
 # 查找占用端口的进程
-netstat -ano | findstr :11434
+netstat -ano | findstr :14343
 
 # 终止进程
 taskkill /PID <进程ID> /F
 
 # 或使用不同端口
-$env:OLLAMA_HOST = "localhost:11435"
+$env:SUSAN_HOST = "localhost:11435"
 ```
 
 ## macOS平台构建指南
@@ -421,7 +421,7 @@ ls -lh build/lib/ollama/
 ./susan serve
 
 # 使用不同端口
-OLLAMA_HOST=localhost:11435 ./susan serve
+SUSAN_HOST=localhost:11435 ./susan serve
 ```
 
 #### 3.2 测试API接口
@@ -429,13 +429,13 @@ OLLAMA_HOST=localhost:11435 ./susan serve
 
 ```bash
 # 测试版本信息
-curl http://localhost:11434/api/version
+curl http://localhost:14343/api/version
 
 # 测试模型列表
-curl http://localhost:11434/api/tags
+curl http://localhost:14343/api/tags
 
 # 测试健康检查
-curl http://localhost:11434/api/ps
+curl http://localhost:14343/api/ps
 ```
 
 #### 3.3 运行单元测试

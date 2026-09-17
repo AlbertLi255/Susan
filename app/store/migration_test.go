@@ -138,7 +138,7 @@ func TestNoConfigToMigrate(t *testing.T) {
 func TestCloudMigrationFromAirplaneMode(t *testing.T) {
 	tmpHome := t.TempDir()
 	setTestHome(t, tmpHome)
-	t.Setenv("OLLAMA_NO_CLOUD", "")
+	t.Setenv("SUSAN_NO_CLOUD", "")
 
 	dbPath := filepath.Join(tmpHome, "db.sqlite")
 	db, err := newDatabase(dbPath)

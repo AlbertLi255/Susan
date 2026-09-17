@@ -474,7 +474,7 @@ func TestInferSafetensorsCapabilities(t *testing.T) {
 }
 
 func TestCreateModelfileLayersIncludesParameters(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	layers, err := createModelfileLayers(&ModelfileConfig{
 		Parameters: map[string]any{
@@ -515,7 +515,7 @@ func TestCreateModelfileLayersIncludesParameters(t *testing.T) {
 }
 
 func TestNewManifestWriter_PopulatesFileTypeFromEffectiveQuantize(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	opts := CreateOptions{
 		ModelName: "test-quantized",
@@ -555,7 +555,7 @@ func TestNewManifestWriter_PopulatesFileTypeFromEffectiveQuantize(t *testing.T) 
 }
 
 func TestNewManifestWriter_PopulatesGenerationDefaults(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	modelDir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(modelDir, "generation_config.json"), []byte(`{
@@ -616,7 +616,7 @@ func TestNewManifestWriter_PopulatesGenerationDefaults(t *testing.T) {
 }
 
 func TestNewManifestWriter_PopulatesDraftMetadata(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	draftDir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(draftDir, "config.json"), []byte(`{"architectures":["DFlashDraftModel"],"model_type":"qwen3"}`), 0o644); err != nil {

@@ -222,11 +222,11 @@ Susan Windows 桌面 App：编译、构建、启动保姆级教程
 
       说明：环境变量名仍是 OLLAMA_DEBUG（批次 3 才会改成 SUSAN_*）。
 
-      若本机用户环境里设置了 OLLAMA_HOST（例如 localhost:11434），
+      若本机用户环境里设置了 SUSAN_HOST（例如 localhost:14343），
       健康检查会去连那个地址，容易和默认端口 14343 对不上。
       需要时在当前窗口清空：
 
-      Remove-Item Env:OLLAMA_HOST -ErrorAction SilentlyContinue
+      Remove-Item Env:SUSAN_HOST -ErrorAction SilentlyContinue
 
   6.3 启动
 
@@ -277,7 +277,7 @@ Susan Windows 桌面 App：编译、构建、启动保姆级教程
       Invoke-WebRequest -Uri "http://127.0.0.1:14343/api/version" -Method GET
 
       默认端口是 14343，不是旧 Ollama 的 11434。
-      如果设置了 OLLAMA_HOST，以环境变量为准。
+      如果设置了 SUSAN_HOST，以环境变量为准。
 
 
 --------------------------------------------------------------------------------
@@ -318,7 +318,7 @@ Susan Windows 桌面 App：编译、构建、启动保姆级教程
   go build -o dist\susan.exe .
   go build -trimpath -o dist\susan-app.exe ./app/cmd/app/
 
-  Remove-Item Env:OLLAMA_HOST -ErrorAction SilentlyContinue
+  Remove-Item Env:SUSAN_HOST -ErrorAction SilentlyContinue
   $env:PATH = (Resolve-Path dist).Path + ";" + $env:PATH
   $env:OLLAMA_DEBUG = "1"
   & ".\dist\susan-app.exe"
@@ -340,8 +340,8 @@ Susan Windows 桌面 App：编译、构建、启动保姆级教程
      正确目录是 app\ui\app，产物是 app\ui\app\dist。
 
   Q：日志 timeout waiting for Susan server？
-  A：端口被占用、OLLAMA_HOST 指错、或找不到 susan.exe。
-     先 Get-Process susan，再检查 dist\susan.exe 和 OLLAMA_HOST。
+  A：端口被占用、SUSAN_HOST 指错、或找不到 susan.exe。
+     先 Get-Process susan，再检查 dist\susan.exe 和 SUSAN_HOST。
      App 仍可能继续跑托盘，点图标看窗口。
 
   Q：窗口一闪或一直看不见？

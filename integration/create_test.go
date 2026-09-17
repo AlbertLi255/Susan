@@ -18,12 +18,12 @@ import (
 
 const testdataModelsDir = "testdata/models"
 
-// skipIfRemote skips the test if OLLAMA_HOST points to a non-local server.
+// skipIfRemote skips the test if SUSAN_HOST points to a non-local server.
 // Safetensors creation requires localhost since it reads model files.
 // from disk and uses the --experimental CLI path.
 func skipIfRemote(t *testing.T) {
 	t.Helper()
-	host := os.Getenv("OLLAMA_HOST")
+	host := os.Getenv("SUSAN_HOST")
 	if host == "" {
 		return // default is localhost
 	}
@@ -43,7 +43,7 @@ func skipIfRemote(t *testing.T) {
 	if ip != nil && (ip.IsLoopback() || ip.IsUnspecified()) {
 		return
 	}
-	t.Skipf("safetensors creation requires a local server (OLLAMA_HOST=%s)", host)
+	t.Skipf("safetensors creation requires a local server (SUSAN_HOST=%s)", host)
 }
 
 // findHFCLI returns the path to the HuggingFace CLI, or "" if not found.
@@ -90,10 +90,10 @@ func downloadHFModel(t *testing.T, repo, destDir string, extraArgs ...string) {
 }
 
 // ollamaBin returns the path to the susan binary to use for tests.
-// Prefers OLLAMA_BIN env, then falls back to the built binary at ../susan
+// Prefers SUSAN_BIN env, then falls back to the built binary at ../susan
 // (same binary the integration test server uses).
 func ollamaBin() string {
-	if bin := os.Getenv("OLLAMA_BIN"); bin != "" {
+	if bin := os.Getenv("SUSAN_BIN"); bin != "" {
 		return bin
 	}
 	if abs, err := filepath.Abs("../susan"); err == nil {
@@ -104,17 +104,17 @@ func ollamaBin() string {
 	return "susan"
 }
 
-// ensureMLXLibraryPath sets OLLAMA_LIBRARY_PATH so the MLX dynamic library
+// ensureMLXLibraryPath sets SUSAN_LIBRARY_PATH so the MLX dynamic library
 // is discoverable. Integration tests run from integration/ dir, so the
 // default CWD-based search won't find the library at the repo root.
 func ensureMLXLibraryPath(t *testing.T) {
 	t.Helper()
 	if libPath, err := filepath.Abs("../build/lib/ollama"); err == nil {
 		if _, err := os.Stat(libPath); err == nil {
-			if existing := os.Getenv("OLLAMA_LIBRARY_PATH"); existing != "" {
-				t.Setenv("OLLAMA_LIBRARY_PATH", existing+string(filepath.ListSeparator)+libPath)
+			if existing := os.Getenv("SUSAN_LIBRARY_PATH"); existing != "" {
+				t.Setenv("SUSAN_LIBRARY_PATH", existing+string(filepath.ListSeparator)+libPath)
 			} else {
-				t.Setenv("OLLAMA_LIBRARY_PATH", libPath)
+				t.Setenv("SUSAN_LIBRARY_PATH", libPath)
 			}
 		}
 	}

@@ -28,7 +28,7 @@ import (
 const (
 	defaultCloudProxyBaseURL       = "https://ollama.com:443"
 	defaultCloudProxySigningHost   = "ollama.com"
-	cloudProxyBaseURLEnv           = "OLLAMA_CLOUD_BASE_URL"
+	cloudProxyBaseURLEnv           = "SUSAN_CLOUD_BASE_URL"
 	cloudWebSearchOrchestrationKey = "cloud_web_search_orchestration"
 	cloudProxyClientVersionHeader  = "X-Ollama-Client-Version"
 

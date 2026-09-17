@@ -194,10 +194,10 @@ func init() {
 		return
 	}
 
-	// OLLAMA_LLM_LIBRARY overrides variant selection (e.g., "mlx_metal_v3").
+	// SUSAN_LLM_LIBRARY overrides variant selection (e.g., "mlx_metal_v3").
 	// When set to an mlx_* value, only that specific subdir is tried.
 	// The GGML runner ignores mlx_* values (see discover/runner.go).
-	forcedVariant, _ := os.LookupEnv("OLLAMA_LLM_LIBRARY")
+	forcedVariant, _ := os.LookupEnv("SUSAN_LLM_LIBRARY")
 	if forcedVariant != "" && !strings.HasPrefix(forcedVariant, "mlx_") {
 		forcedVariant = "" // not an MLX variant, ignore
 	}

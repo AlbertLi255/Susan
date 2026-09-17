@@ -53,7 +53,7 @@ func TestCloudDisabled(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpHome := t.TempDir()
 			setTestHome(t, tmpHome)
-			t.Setenv("OLLAMA_NO_CLOUD", tt.envValue)
+			t.Setenv("SUSAN_NO_CLOUD", tt.envValue)
 
 			if tt.configContent != "" {
 				configDir := filepath.Join(tmpHome, ".susan")

@@ -474,7 +474,7 @@ jobs:
           path: |
             dist/*.zip
             dist/*.ps1
-            dist/OllamaSetup.exe
+            dist/SusanSetup.exe
 
   linux-depends:
     strategy:
@@ -668,7 +668,7 @@ jobs:
           set -euo pipefail
           base="dist/${{ matrix.os }}-${{ matrix.arch }}"
           for payload in \
-            "$base/bin/ollama" \
+            "$base/bin/susan" \
             "$base/lib/ollama/llama-server"
           do
             [ -f "$payload" ] || { echo "missing $payload"; exit 1; }
@@ -676,22 +676,22 @@ jobs:
       - run: |
           for COMPONENT in bin/* lib/ollama/*; do
             case "$COMPONENT" in
-              bin/ollama*)               echo $COMPONENT >>ollama-${{ matrix.os }}-${{ matrix.arch }}.tar.in ;;
-              lib/ollama/*.so*)          echo $COMPONENT >>ollama-${{ matrix.os }}-${{ matrix.arch }}.tar.in ;;
-              lib/ollama/llama-server*|lib/ollama/llama-quantize*)  echo $COMPONENT >>ollama-${{ matrix.os }}-${{ matrix.arch }}.tar.in ;;
-              lib/ollama/cuda_v*)        echo $COMPONENT >>ollama-${{ matrix.os }}-${{ matrix.arch }}.tar.in ;;
-              lib/ollama/vulkan*)        echo $COMPONENT >>ollama-${{ matrix.os }}-${{ matrix.arch }}.tar.in ;;
-              lib/ollama/mlx*)           echo $COMPONENT >>ollama-${{ matrix.os }}-${{ matrix.arch }}-mlx.tar.in ;;
-              lib/ollama/include*)       echo $COMPONENT >>ollama-${{ matrix.os }}-${{ matrix.arch }}-mlx.tar.in ;;
-              lib/ollama/*_LICENSE|lib/ollama/*_NOTICE) echo $COMPONENT >>ollama-${{ matrix.os }}-${{ matrix.arch }}.tar.in ;;
-              lib/ollama/cuda_jetpack5)  echo $COMPONENT >>ollama-${{ matrix.os }}-${{ matrix.arch }}-jetpack5.tar.in ;;
-              lib/ollama/cuda_jetpack6)  echo $COMPONENT >>ollama-${{ matrix.os }}-${{ matrix.arch }}-jetpack6.tar.in ;;
-              lib/ollama/rocm_v*)        echo $COMPONENT >>ollama-${{ matrix.os }}-${{ matrix.arch }}-rocm.tar.in ;;
+              bin/susan*)                echo $COMPONENT >>susan-${{ matrix.os }}-${{ matrix.arch }}.tar.in ;;
+              lib/ollama/*.so*)          echo $COMPONENT >>susan-${{ matrix.os }}-${{ matrix.arch }}.tar.in ;;
+              lib/ollama/llama-server*|lib/ollama/llama-quantize*)  echo $COMPONENT >>susan-${{ matrix.os }}-${{ matrix.arch }}.tar.in ;;
+              lib/ollama/cuda_v*)        echo $COMPONENT >>susan-${{ matrix.os }}-${{ matrix.arch }}.tar.in ;;
+              lib/ollama/vulkan*)        echo $COMPONENT >>susan-${{ matrix.os }}-${{ matrix.arch }}.tar.in ;;
+              lib/ollama/mlx*)           echo $COMPONENT >>susan-${{ matrix.os }}-${{ matrix.arch }}-mlx.tar.in ;;
+              lib/ollama/include*)       echo $COMPONENT >>susan-${{ matrix.os }}-${{ matrix.arch }}-mlx.tar.in ;;
+              lib/ollama/*_LICENSE|lib/ollama/*_NOTICE) echo $COMPONENT >>susan-${{ matrix.os }}-${{ matrix.arch }}.tar.in ;;
+              lib/ollama/cuda_jetpack5)  echo $COMPONENT >>susan-${{ matrix.os }}-${{ matrix.arch }}-jetpack5.tar.in ;;
+              lib/ollama/cuda_jetpack6)  echo $COMPONENT >>susan-${{ matrix.os }}-${{ matrix.arch }}-jetpack6.tar.in ;;
+              lib/ollama/rocm_v*)        echo $COMPONENT >>susan-${{ matrix.os }}-${{ matrix.arch }}-rocm.tar.in ;;
             esac
           done
         working-directory: dist/${{ matrix.os }}-${{ matrix.arch }}
       - if: matrix.suffix == '-rocm'
-        run: rm -f dist/${{ matrix.os }}-${{ matrix.arch }}/ollama-${{ matrix.os }}-${{ matrix.arch }}.tar.in
+        run: rm -f dist/${{ matrix.os }}-${{ matrix.arch }}/susan-${{ matrix.os }}-${{ matrix.arch }}.tar.in
       - run: |
           echo "Manifests"
           for ARCHIVE in dist/${{ matrix.os }}-${{ matrix.arch }}/*.tar.in ; do
@@ -769,7 +769,7 @@ jobs:
       - name: Verify release artifacts
         run: |
           required=(
-            dist/OllamaSetup.exe
+            dist/SusanSetup.exe
             dist/install.ps1
             dist/install.sh
             dist/susan-windows-amd64.zip

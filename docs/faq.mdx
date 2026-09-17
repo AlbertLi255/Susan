@@ -24,10 +24,10 @@ Please refer to the [GPU docs](./gpu.mdx).
 
 By default, Susan uses a context window size of 4096 tokens.
 
-This can be overridden with the `OLLAMA_CONTEXT_LENGTH` environment variable. For example, to set the default context window to 8K, use:
+This can be overridden with the `SUSAN_CONTEXT_LENGTH` environment variable. For example, to set the default context window to 8K, use:
 
 ```shell
-OLLAMA_CONTEXT_LENGTH=8192 susan serve
+SUSAN_CONTEXT_LENGTH=8192 susan serve
 ```
 
 To change this when using `susan run`, use `/set parameter`:
@@ -83,7 +83,7 @@ If Susan is run as a macOS application, environment variables should be set usin
 1. For each environment variable, call `launchctl setenv`.
 
    ```bash
-   launchctl setenv OLLAMA_HOST "0.0.0.0:14343"
+   launchctl setenv SUSAN_HOST "0.0.0.0:14343"
    ```
 
 2. Restart Susan application.
@@ -98,7 +98,7 @@ If Susan is run as a systemd service, environment variables should be set using 
 
    ```ini
    [Service]
-   Environment="OLLAMA_HOST=0.0.0.0:14343"
+   Environment="SUSAN_HOST=0.0.0.0:14343"
    ```
 
 3. Save and exit.
@@ -120,7 +120,7 @@ On Windows, Susan inherits your user and system environment variables.
 
 3. Click on _Edit environment variables for your account_.
 
-4. Edit or create a new variable for your user account for `OLLAMA_HOST`, `OLLAMA_MODELS`, etc.
+4. Edit or create a new variable for your user account for `SUSAN_HOST`, `SUSAN_MODELS`, etc.
 
 5. Click OK/Apply to save.
 
@@ -144,7 +144,7 @@ Alternatively, the Docker daemon can be configured to use a proxy. Instructions 
 Ensure the certificate is installed as a system certificate when using HTTPS. This may require a new Docker image when using a self-signed certificate.
 
 ```dockerfile
-FROM ollama/ollama
+FROM susan/susan
 COPY my-ca.pem /usr/local/share/ca-certificates/my-ca.crt
 RUN update-ca-certificates
 ```
@@ -175,14 +175,14 @@ Set `disable_ollama_cloud` in `~/.susan/server.json`:
 You can also set the environment variable:
 
 ```shell
-OLLAMA_NO_CLOUD=1
+SUSAN_NO_CLOUD=1
 ```
 
 Restart Susan after changing configuration. Once disabled, Susan's logs will show `Susan cloud disabled: true`. 
 
 ## How can I expose Susan on my network?
 
-Susan binds 127.0.0.1 port 14343 by default. Change the bind address with the `OLLAMA_HOST` environment variable.
+Susan binds 127.0.0.1 port 14343 by default. Change the bind address with the `SUSAN_HOST` environment variable.
 
 Refer to the section [above](#how-do-i-configure-susan-server) for how to set environment variables on your platform.
 
@@ -219,13 +219,13 @@ cloudflared tunnel --url http://localhost:14343 --http-host-header="localhost:14
 
 ## How can I allow additional web origins to access Susan?
 
-Susan allows cross-origin requests from `127.0.0.1` and `0.0.0.0` by default. Additional origins can be configured with `OLLAMA_ORIGINS`.
+Susan allows cross-origin requests from `127.0.0.1` and `0.0.0.0` by default. Additional origins can be configured with `SUSAN_ORIGINS`.
 
-For browser extensions, you'll need to explicitly allow the extension's origin pattern. Set `OLLAMA_ORIGINS` to include `chrome-extension://*`, `moz-extension://*`, and `safari-web-extension://*` if you wish to allow all browser extensions access, or specific extensions as needed:
+For browser extensions, you'll need to explicitly allow the extension's origin pattern. Set `SUSAN_ORIGINS` to include `chrome-extension://*`, `moz-extension://*`, and `safari-web-extension://*` if you wish to allow all browser extensions access, or specific extensions as needed:
 
 ```
 # Allow all Chrome, Firefox, and Safari extensions
-OLLAMA_ORIGINS=chrome-extension://*,moz-extension://*,safari-web-extension://* susan serve
+SUSAN_ORIGINS=chrome-extension://*,moz-extension://*,safari-web-extension://* susan serve
 ```
 
 Refer to the section [above](#how-do-i-configure-susan-server) for how to set environment variables on your platform.
@@ -238,7 +238,7 @@ Refer to the section [above](#how-do-i-configure-susan-server) for how to set en
 
 ### How do I set them to a different location?
 
-If a different directory needs to be used, set the environment variable `OLLAMA_MODELS` to the chosen directory.
+If a different directory needs to be used, set the environment variable `SUSAN_MODELS` to the chosen directory.
 
 <Note>
   On Linux using the standard installer, the `susan` user needs read and write access to the specified directory. To assign the directory to the `susan` user run `sudo chown -R susan:susan <directory>`.
@@ -252,7 +252,7 @@ Install the [Susan extension](https://marketplace.visualstudio.com/items?itemNam
 
 ## How do I use Susan with GPU acceleration in Docker?
 
-The Susan Docker container can be configured with GPU acceleration in Linux or Windows (with WSL2). This requires the [nvidia-container-toolkit](https://github.com/NVIDIA/nvidia-container-toolkit). See [ollama/ollama](https://hub.docker.com/r/ollama/ollama) for more details.
+The Susan Docker container can be configured with GPU acceleration in Linux or Windows (with WSL2). This requires the [nvidia-container-toolkit](https://github.com/NVIDIA/nvidia-container-toolkit). See [susan/susan](https://hub.docker.com/r/susan/susan) for more details.
 
 GPU acceleration is not available for Docker Desktop in macOS due to the lack of GPU passthrough and emulation.
 
@@ -313,13 +313,13 @@ To unload the model and free up memory use:
 curl http://localhost:14343/api/generate -d '{"model": "llama3.2", "keep_alive": 0}'
 ```
 
-Alternatively, you can change the amount of time all models are loaded into memory by setting the `OLLAMA_KEEP_ALIVE` environment variable when starting the Susan server. The `OLLAMA_KEEP_ALIVE` variable uses the same parameter types as the `keep_alive` parameter types mentioned above. Refer to the section explaining [how to configure the Susan server](#how-do-i-configure-susan-server) to correctly set the environment variable.
+Alternatively, you can change the amount of time all models are loaded into memory by setting the `SUSAN_KEEP_ALIVE` environment variable when starting the Susan server. The `SUSAN_KEEP_ALIVE` variable uses the same parameter types as the `keep_alive` parameter types mentioned above. Refer to the section explaining [how to configure the Susan server](#how-do-i-configure-susan-server) to correctly set the environment variable.
 
-The `keep_alive` API parameter with the `/api/generate` and `/api/chat` API endpoints will override the `OLLAMA_KEEP_ALIVE` setting.
+The `keep_alive` API parameter with the `/api/generate` and `/api/chat` API endpoints will override the `SUSAN_KEEP_ALIVE` setting.
 
 ## How do I manage the maximum number of requests the Susan server can queue?
 
-If too many requests are sent to the server, it will respond with a 503 error indicating the server is overloaded. You can adjust how many requests may be queued by setting `OLLAMA_MAX_QUEUE`.
+If too many requests are sent to the server, it will respond with a 503 error indicating the server is overloaded. You can adjust how many requests may be queued by setting `SUSAN_MAX_QUEUE`.
 
 ## How does Susan handle concurrent requests?
 
@@ -331,9 +331,9 @@ Parallel request processing for a given model results in increasing the context 
 
 The following server settings may be used to adjust how Susan handles concurrent requests on most platforms:
 
-- `OLLAMA_MAX_LOADED_MODELS` - The maximum number of models that can be loaded concurrently provided they fit in available memory. The default is 3 \* the number of GPUs or 3 for CPU inference.
-- `OLLAMA_NUM_PARALLEL` - The maximum number of parallel requests each model will process at the same time, default 1.  Required RAM will scale by `OLLAMA_NUM_PARALLEL` * `OLLAMA_CONTEXT_LENGTH`.
-- `OLLAMA_MAX_QUEUE` - The maximum number of requests Susan will queue when busy before rejecting additional requests. The default is 512
+- `SUSAN_MAX_LOADED_MODELS` - The maximum number of models that can be loaded concurrently provided they fit in available memory. The default is 3 \* the number of GPUs or 3 for CPU inference.
+- `SUSAN_NUM_PARALLEL` - The maximum number of parallel requests each model will process at the same time, default 1.  Required RAM will scale by `SUSAN_NUM_PARALLEL` * `SUSAN_CONTEXT_LENGTH`.
+- `SUSAN_MAX_QUEUE` - The maximum number of requests Susan will queue when busy before rejecting additional requests. The default is 512
 
 Note: Windows with Radeon GPUs currently default to 1 model maximum due to limitations in ROCm v5.7 for available VRAM reporting. Once ROCm v6.2 is available, Windows Radeon will follow the defaults above. You may enable concurrent model loads on Radeon on Windows, but ensure you don't load more models than will fit into your GPU's VRAM.
 
@@ -343,7 +343,7 @@ When loading a new model, Susan evaluates the required VRAM for the model agains
 
 ## How can I enable Flash Attention?
 
-Flash Attention is a feature of most modern models that can significantly reduce memory usage as the context size grows. Susan uses Flash Attention automatically when the selected backend and devices support it. To force Flash Attention on, set `OLLAMA_FLASH_ATTENTION=1` when starting the Susan server. To disable it, set `OLLAMA_FLASH_ATTENTION=0`.
+Flash Attention is a feature of most modern models that can significantly reduce memory usage as the context size grows. Susan uses Flash Attention automatically when the selected backend and devices support it. To force Flash Attention on, set `SUSAN_FLASH_ATTENTION=1` when starting the Susan server. To disable it, set `SUSAN_FLASH_ATTENTION=0`.
 
 ## How can I set the quantization type for the K/V cache?
 
@@ -351,7 +351,7 @@ The K/V context cache can be quantized to significantly reduce memory usage when
 
 To use quantized K/V cache with Susan you can set the following environment variable:
 
-- `OLLAMA_KV_CACHE_TYPE` - The quantization type for the K/V cache. Default is `f16`.
+- `SUSAN_KV_CACHE_TYPE` - The quantization type for the K/V cache. Default is `f16`.
 
 <Note>
   Currently this is a global option - meaning all models will run with the

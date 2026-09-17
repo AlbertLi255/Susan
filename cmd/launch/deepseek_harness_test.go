@@ -35,7 +35,7 @@ func TestDeepSeekHarnessRegistry(t *testing.T) {
 func TestDeepSeekHarnessConfigurePreservesSettingsAndIsIdempotent(t *testing.T) {
 	home := t.TempDir()
 	setTestHome(t, home)
-	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:12345")
+	t.Setenv("SUSAN_HOST", "http://127.0.0.1:12345")
 
 	settingsPath, err := deepSeekHarnessSettingsPath()
 	if err != nil {
@@ -161,7 +161,7 @@ func TestDeepSeekHarnessConfigureSkipsWebSearchWhenCloudDisabled(t *testing.T) {
 		http.NotFound(w, r)
 	}))
 	t.Cleanup(srv.Close)
-	t.Setenv("OLLAMA_HOST", srv.URL)
+	t.Setenv("SUSAN_HOST", srv.URL)
 
 	settingsPath, err := deepSeekHarnessSettingsPath()
 	if err != nil {
@@ -195,12 +195,12 @@ func TestDeepSeekHarnessConfigureSkipsWebSearchWhenCloudDisabled(t *testing.T) {
 
 func TestDeepSeekHarnessCurrentModelRejectsDrift(t *testing.T) {
 	setTestHome(t, t.TempDir())
-	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:14343")
+	t.Setenv("SUSAN_HOST", "http://127.0.0.1:14343")
 	dsh := &DeepSeekHarness{}
 	if err := dsh.Configure("qwen3.5"); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:9999")
+	t.Setenv("SUSAN_HOST", "http://127.0.0.1:9999")
 	if got := dsh.CurrentModel(); got != "" {
 		t.Fatalf("CurrentModel() = %q for stale endpoint", got)
 	}
@@ -208,7 +208,7 @@ func TestDeepSeekHarnessCurrentModelRejectsDrift(t *testing.T) {
 
 func TestDeepSeekHarnessCurrentModelRejectsPatchDrift(t *testing.T) {
 	setTestHome(t, t.TempDir())
-	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:14343")
+	t.Setenv("SUSAN_HOST", "http://127.0.0.1:14343")
 	dsh := &DeepSeekHarness{}
 	if err := dsh.Configure("qwen3.5"); err != nil {
 		t.Fatal(err)
@@ -297,7 +297,7 @@ func TestDeepSeekHarnessRunUsesManagedPatchAndCredential(t *testing.T) {
 	setTestHome(t, home)
 	binDir := t.TempDir()
 	logPath := filepath.Join(home, "dsh-invocation")
-	script := "#!/bin/sh\nprintf '%s\\n' \"$@\" > \"$DSH_TEST_LOG\"\nprintf '%s\\n' \"$OLLAMA_LAUNCH_DSH_API_KEY\" >> \"$DSH_TEST_LOG\"\n"
+	script := "#!/bin/sh\nprintf '%s\\n' \"$@\" > \"$DSH_TEST_LOG\"\nprintf '%s\\n' \"$SUSAN_LAUNCH_DSH_API_KEY\" >> \"$DSH_TEST_LOG\"\n"
 	bin := filepath.Join(binDir, "dsh")
 	if err := os.WriteFile(bin, []byte(script), 0o755); err != nil {
 		t.Fatal(err)
@@ -379,7 +379,7 @@ func TestDeepSeekHarnessFallsBackToNpxAfterGlobalInstallFailure(t *testing.T) {
 	logPath := filepath.Join(home, "npx-invocation")
 	for name, script := range map[string]string{
 		"npm": "#!/bin/sh\nexit 1\n",
-		"npx": "#!/bin/sh\nprintf '%s\\n' \"$@\" > \"$DSH_NPX_LOG\"\nprintf '%s\\n' \"$OLLAMA_LAUNCH_DSH_API_KEY\" >> \"$DSH_NPX_LOG\"\n",
+		"npx": "#!/bin/sh\nprintf '%s\\n' \"$@\" > \"$DSH_NPX_LOG\"\nprintf '%s\\n' \"$SUSAN_LAUNCH_DSH_API_KEY\" >> \"$DSH_NPX_LOG\"\n",
 	} {
 		if err := os.WriteFile(filepath.Join(binDir, name), []byte(script), 0o755); err != nil {
 			t.Fatal(err)

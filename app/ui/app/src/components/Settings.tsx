@@ -612,7 +612,7 @@ export default function Settings() {
                       <Label>Cloud</Label>
                       <Description>
                         {cloudOverriddenByEnv
-                          ? "The OLLAMA_NO_CLOUD environment variable is currently forcing cloud off."
+                          ? "The SUSAN_NO_CLOUD environment variable is currently forcing cloud off."
                           : "Enable cloud models and web search."}
                       </Description>
                     </div>
@@ -807,7 +807,7 @@ export default function Settings() {
           )}
 
           {/* Agent Mode */}
-          {window.OLLAMA_TOOLS && (
+          {window.SUSAN_TOOLS && (
             <div className="overflow-hidden rounded-xl bg-white dark:bg-neutral-800">
               <div className="space-y-4 p-4">
                 <Field>

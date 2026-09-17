@@ -2483,7 +2483,7 @@ func NewCLI() *cobra.Command {
 
 	envVars := envconfig.AsMap()
 
-	envs := []envconfig.EnvVar{envVars["OLLAMA_HOST"]}
+	envs := []envconfig.EnvVar{envVars["SUSAN_HOST"]}
 
 	for _, cmd := range []*cobra.Command{
 		createCmd,
@@ -2500,30 +2500,30 @@ func NewCLI() *cobra.Command {
 	} {
 		switch cmd {
 		case runCmd:
-			appendEnvDocs(cmd, []envconfig.EnvVar{envVars["OLLAMA_EDITOR"], envVars["OLLAMA_HOST"], envVars["OLLAMA_NOHISTORY"]})
+			appendEnvDocs(cmd, []envconfig.EnvVar{envVars["SUSAN_EDITOR"], envVars["SUSAN_HOST"], envVars["SUSAN_NOHISTORY"]})
 		case serveCmd:
 			appendEnvDocs(cmd, []envconfig.EnvVar{
-				envVars["OLLAMA_DEBUG"],
-				envVars["OLLAMA_HOST"],
-				envVars["OLLAMA_CONTEXT_LENGTH"],
-				envVars["OLLAMA_KEEP_ALIVE"],
-				envVars["OLLAMA_MAX_LOADED_MODELS"],
-				envVars["OLLAMA_MAX_TRANSFER_STREAMS"],
-				envVars["OLLAMA_MAX_QUEUE"],
-				envVars["OLLAMA_MODELS"],
-				envVars["OLLAMA_NUM_PARALLEL"],
-				envVars["OLLAMA_NO_CLOUD"],
-				envVars["OLLAMA_NOPRUNE"],
-				envVars["OLLAMA_ORIGINS"],
-				envVars["OLLAMA_SCHED_SPREAD"],
-				envVars["OLLAMA_FLASH_ATTENTION"],
-				envVars["OLLAMA_KV_CACHE_TYPE"],
-				envVars["OLLAMA_LLM_LIBRARY"],
-				envVars["OLLAMA_GPU_OVERHEAD"],
-				envVars["OLLAMA_IGPU_ENABLE"],
+				envVars["SUSAN_DEBUG"],
+				envVars["SUSAN_HOST"],
+				envVars["SUSAN_CONTEXT_LENGTH"],
+				envVars["SUSAN_KEEP_ALIVE"],
+				envVars["SUSAN_MAX_LOADED_MODELS"],
+				envVars["SUSAN_MAX_TRANSFER_STREAMS"],
+				envVars["SUSAN_MAX_QUEUE"],
+				envVars["SUSAN_MODELS"],
+				envVars["SUSAN_NUM_PARALLEL"],
+				envVars["SUSAN_NO_CLOUD"],
+				envVars["SUSAN_NOPRUNE"],
+				envVars["SUSAN_ORIGINS"],
+				envVars["SUSAN_SCHED_SPREAD"],
+				envVars["SUSAN_FLASH_ATTENTION"],
+				envVars["SUSAN_KV_CACHE_TYPE"],
+				envVars["SUSAN_LLM_LIBRARY"],
+				envVars["SUSAN_GPU_OVERHEAD"],
+				envVars["SUSAN_IGPU_ENABLE"],
 				envVars["LLAMA_ARG_FIT"],
 				envVars["LLAMA_ARG_FIT_TARGET"],
-				envVars["OLLAMA_LOAD_TIMEOUT"],
+				envVars["SUSAN_LOAD_TIMEOUT"],
 			})
 		default:
 			appendEnvDocs(cmd, envs)

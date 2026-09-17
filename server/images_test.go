@@ -21,7 +21,7 @@ import (
 )
 
 func TestPruneLayersSkipsRecentOrphans(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	recentDigest := "sha256:0000000000000000000000000000000000000000000000000000000000000001"
 	oldDigest := "sha256:0000000000000000000000000000000000000000000000000000000000000002"
@@ -122,8 +122,8 @@ func TestGetModelTemplateMetadata(t *testing.T) {
 	customTemplate := "CUSTOM {{ .Prompt }}"
 
 	t.Run("records chat template and Go TEMPLATE layer", func(t *testing.T) {
-		t.Setenv("OLLAMA_MODELS", t.TempDir())
-		t.Setenv("OLLAMA_GO_TEMPLATE", "")
+		t.Setenv("SUSAN_MODELS", t.TempDir())
+		t.Setenv("SUSAN_GO_TEMPLATE", "")
 
 		_, digest := createBinFile(t, ggml.KV{
 			"general.architecture":    "llama",
@@ -147,8 +147,8 @@ func TestGetModelTemplateMetadata(t *testing.T) {
 	})
 
 	t.Run("prefers chat template when Go TEMPLATE has fewer capabilities", func(t *testing.T) {
-		t.Setenv("OLLAMA_MODELS", t.TempDir())
-		t.Setenv("OLLAMA_GO_TEMPLATE", "")
+		t.Setenv("SUSAN_MODELS", t.TempDir())
+		t.Setenv("SUSAN_GO_TEMPLATE", "")
 
 		_, digest := createBinFile(t, ggml.KV{
 			"general.architecture":    "llama",
@@ -169,8 +169,8 @@ func TestGetModelTemplateMetadata(t *testing.T) {
 	})
 
 	t.Run("prefers Qwen chat template with tools and inferred thinking", func(t *testing.T) {
-		t.Setenv("OLLAMA_MODELS", t.TempDir())
-		t.Setenv("OLLAMA_GO_TEMPLATE", "")
+		t.Setenv("SUSAN_MODELS", t.TempDir())
+		t.Setenv("SUSAN_GO_TEMPLATE", "")
 
 		_, digest := createBinFile(t, ggml.KV{
 			"general.architecture":    "llama",
@@ -194,8 +194,8 @@ func TestGetModelTemplateMetadata(t *testing.T) {
 	})
 
 	t.Run("prefers chat template with stronger tool round trip", func(t *testing.T) {
-		t.Setenv("OLLAMA_MODELS", t.TempDir())
-		t.Setenv("OLLAMA_GO_TEMPLATE", "")
+		t.Setenv("SUSAN_MODELS", t.TempDir())
+		t.Setenv("SUSAN_GO_TEMPLATE", "")
 
 		_, digest := createBinFile(t, ggml.KV{
 			"general.architecture": "llama",
@@ -225,8 +225,8 @@ func TestGetModelTemplateMetadata(t *testing.T) {
 	})
 
 	t.Run("keeps Go TEMPLATE when chat template has weaker tool support", func(t *testing.T) {
-		t.Setenv("OLLAMA_MODELS", t.TempDir())
-		t.Setenv("OLLAMA_GO_TEMPLATE", "")
+		t.Setenv("SUSAN_MODELS", t.TempDir())
+		t.Setenv("SUSAN_GO_TEMPLATE", "")
 
 		_, digest := createBinFile(t, ggml.KV{
 			"general.architecture": "llama",
@@ -263,8 +263,8 @@ func TestGetModelTemplateMetadata(t *testing.T) {
 	})
 
 	t.Run("respects explicit Go TEMPLATE enablement", func(t *testing.T) {
-		t.Setenv("OLLAMA_MODELS", t.TempDir())
-		t.Setenv("OLLAMA_GO_TEMPLATE", "1")
+		t.Setenv("SUSAN_MODELS", t.TempDir())
+		t.Setenv("SUSAN_GO_TEMPLATE", "1")
 
 		_, digest := createBinFile(t, ggml.KV{
 			"general.architecture":    "llama",
@@ -285,8 +285,8 @@ func TestGetModelTemplateMetadata(t *testing.T) {
 	})
 
 	t.Run("respects explicit Go TEMPLATE disablement", func(t *testing.T) {
-		t.Setenv("OLLAMA_MODELS", t.TempDir())
-		t.Setenv("OLLAMA_GO_TEMPLATE", "0")
+		t.Setenv("SUSAN_MODELS", t.TempDir())
+		t.Setenv("SUSAN_GO_TEMPLATE", "0")
 
 		_, digest := createBinFile(t, ggml.KV{
 			"general.architecture":    "llama",
@@ -307,8 +307,8 @@ func TestGetModelTemplateMetadata(t *testing.T) {
 	})
 
 	t.Run("records missing chat template", func(t *testing.T) {
-		t.Setenv("OLLAMA_MODELS", t.TempDir())
-		t.Setenv("OLLAMA_GO_TEMPLATE", "")
+		t.Setenv("SUSAN_MODELS", t.TempDir())
+		t.Setenv("SUSAN_GO_TEMPLATE", "")
 
 		_, digest := createBinFile(t, ggml.KV{
 			"general.architecture": "llama",
@@ -830,7 +830,7 @@ func TestPullModelManifest(t *testing.T) {
 // an "internal" path serving bytes that don't match the digest, so PullModel
 // must reject the pull with errDigestMismatch.
 func TestPullModelDuplicateDigestVerifiesBlob(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	const bogusDigest = "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 

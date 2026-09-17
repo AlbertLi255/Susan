@@ -31,9 +31,9 @@ func TestNew(t *testing.T) {
 }
 
 func TestServerCmd(t *testing.T) {
-	os.Unsetenv("OLLAMA_HOST")
-	os.Unsetenv("OLLAMA_ORIGINS")
-	os.Unsetenv("OLLAMA_MODELS")
+	os.Unsetenv("SUSAN_HOST")
+	os.Unsetenv("SUSAN_ORIGINS")
+	os.Unsetenv("SUSAN_MODELS")
 	var defaultModels string
 	home, err := os.UserHomeDir()
 	if err == nil {
@@ -51,32 +51,32 @@ func TestServerCmd(t *testing.T) {
 		{
 			name:     "default",
 			settings: store.Settings{},
-			want:     []string{"OLLAMA_MODELS=" + defaultModels},
-			dont:     []string{"OLLAMA_HOST=", "OLLAMA_ORIGINS="},
+			want:     []string{"SUSAN_MODELS=" + defaultModels},
+			dont:     []string{"SUSAN_HOST=", "SUSAN_ORIGINS="},
 		},
 		{
 			name:     "expose",
 			settings: store.Settings{Expose: true},
-			want:     []string{"OLLAMA_HOST=0.0.0.0", "OLLAMA_MODELS=" + defaultModels},
-			dont:     []string{"OLLAMA_ORIGINS="},
+			want:     []string{"SUSAN_HOST=0.0.0.0", "SUSAN_MODELS=" + defaultModels},
+			dont:     []string{"SUSAN_ORIGINS="},
 		},
 		{
 			name:     "browser",
 			settings: store.Settings{Browser: true},
-			want:     []string{"OLLAMA_ORIGINS=*", "OLLAMA_MODELS=" + defaultModels},
-			dont:     []string{"OLLAMA_HOST="},
+			want:     []string{"SUSAN_ORIGINS=*", "SUSAN_MODELS=" + defaultModels},
+			dont:     []string{"SUSAN_HOST="},
 		},
 		{
 			name:     "models",
 			settings: store.Settings{Models: tmpModels},
-			want:     []string{"OLLAMA_MODELS=" + tmpModels},
-			dont:     []string{"OLLAMA_HOST=", "OLLAMA_ORIGINS="},
+			want:     []string{"SUSAN_MODELS=" + tmpModels},
+			dont:     []string{"SUSAN_HOST=", "SUSAN_ORIGINS="},
 		},
 		{
 			name:     "inaccessible_models",
 			settings: store.Settings{Models: "/nonexistent/external/drive/models"},
 			want:     []string{},
-			dont:     []string{"OLLAMA_MODELS="},
+			dont:     []string{"SUSAN_MODELS="},
 		},
 		{
 			name: "all",
@@ -86,9 +86,9 @@ func TestServerCmd(t *testing.T) {
 				Models:  tmpModels,
 			},
 			want: []string{
-				"OLLAMA_HOST=0.0.0.0",
-				"OLLAMA_ORIGINS=*",
-				"OLLAMA_MODELS=" + tmpModels,
+				"SUSAN_HOST=0.0.0.0",
+				"SUSAN_ORIGINS=*",
+				"SUSAN_MODELS=" + tmpModels,
 			},
 			dont: []string{},
 		},
@@ -146,22 +146,22 @@ func TestServerCmdCloudSettingEnv(t *testing.T) {
 	}{
 		{
 			name: "default cloud enabled",
-			want: "OLLAMA_NO_CLOUD=0",
+			want: "SUSAN_NO_CLOUD=0",
 		},
 		{
 			name:     "env disables cloud",
 			envValue: "1",
-			want:     "OLLAMA_NO_CLOUD=1",
+			want:     "SUSAN_NO_CLOUD=1",
 		},
 		{
 			name:          "config disables cloud",
 			configContent: `{"disable_ollama_cloud": true}`,
-			want:          "OLLAMA_NO_CLOUD=1",
+			want:          "SUSAN_NO_CLOUD=1",
 		},
 		{
 			name:     "invalid env disables cloud",
 			envValue: "invalid",
-			want:     "OLLAMA_NO_CLOUD=1",
+			want:     "SUSAN_NO_CLOUD=1",
 		},
 	}
 
@@ -170,7 +170,7 @@ func TestServerCmdCloudSettingEnv(t *testing.T) {
 			tmpHome := t.TempDir()
 			t.Setenv("HOME", tmpHome)
 			t.Setenv("USERPROFILE", tmpHome)
-			t.Setenv("OLLAMA_NO_CLOUD", tt.envValue)
+			t.Setenv("SUSAN_NO_CLOUD", tt.envValue)
 
 			if tt.configContent != "" {
 				configDir := filepath.Join(tmpHome, ".susan")

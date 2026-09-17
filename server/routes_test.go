@@ -35,9 +35,9 @@ import (
 func createTestFile(t *testing.T, name string) (string, string) {
 	t.Helper()
 
-	modelDir := os.Getenv("OLLAMA_MODELS")
+	modelDir := os.Getenv("SUSAN_MODELS")
 	if modelDir == "" {
-		t.Fatalf("OLLAMA_MODELS not specified")
+		t.Fatalf("SUSAN_MODELS not specified")
 	}
 
 	f, err := os.CreateTemp(t.TempDir(), name)
@@ -85,7 +85,7 @@ func createTestFile(t *testing.T, name string) (string, string) {
 
 func TestRoutes(t *testing.T) {
 	modelsDir := t.TempDir()
-	t.Setenv("OLLAMA_MODELS", modelsDir)
+	t.Setenv("SUSAN_MODELS", modelsDir)
 
 	type testCase struct {
 		Name     string
@@ -528,7 +528,7 @@ func TestRoutes(t *testing.T) {
 }
 
 func TestGetModelInfo_SafetensorsUsesStoredFileType(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	cfgData, err := json.Marshal(model.ConfigV2{
 		ModelFormat:  "safetensors",
@@ -560,7 +560,7 @@ func TestGetModelInfo_SafetensorsUsesStoredFileType(t *testing.T) {
 }
 
 func TestGetModelInfoRepairsUnknownGGUFFileType(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	_, digest := createBinFile(t, ggml.KV{
 		"general.architecture": "llama",
@@ -596,7 +596,7 @@ func TestGetModelInfoRepairsUnknownGGUFFileType(t *testing.T) {
 }
 
 func TestGetModelInfo_SafetensorsModelfileUsesShortName(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	cfgData, err := json.Marshal(model.ConfigV2{
 		ModelFormat:  "safetensors",
@@ -643,7 +643,7 @@ func casingShuffle(s string) string {
 }
 
 func TestManifestCaseSensitivity(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	r := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -673,7 +673,7 @@ func TestManifestCaseSensitivity(t *testing.T) {
 	checkManifestList := func() {
 		t.Helper()
 
-		mandir := filepath.Join(os.Getenv("OLLAMA_MODELS"), "manifests/")
+		mandir := filepath.Join(os.Getenv("SUSAN_MODELS"), "manifests/")
 		var entries []string
 		t.Logf("dir entries:")
 		fsys := os.DirFS(mandir)
@@ -770,7 +770,7 @@ func TestManifestCaseSensitivity(t *testing.T) {
 }
 
 func TestShow(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	var s Server
 
@@ -805,8 +805,8 @@ func TestShow(t *testing.T) {
 }
 
 func TestShowTemplateUsesSelectedRuntimeTemplate(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
-	t.Setenv("OLLAMA_GO_TEMPLATE", "")
+	t.Setenv("SUSAN_MODELS", t.TempDir())
+	t.Setenv("SUSAN_GO_TEMPLATE", "")
 
 	chatTemplate := "{% if tools %}{{ tools }}{% endif %}{% set content = (content.split('</think>')|last) %}"
 	goTemplate := "{{ range .Messages }}{{ if .Thinking }}<think>{{ .Thinking }}</think>{{ end }}{{ .Content }}{{ end }}"
@@ -832,7 +832,7 @@ func TestShowTemplateUsesSelectedRuntimeTemplate(t *testing.T) {
 }
 
 func TestShowCopilotUserAgentOverwritesExistingBasename(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	var s Server
 
@@ -893,7 +893,7 @@ func TestShowCopilotUserAgentOverwritesExistingBasename(t *testing.T) {
 }
 
 func TestShowCopilotUserAgentSetsBasenameWhenModelInfoIsEmpty(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	var s Server
 

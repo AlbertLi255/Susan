@@ -805,7 +805,7 @@ func AnthropicMessagesMiddleware() gin.HandlerFunc {
 		}
 
 		if hasWebSearchTool(req.Tools) {
-			// Guard against runtime cloud-disable policy (OLLAMA_NO_CLOUD/server.json)
+			// Guard against runtime cloud-disable policy (SUSAN_NO_CLOUD/server.json)
 			// for cloud models. Local models may still receive web_search tool definitions;
 			// execution is validated when the model actually emits a web_search tool call.
 			if isCloudModelName(req.Model) {

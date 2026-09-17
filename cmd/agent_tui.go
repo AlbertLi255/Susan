@@ -256,7 +256,7 @@ func agentToolsRegistry(ctx context.Context, client *api.Client, modelName strin
 	}
 
 	registry := &coreagent.Registry{}
-	if os.Getenv("OLLAMA_AGENT_DISABLE_SHELL") == "" {
+	if os.Getenv("SUSAN_AGENT_DISABLE_SHELL") == "" {
 		registry.Register(&agenttools.Bash{})
 	}
 	registry.Register(&agenttools.Read{})
@@ -265,7 +265,7 @@ func agentToolsRegistry(ctx context.Context, client *api.Client, modelName strin
 		registry.Register(&agenttools.Skill{Catalog: skillCatalog})
 	}
 
-	if os.Getenv("OLLAMA_AGENT_DISABLE_WEBSEARCH") == "" {
+	if os.Getenv("SUSAN_AGENT_DISABLE_WEBSEARCH") == "" {
 		if disabled, known := agentCloudStatusDisabled(ctx, client); !known || !disabled {
 			registry.Register(&agenttools.WebSearch{})
 			registry.Register(&agenttools.WebFetch{})

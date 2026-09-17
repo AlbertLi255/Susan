@@ -40,7 +40,7 @@ shift $(( $OPTIND - 1 ))
 _build_darwin() {
     BUILD_CPUS=$(getconf _NPROCESSORS_ONLN)
     BUILD_JOBS=${OLLAMA_BUILD_PARALLEL:-$BUILD_CPUS}
-    BUILD_LOAD=${OLLAMA_BUILD_LOAD:-$BUILD_CPUS}
+    BUILD_LOAD=${SUSAN_BUILD_LOAD:-$BUILD_CPUS}
     status "Build parallelism: $BUILD_JOBS, load limit: $BUILD_LOAD"
 
     SOURCE_BUILD=build/darwin-sources

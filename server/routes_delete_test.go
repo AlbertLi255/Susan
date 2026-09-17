@@ -18,7 +18,7 @@ func TestDelete(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	p := t.TempDir()
-	t.Setenv("OLLAMA_MODELS", p)
+	t.Setenv("SUSAN_MODELS", p)
 
 	var s Server
 
@@ -83,7 +83,7 @@ func TestDeleteDuplicateLayers(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	p := t.TempDir()
-	t.Setenv("OLLAMA_MODELS", p)
+	t.Setenv("SUSAN_MODELS", p)
 	var s Server
 
 	n := model.ParseName("test")
@@ -115,7 +115,7 @@ func TestDeleteCloudSourceNormalizesToLegacyName(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	p := t.TempDir()
-	t.Setenv("OLLAMA_MODELS", p)
+	t.Setenv("SUSAN_MODELS", p)
 
 	var s Server
 

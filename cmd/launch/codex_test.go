@@ -102,7 +102,7 @@ func TestCodexArgsRejectManagedOverrides(t *testing.T) {
 }
 
 func TestWriteCodexProfileConfig(t *testing.T) {
-	t.Setenv("OLLAMA_HOST", "")
+	t.Setenv("SUSAN_HOST", "")
 	t.Run("creates new file when none exists", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		profilePath := filepath.Join(tmpDir, "ollama-launch.config.toml")
@@ -166,8 +166,8 @@ func TestWriteCodexProfileConfig(t *testing.T) {
 		assertBackupContains(t, filepath.Join(fileutil.BackupDir(), "ollama-launch.config.toml.*"), "original-codex-profile-backup-marker")
 	})
 
-	t.Run("uses custom OLLAMA_HOST", func(t *testing.T) {
-		t.Setenv("OLLAMA_HOST", "http://myhost:9999")
+	t.Run("uses custom SUSAN_HOST", func(t *testing.T) {
+		t.Setenv("SUSAN_HOST", "http://myhost:9999")
 		tmpDir := t.TempDir()
 		profilePath := filepath.Join(tmpDir, "ollama-launch.config.toml")
 
@@ -184,7 +184,7 @@ func TestWriteCodexProfileConfig(t *testing.T) {
 	})
 
 	t.Run("uses connectable host for unspecified bind address", func(t *testing.T) {
-		t.Setenv("OLLAMA_HOST", "http://0.0.0.0:14343")
+		t.Setenv("SUSAN_HOST", "http://0.0.0.0:14343")
 		tmpDir := t.TempDir()
 		profilePath := filepath.Join(tmpDir, "ollama-launch.config.toml")
 
@@ -616,7 +616,7 @@ func TestBuildCodexModelEntryContextWindow(t *testing.T) {
 			wantContext: 131072,
 		},
 		{
-			name: "OLLAMA_CONTEXT_LENGTH overrides local gguf inventory context",
+			name: "SUSAN_CONTEXT_LENGTH overrides local gguf inventory context",
 			model: LaunchModel{
 				Name:          "llama3.2",
 				ContextLength: 131072,
@@ -673,9 +673,9 @@ func TestBuildCodexModelEntryContextWindow(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.envContextLen != "" {
-				t.Setenv("OLLAMA_CONTEXT_LENGTH", tt.envContextLen)
+				t.Setenv("SUSAN_CONTEXT_LENGTH", tt.envContextLen)
 			} else {
-				t.Setenv("OLLAMA_CONTEXT_LENGTH", "")
+				t.Setenv("SUSAN_CONTEXT_LENGTH", "")
 			}
 
 			entry := buildCodexModelEntry(tt.model)

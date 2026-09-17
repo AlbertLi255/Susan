@@ -12,8 +12,8 @@ import (
 )
 
 func TestInferenceModelCache(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
-	t.Setenv("OLLAMA_GO_TEMPLATE", "")
+	t.Setenv("SUSAN_MODELS", t.TempDir())
+	t.Setenv("SUSAN_GO_TEMPLATE", "")
 
 	_, completionDigest := createBinFile(t, ggml.KV{
 		"general.architecture": "llama",
@@ -81,8 +81,8 @@ func TestInferenceModelCache(t *testing.T) {
 }
 
 func TestInferenceModelCacheConcurrentMiss(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
-	t.Setenv("OLLAMA_GO_TEMPLATE", "")
+	t.Setenv("SUSAN_MODELS", t.TempDir())
+	t.Setenv("SUSAN_GO_TEMPLATE", "")
 
 	_, digest := createBinFile(t, ggml.KV{
 		"general.architecture": "llama",

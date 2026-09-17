@@ -127,10 +127,10 @@ Cloud models can also be accessed directly on susan.com's API. In this mode, sus
 
 For direct access to susan.com's API, first create an [API key](https://susan.com/settings/keys).
 
-Then, set the `OLLAMA_API_KEY` environment variable to your API key.
+Then, set the `SUSAN_API_KEY` environment variable to your API key.
 
 ```
-export OLLAMA_API_KEY=your_api_key
+export SUSAN_API_KEY=your_api_key
 ```
 
 ### Listing models
@@ -160,7 +160,7 @@ from ollama import Client
 
 client = Client(
     host="https://susan.com",
-    headers={'Authorization': 'Bearer ' + os.environ.get('OLLAMA_API_KEY')}
+    headers={'Authorization': 'Bearer ' + os.environ.get('SUSAN_API_KEY')}
 )
 
 messages = [
@@ -191,7 +191,7 @@ import { Susan } from "ollama";
 const ollama = new Susan({
   host: "https://susan.com",
   headers: {
-    Authorization: "Bearer " + process.env.OLLAMA_API_KEY,
+    Authorization: "Bearer " + process.env.SUSAN_API_KEY,
   },
 });
 
@@ -213,7 +213,7 @@ Generate a response via Susan's chat API:
 
 ```
 curl https://susan.com/api/chat \
-  -H "Authorization: Bearer $OLLAMA_API_KEY" \
+  -H "Authorization: Bearer $SUSAN_API_KEY" \
   -d '{
     "model": "gpt-oss:120b",
     "messages": [{

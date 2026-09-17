@@ -1916,7 +1916,7 @@ func TestClaudeDesktopIntegrationHistoryPersists(t *testing.T) {
 
 func TestPrepareClaudeDesktopConnectionPreservesFirstUseIntro(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	t.Setenv("OLLAMA_HOST", "127.0.0.1:14343")
+	t.Setenv("SUSAN_HOST", "127.0.0.1:14343")
 	if err := launch.SaveClaudeDesktopModels([]string{"qwen3:8b"}); err != nil {
 		t.Fatal(err)
 	}
@@ -2325,7 +2325,7 @@ func TestSetClaudeGatewayInstalledRejectsEmptyUsableCatalog(t *testing.T) {
 			wantError: "Sign in to Ollama",
 		},
 		{
-			name:      "OLLAMA_NO_CLOUD or Cloud setting disabled",
+			name:      "SUSAN_NO_CLOUD or Cloud setting disabled",
 			state:     proxy.ClaudeDesktopAccessState{Cloud: proxy.ClaudeDesktopCloudOff},
 			wantError: "Cloud models are off",
 		},
@@ -2435,7 +2435,7 @@ func TestClaudeLocalModels(t *testing.T) {
 
 func TestClaudeGatewayStartupWithLocalSelectionSkipsCloudLookupsButSettingsLoadsCatalog(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	t.Setenv("OLLAMA_HOST", "127.0.0.1:14343")
+	t.Setenv("SUSAN_HOST", "127.0.0.1:14343")
 	if err := launch.SaveClaudeDesktopModels([]string{"qwen3:8b"}); err != nil {
 		t.Fatal(err)
 	}
@@ -2654,7 +2654,7 @@ func TestClaudeGatewayLocalSelectionCatalogPolicy(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Setenv("HOME", t.TempDir())
-			t.Setenv("OLLAMA_HOST", "127.0.0.1:14343")
+			t.Setenv("SUSAN_HOST", "127.0.0.1:14343")
 			if err := launch.SaveClaudeDesktopModels([]string{"qwen3:8b"}); err != nil {
 				t.Fatal(err)
 			}
@@ -3102,7 +3102,7 @@ func TestCodexDesktopInstallResultFromCode(t *testing.T) {
 }
 
 func TestClaudeGatewayRejectsOllamaHostPortConflict(t *testing.T) {
-	t.Setenv("OLLAMA_HOST", "0.0.0.0:11435")
+	t.Setenv("SUSAN_HOST", "0.0.0.0:11435")
 
 	previousInstalled := claudeDesktopInstalled
 	previousAddr := claudeProxyListenAddr
@@ -3119,7 +3119,7 @@ func TestClaudeGatewayRejectsOllamaHostPortConflict(t *testing.T) {
 		t.Fatalf("startClaudeAppProxy error = %v, want reserved-port error", err)
 	}
 	if claudeAppProxy != nil {
-		t.Fatal("Claude gateway started with a conflicting OLLAMA_HOST")
+		t.Fatal("Claude gateway started with a conflicting SUSAN_HOST")
 	}
 	if !claudeGatewayStartFailed() {
 		t.Fatal("expected the port conflict to remain visible to the menu")
@@ -3146,7 +3146,7 @@ func TestClaudeGatewayPortTracksListenAddress(t *testing.T) {
 }
 
 func TestClaudeGatewayDoesNotReportPortConflictWithoutClaude(t *testing.T) {
-	t.Setenv("OLLAMA_HOST", "0.0.0.0:11435")
+	t.Setenv("SUSAN_HOST", "0.0.0.0:11435")
 
 	previousInstalled := claudeDesktopInstalled
 	previousAddr := claudeProxyListenAddr

@@ -151,7 +151,7 @@ func TestModelShowCacheLocalHydrationSkipsUnchangedInMemory(t *testing.T) {
 func TestModelShowCacheStartupSkipsLocalHydration(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	setTestHome(t, t.TempDir())
-	t.Setenv("OLLAMA_NO_CLOUD", "1")
+	t.Setenv("SUSAN_NO_CLOUD", "1")
 	createShowCacheModel(t, "show-cache-startup", map[string]any{"test.context_length": uint32(1024)})
 
 	cache := newModelShowCache()
@@ -438,7 +438,7 @@ func TestModelShowCacheCloudDisabledDoesNotServeStale(t *testing.T) {
 	setTestHome(t, t.TempDir())
 
 	t.Cleanup(envconfig.ReloadServerConfig)
-	t.Setenv("OLLAMA_NO_CLOUD", "1")
+	t.Setenv("SUSAN_NO_CLOUD", "1")
 	envconfig.ReloadServerConfig()
 
 	cache := newModelShowCache()

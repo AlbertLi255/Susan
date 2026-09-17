@@ -24,7 +24,7 @@ import (
 func TestStatusHandler(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	setTestHome(t, t.TempDir())
-	t.Setenv("OLLAMA_NO_CLOUD", "1")
+	t.Setenv("SUSAN_NO_CLOUD", "1")
 
 	s := Server{}
 	w := createRequest(t, s.StatusHandler, nil)
@@ -48,7 +48,7 @@ func TestStatusHandler(t *testing.T) {
 func TestCloudDisabledBlocksRemoteOperations(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	setTestHome(t, t.TempDir())
-	t.Setenv("OLLAMA_NO_CLOUD", "1")
+	t.Setenv("SUSAN_NO_CLOUD", "1")
 
 	s := Server{}
 
@@ -849,7 +849,7 @@ func TestCloudResponsesWebSearchUsesLocalOrchestration(t *testing.T) {
 	}
 	local := httptest.NewServer(router)
 	defer local.Close()
-	t.Setenv("OLLAMA_HOST", local.URL)
+	t.Setenv("SUSAN_HOST", local.URL)
 
 	reqBody := `{
 		"model":"kimi-k2.5:cloud",
@@ -963,7 +963,7 @@ func TestCloudResponsesUnsupportedWebSearchPassthrough(t *testing.T) {
 func TestCloudDisabledBlocksExplicitCloudPassthrough(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	setTestHome(t, t.TempDir())
-	t.Setenv("OLLAMA_NO_CLOUD", "1")
+	t.Setenv("SUSAN_NO_CLOUD", "1")
 
 	s := &Server{}
 	router, err := s.GenerateRoutes()

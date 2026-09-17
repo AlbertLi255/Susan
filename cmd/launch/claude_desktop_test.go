@@ -162,7 +162,7 @@ func TestLaunchIntegration_ClaudeDesktopDoesNotRequireLocalCloudSignIn(t *testin
 	withClaudeDesktopPlatform(t, "darwin")
 	withInteractiveSession(t, true)
 	withLauncherHooks(t)
-	t.Setenv("OLLAMA_API_KEY", "test-api-key")
+	t.Setenv("SUSAN_API_KEY", "test-api-key")
 
 	if err := os.MkdirAll(filepath.Join(tmpDir, "Applications", "Claude.app"), 0o755); err != nil {
 		t.Fatal(err)
@@ -181,7 +181,7 @@ func TestLaunchIntegration_ClaudeDesktopDoesNotRequireLocalCloudSignIn(t *testin
 		}
 	}))
 	defer srv.Close()
-	t.Setenv("OLLAMA_HOST", srv.URL)
+	t.Setenv("SUSAN_HOST", srv.URL)
 
 	DefaultSignIn = func(modelName, signInURL string) (string, error) {
 		t.Fatalf("Claude Desktop launch should not require Ollama Cloud sign-in, got %s at %s", modelName, signInURL)
@@ -210,7 +210,7 @@ func TestClaudeDesktopConfigureWritesOllamaCloudProfile(t *testing.T) {
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
 	withClaudeDesktopPlatform(t, "darwin")
-	t.Setenv("OLLAMA_API_KEY", "test-api-key")
+	t.Setenv("SUSAN_API_KEY", "test-api-key")
 
 	paths, err := claudeDesktopConfigPaths()
 	if err != nil {
@@ -330,7 +330,7 @@ func TestClaudeDesktopConfigureAutodiscoveryRemovesExistingModelCatalog(t *testi
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
 	withClaudeDesktopPlatform(t, "darwin")
-	t.Setenv("OLLAMA_API_KEY", "test-api-key")
+	t.Setenv("SUSAN_API_KEY", "test-api-key")
 
 	paths, err := claudeDesktopConfigPaths()
 	if err != nil {
@@ -388,7 +388,7 @@ func TestClaudeDesktopConfigureWritesSavedAutoModePreference(t *testing.T) {
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
 	withClaudeDesktopPlatform(t, "darwin")
-	t.Setenv("OLLAMA_API_KEY", "test-api-key")
+	t.Setenv("SUSAN_API_KEY", "test-api-key")
 
 	paths, err := claudeDesktopConfigPaths()
 	if err != nil {
@@ -443,7 +443,7 @@ func TestClaudeDesktopEffectiveAutoModeDoesNotChangeSavedPreference(t *testing.T
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
 	withClaudeDesktopPlatform(t, "darwin")
-	t.Setenv("OLLAMA_API_KEY", "test-api-key")
+	t.Setenv("SUSAN_API_KEY", "test-api-key")
 
 	if err := SaveClaudeDesktopAutoMode(true); err != nil {
 		t.Fatal(err)
@@ -655,7 +655,7 @@ func TestClaudeDesktopConfigureIgnoresCloudAPIKey(t *testing.T) {
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
 	withClaudeDesktopPlatform(t, "darwin")
-	t.Setenv("OLLAMA_API_KEY", "bad-key")
+	t.Setenv("SUSAN_API_KEY", "bad-key")
 
 	if err := (&ClaudeDesktop{}).ConfigureAutodiscovery(); err != nil {
 		t.Fatalf("Configure error = %v", err)
@@ -675,7 +675,7 @@ func TestClaudeDesktopConfigureDoesNotRequireAPIKey(t *testing.T) {
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
 	withClaudeDesktopPlatform(t, "darwin")
-	t.Setenv("OLLAMA_API_KEY", "")
+	t.Setenv("SUSAN_API_KEY", "")
 	if err := (&ClaudeDesktop{}).ConfigureAutodiscovery(); err != nil {
 		t.Fatalf("Configure error = %v", err)
 	}
@@ -685,7 +685,7 @@ func TestClaudeDesktopConfigureReplacesExistingAPIKeyWithPlaceholder(t *testing.
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
 	withClaudeDesktopPlatform(t, "darwin")
-	t.Setenv("OLLAMA_API_KEY", "")
+	t.Setenv("SUSAN_API_KEY", "")
 
 	paths, err := claudeDesktopConfigPaths()
 	if err != nil {
@@ -712,7 +712,7 @@ func TestClaudeDesktopConfigureDoesNotPromptForExistingAPIKey(t *testing.T) {
 	setTestHome(t, tmpDir)
 	withClaudeDesktopPlatform(t, "darwin")
 	withInteractiveSession(t, true)
-	t.Setenv("OLLAMA_API_KEY", "")
+	t.Setenv("SUSAN_API_KEY", "")
 
 	paths, err := claudeDesktopConfigPaths()
 	if err != nil {
@@ -738,7 +738,7 @@ func TestClaudeDesktopAutodiscoveryConfiguredRequiresAppliedOllamaProfile(t *tes
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
 	withClaudeDesktopPlatform(t, "darwin")
-	t.Setenv("OLLAMA_API_KEY", "test-api-key")
+	t.Setenv("SUSAN_API_KEY", "test-api-key")
 
 	c := &ClaudeDesktop{}
 	if err := c.ConfigureAutodiscovery(); err != nil {
@@ -767,7 +767,7 @@ func TestClaudeDesktopAutodiscoveryConfiguredRequiresAPIKey(t *testing.T) {
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
 	withClaudeDesktopPlatform(t, "darwin")
-	t.Setenv("OLLAMA_API_KEY", "test-api-key")
+	t.Setenv("SUSAN_API_KEY", "test-api-key")
 
 	c := &ClaudeDesktop{}
 	if err := c.ConfigureAutodiscovery(); err != nil {

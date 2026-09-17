@@ -16,7 +16,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	if os.Getenv("OLLAMA_LAUNCH_OMP_TEST_HELPER") == "1" {
+	if os.Getenv("SUSAN_LAUNCH_OMP_TEST_HELPER") == "1" {
 		runOMPTestHelper()
 		return
 	}
@@ -24,7 +24,7 @@ func TestMain(m *testing.M) {
 }
 
 func runOMPTestHelper() {
-	logPath := os.Getenv("OLLAMA_LAUNCH_OMP_TEST_LOG")
+	logPath := os.Getenv("SUSAN_LAUNCH_OMP_TEST_LOG")
 	if logPath != "" {
 		f, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
 		if err == nil {
@@ -34,11 +34,11 @@ func runOMPTestHelper() {
 	}
 
 	if len(os.Args) >= 3 && os.Args[1] == "plugin" && os.Args[2] == "list" {
-		fmt.Print(os.Getenv("OLLAMA_LAUNCH_OMP_TEST_PLUGIN_LIST"))
+		fmt.Print(os.Getenv("SUSAN_LAUNCH_OMP_TEST_PLUGIN_LIST"))
 		os.Exit(0)
 	}
 	if len(os.Args) >= 4 && os.Args[1] == "plugin" && os.Args[2] == "install" {
-		if os.Getenv("OLLAMA_LAUNCH_OMP_TEST_FAIL_INSTALL") == "1" {
+		if os.Getenv("SUSAN_LAUNCH_OMP_TEST_FAIL_INSTALL") == "1" {
 			_, _ = fmt.Fprintln(os.Stderr, "install failed")
 			os.Exit(1)
 		}
@@ -136,7 +136,7 @@ func TestOMPRun_WebSearchPluginLifecycle(t *testing.T) {
 			http.NotFound(w, r)
 		}))
 		t.Cleanup(srv.Close)
-		t.Setenv("OLLAMA_HOST", srv.URL)
+		t.Setenv("SUSAN_HOST", srv.URL)
 	}
 
 	setup := func(t *testing.T, pluginList string, cloudDisabled bool) (string, *OMP) {
@@ -144,10 +144,10 @@ func TestOMPRun_WebSearchPluginLifecycle(t *testing.T) {
 		tmpDir := t.TempDir()
 		setOMPTestHome(t, tmpDir)
 		t.Setenv("PATH", tmpDir)
-		t.Setenv("OLLAMA_LAUNCH_OMP_TEST_HELPER", "1")
-		t.Setenv("OLLAMA_LAUNCH_OMP_TEST_PLUGIN_LIST", pluginList)
+		t.Setenv("SUSAN_LAUNCH_OMP_TEST_HELPER", "1")
+		t.Setenv("SUSAN_LAUNCH_OMP_TEST_PLUGIN_LIST", pluginList)
 		logPath := filepath.Join(tmpDir, "omp.log")
-		t.Setenv("OLLAMA_LAUNCH_OMP_TEST_LOG", logPath)
+		t.Setenv("SUSAN_LAUNCH_OMP_TEST_LOG", logPath)
 		setCloudStatus(t, cloudDisabled)
 		seedOMPHelperBinary(t, tmpDir)
 		return logPath, &OMP{}
@@ -198,7 +198,7 @@ func TestOMPRun_WebSearchPluginLifecycle(t *testing.T) {
 
 	t.Run("web search install failure warns and continues", func(t *testing.T) {
 		logPath, o := setup(t, "No plugins installed\n", false)
-		t.Setenv("OLLAMA_LAUNCH_OMP_TEST_FAIL_INSTALL", "1")
+		t.Setenv("SUSAN_LAUNCH_OMP_TEST_FAIL_INSTALL", "1")
 
 		stderr := captureStderr(t, func() {
 			if err := o.Run("gemma4", nil, []string{"chat"}); err != nil {
@@ -316,7 +316,7 @@ func TestOMPFindPath(t *testing.T) {
 func TestOMPConfigureWithModelsWritesModelsYML(t *testing.T) {
 	home := t.TempDir()
 	setOMPTestHome(t, home)
-	t.Setenv("OLLAMA_HOST", "http://0.0.0.0:14343")
+	t.Setenv("SUSAN_HOST", "http://0.0.0.0:14343")
 
 	o := &OMP{}
 	models := []LaunchModel{
@@ -393,7 +393,7 @@ func TestOMPConfigureWithModelsWritesModelsYML(t *testing.T) {
 func TestOMPConfigureWithModelsPreservesExistingConfig(t *testing.T) {
 	home := t.TempDir()
 	setOMPTestHome(t, home)
-	t.Setenv("OLLAMA_HOST", "")
+	t.Setenv("SUSAN_HOST", "")
 
 	modelsPath := filepath.Join(home, ".omp", "agent", "models.yml")
 	if err := os.MkdirAll(filepath.Dir(modelsPath), 0o755); err != nil {
@@ -558,7 +558,7 @@ func TestOMPConfigureWithModelsRespectsPiCodingAgentDir(t *testing.T) {
 func TestOMPCurrentModelRequiresHealthyProvider(t *testing.T) {
 	home := t.TempDir()
 	setOMPTestHome(t, home)
-	t.Setenv("OLLAMA_HOST", "http://127.0.0.1:14343")
+	t.Setenv("SUSAN_HOST", "http://127.0.0.1:14343")
 
 	modelsPath := filepath.Join(home, ".omp", "agent", "models.yml")
 	if err := os.MkdirAll(filepath.Dir(modelsPath), 0o755); err != nil {

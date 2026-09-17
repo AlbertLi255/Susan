@@ -258,25 +258,25 @@ func (s *Server) cmd(ctx context.Context) (*exec.Cmd, error) {
 		env[s[0]] = s[1]
 	}
 	if settings.Expose {
-		env["OLLAMA_HOST"] = "0.0.0.0"
+		env["SUSAN_HOST"] = "0.0.0.0"
 	}
 	if settings.Browser {
-		env["OLLAMA_ORIGINS"] = "*"
+		env["SUSAN_ORIGINS"] = "*"
 	}
 	if settings.Models != "" {
 		if _, err := os.Stat(settings.Models); err == nil {
-			env["OLLAMA_MODELS"] = settings.Models
+			env["SUSAN_MODELS"] = settings.Models
 		} else {
 			slog.Warn("models path not accessible, using default", "path", settings.Models, "err", err)
 		}
 	}
 	if settings.ContextLength > 0 {
-		env["OLLAMA_CONTEXT_LENGTH"] = strconv.Itoa(settings.ContextLength)
+		env["SUSAN_CONTEXT_LENGTH"] = strconv.Itoa(settings.ContextLength)
 	}
 	if cloudDisabled {
-		env["OLLAMA_NO_CLOUD"] = "1"
+		env["SUSAN_NO_CLOUD"] = "1"
 	} else {
-		env["OLLAMA_NO_CLOUD"] = "0"
+		env["SUSAN_NO_CLOUD"] = "0"
 	}
 	cmd.Env = []string{}
 	for k, v := range env {

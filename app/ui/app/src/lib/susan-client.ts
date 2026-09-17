@@ -1,5 +1,5 @@
 import { Ollama } from "ollama/browser";
-import { OLLAMA_HOST } from "./config";
+import { SUSAN_HOST } from "./config";
 
 let _ollamaClient: Ollama | null = null;
 
@@ -7,7 +7,7 @@ export const ollamaClient = new Proxy({} as Ollama, {
   get(_target, prop) {
     if (!_ollamaClient) {
       _ollamaClient = new Ollama({
-        host: OLLAMA_HOST,
+        host: SUSAN_HOST,
       });
     }
     const value = _ollamaClient[prop as keyof Ollama];

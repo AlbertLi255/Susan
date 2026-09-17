@@ -287,7 +287,7 @@ func (s *Scheduler) processPending(ctx context.Context) {
 						} else {
 							maxRunners = uint(defaultModelsPerGPU * max(len(gpus), 1))
 						}
-						slog.Debug("updating default concurrency", "OLLAMA_MAX_LOADED_MODELS", maxRunners, "gpu_count", len(gpus))
+						slog.Debug("updating default concurrency", "SUSAN_MAX_LOADED_MODELS", maxRunners, "gpu_count", len(gpus))
 					}
 
 					// Update free memory from currently loaded models

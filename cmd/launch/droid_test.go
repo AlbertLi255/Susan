@@ -32,7 +32,7 @@ func TestDroidEdit(t *testing.T) {
 	d := &Droid{}
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
-	t.Setenv("OLLAMA_HOST", "")
+	t.Setenv("SUSAN_HOST", "")
 
 	settingsDir := filepath.Join(tmpDir, ".factory")
 	settingsPath := filepath.Join(settingsDir, "settings.json")

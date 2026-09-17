@@ -198,7 +198,7 @@ func TestGetIntegrationStatuses(t *testing.T) {
 func TestHandlePostApiCloudSetting(t *testing.T) {
 	tmpHome := t.TempDir()
 	t.Setenv("HOME", tmpHome)
-	t.Setenv("OLLAMA_NO_CLOUD", "")
+	t.Setenv("SUSAN_NO_CLOUD", "")
 
 	testStore := &store.Store{
 		DBPath: filepath.Join(t.TempDir(), "db.sqlite"),
@@ -259,7 +259,7 @@ func TestHandlePostApiCloudSetting(t *testing.T) {
 func TestHandleGetApiCloudSetting(t *testing.T) {
 	tmpHome := t.TempDir()
 	t.Setenv("HOME", tmpHome)
-	t.Setenv("OLLAMA_NO_CLOUD", "")
+	t.Setenv("SUSAN_NO_CLOUD", "")
 
 	testStore := &store.Store{
 		DBPath: filepath.Join(t.TempDir(), "db.sqlite"),
@@ -606,7 +606,7 @@ func TestUserAgentTransport(t *testing.T) {
 func TestGetCloudModels(t *testing.T) {
 	t.Run("does not call ollama.com when cloud is disabled", func(t *testing.T) {
 		t.Setenv("HOME", t.TempDir())
-		t.Setenv("OLLAMA_NO_CLOUD", "1")
+		t.Setenv("SUSAN_NO_CLOUD", "1")
 		testStore := &store.Store{DBPath: filepath.Join(t.TempDir(), "db.sqlite")}
 		defer testStore.Close()
 
@@ -634,7 +634,7 @@ func TestGetCloudModels(t *testing.T) {
 
 	t.Run("returns no cloud models when account is unauthorized", func(t *testing.T) {
 		t.Setenv("HOME", t.TempDir())
-		t.Setenv("OLLAMA_NO_CLOUD", "")
+		t.Setenv("SUSAN_NO_CLOUD", "")
 		testStore := &store.Store{DBPath: filepath.Join(t.TempDir(), "db.sqlite")}
 		defer testStore.Close()
 
@@ -669,7 +669,7 @@ func TestInferenceClientUsesUserAgent(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	t.Setenv("OLLAMA_HOST", ts.URL)
+	t.Setenv("SUSAN_HOST", ts.URL)
 
 	server := &Server{}
 	client := server.inferenceClient()

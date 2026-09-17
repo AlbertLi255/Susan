@@ -63,7 +63,7 @@ func runToolRoutesModel(t *testing.T, model string) {
 
 func assertNoUnexpectedRoleWarnings(t *testing.T) {
 	t.Helper()
-	if os.Getenv("OLLAMA_TEST_EXISTING") != "" || runtime.GOOS == "windows" {
+	if os.Getenv("SUSAN_TEST_EXISTING") != "" || runtime.GOOS == "windows" {
 		return
 	}
 

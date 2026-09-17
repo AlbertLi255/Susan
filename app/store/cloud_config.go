@@ -19,7 +19,7 @@ type serverConfig struct {
 }
 
 // CloudDisabled returns whether cloud features should be disabled.
-// The source of truth is: OLLAMA_NO_CLOUD OR ~/.susan/server.json:disable_ollama_cloud.
+// The source of truth is: SUSAN_NO_CLOUD OR ~/.susan/server.json:disable_ollama_cloud.
 func (s *Store) CloudDisabled() (bool, error) {
 	disabled, _, err := s.CloudStatus()
 	return disabled, err

@@ -60,7 +60,7 @@ func TestStatus(t *testing.T) {
 			}
 
 			setTestHome(t, home)
-			t.Setenv("OLLAMA_NO_CLOUD", tt.envValue)
+			t.Setenv("SUSAN_NO_CLOUD", tt.envValue)
 
 			disabled, source := Status()
 			if disabled != tt.disabled {
