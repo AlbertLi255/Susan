@@ -153,6 +153,35 @@ func TestDisableLlamaCppCompat(t *testing.T) {
 	}
 }
 
+func TestLlamaCppCompatEnvMatchesNativeHook(t *testing.T) {
+	if llamaCppCompatEnv != "SUSAN_LLAMA_CPP_COMPAT" {
+		t.Fatalf("llamaCppCompatEnv = %q, want SUSAN_LLAMA_CPP_COMPAT", llamaCppCompatEnv)
+	}
+
+	// Contract with llama/compat/llama-ollama-compat.cpp::compat_disabled().
+	// A rename-only drift here silently re-enables compatibility transforms.
+	root := filepath.Join("..", "llama", "compat", "llama-ollama-compat.cpp")
+	src, err := os.ReadFile(root)
+	if err != nil {
+		t.Fatalf("read native compat source: %v", err)
+	}
+	needle := `std::getenv("` + llamaCppCompatEnv + `")`
+	if !bytes.Contains(src, []byte(needle)) {
+		t.Fatalf("native hook missing %s; Go would set %s=0 but C++ would ignore it", needle, llamaCppCompatEnv)
+	}
+	if bytes.Contains(src, []byte(`std::getenv("OLLAMA_LLAMA_CPP_COMPAT")`)) {
+		t.Fatal(`native hook still reads OLLAMA_LLAMA_CPP_COMPAT; rename it to match llamaCppCompatEnv`)
+	}
+}
+
+func TestLlamaQuantizeEnvDisablesCompatWithExactKey(t *testing.T) {
+	got := llamaQuantizeEnv(nil, false)
+	want := []string{"SUSAN_LLAMA_CPP_COMPAT=0"}
+	if !slices.Equal(got, want) {
+		t.Fatalf("llamaQuantizeEnv(nil, false) = %#v, want %#v", got, want)
+	}
+}
+
 func TestLlamaQuantizeEnv(t *testing.T) {
 	env := []string{"A=1", llamaCppCompatEnv + "=0", "B=2"}
 	tests := []struct {
