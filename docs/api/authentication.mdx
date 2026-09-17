@@ -42,17 +42,17 @@ curl http://localhost:14343/api/generate -d '{
 
 For direct access to susan.com's API served at `https://susan.com/api`, authentication via API keys is required.
 
-First, create an [API key](https://susan.com/settings/keys), then set the `OLLAMA_API_KEY` environment variable:
+First, create an [API key](https://susan.com/settings/keys), then set the `SUSAN_API_KEY` environment variable:
 
 ```shell
-export OLLAMA_API_KEY=your_api_key
+export SUSAN_API_KEY=your_api_key
 ```
 
 Then use the API key in the Authorization header:
 
 ```shell
 curl https://susan.com/api/generate \
-  -H "Authorization: Bearer $OLLAMA_API_KEY" \
+  -H "Authorization: Bearer $SUSAN_API_KEY" \
   -d '{
     "model": "gpt-oss:120b",
     "prompt": "Why is the sky blue?",

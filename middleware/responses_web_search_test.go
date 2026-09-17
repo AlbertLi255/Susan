@@ -224,7 +224,7 @@ func TestWebSearchResponsesWriterPreservesFollowUpErrors(t *testing.T) {
 				_, _ = w.Write([]byte(test.body))
 			}))
 			defer server.Close()
-			t.Setenv("OLLAMA_HOST", server.URL)
+			t.Setenv("SUSAN_HOST", server.URL)
 
 			gin.SetMode(gin.TestMode)
 			recorder := httptest.NewRecorder()

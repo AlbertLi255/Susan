@@ -152,8 +152,8 @@ func (w *Webview) Run(path string) unsafe.Pointer {
 		}
 
 		init += fmt.Sprintf(`
-			window.OLLAMA_PLATFORM = %q;
-			window.OLLAMA_WEBSEARCH = true;
+			window.SUSAN_PLATFORM = %q;
+			window.SUSAN_WEBSEARCH = true;
 		`, runtime.GOOS)
 
 		wv.Init(init)

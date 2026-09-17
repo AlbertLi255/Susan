@@ -148,7 +148,7 @@ function OnboardingCard({ children }: { children: ReactNode }) {
   );
 }
 
-const OLLAMA_FEATURES = [
+const SUSAN_FEATURES = [
   {
     title: "Connect your apps",
     description: "Power your existing coding apps with open models",
@@ -197,7 +197,7 @@ export function IntroScreen({
             keeping your data private.
           </p>
           <div className="mx-auto mt-8 flex w-fit max-w-full flex-col gap-6 text-left">
-            {OLLAMA_FEATURES.map((feature) => {
+            {SUSAN_FEATURES.map((feature) => {
               const Icon = feature.icon;
 
               return (

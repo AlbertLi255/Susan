@@ -618,7 +618,7 @@ func setupModelRecommendationsTestEnv(t *testing.T, noCloudEnv string) {
 	if noCloudEnv == "" {
 		noCloudEnv = "false"
 	}
-	t.Setenv("OLLAMA_NO_CLOUD", noCloudEnv)
+	t.Setenv("SUSAN_NO_CLOUD", noCloudEnv)
 	envconfig.ReloadServerConfig()
 	t.Cleanup(envconfig.ReloadServerConfig)
 }

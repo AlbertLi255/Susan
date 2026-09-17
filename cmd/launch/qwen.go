@@ -14,7 +14,7 @@ import (
 	"github.com/ollama/ollama/envconfig"
 )
 
-const qwenOllamaEnvKey = "OLLAMA_API_KEY"
+const qwenOllamaEnvKey = "SUSAN_API_KEY"
 
 var qwenGOOS = runtime.GOOS
 

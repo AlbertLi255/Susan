@@ -81,7 +81,7 @@ func TestClineEdit(t *testing.T) {
 	c := &Cline{}
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
-	t.Setenv("OLLAMA_HOST", "")
+	t.Setenv("SUSAN_HOST", "")
 
 	configDir := filepath.Join(tmpDir, ".cline", "data")
 	configPath := filepath.Join(configDir, "globalState.json")

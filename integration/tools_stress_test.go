@@ -495,7 +495,7 @@ func checkNoLeakedTags(t *testing.T, content string) {
 }
 
 func contextLength(defaultVal int) int {
-	if s := os.Getenv("OLLAMA_CONTEXT_LENGTH"); s != "" {
+	if s := os.Getenv("SUSAN_CONTEXT_LENGTH"); s != "" {
 		if n, err := strconv.Atoi(s); err == nil {
 			return n
 		}

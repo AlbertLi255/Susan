@@ -21,7 +21,7 @@ const (
 	// are also scanned (see LoadDefaultSkills); on a name collision, Susan-owned
 	// directories take precedence over .agents/skills/, and project-level takes
 	// precedence over user-level.
-	SkillsDirEnv  = "OLLAMA_SKILLS"
+	SkillsDirEnv  = "SUSAN_SKILLS"
 	skillFilename = "SKILL.md"
 	maxSkillBytes = 1 << 20
 

@@ -41,11 +41,11 @@ import (
 //go:generate tscriptify -package=github.com/ollama/ollama/app/ui/responses -target=./app/codegen/gotypes.gen.ts responses/types.go
 //go:generate npm --prefix ./app run build
 
-var CORS = envconfig.Bool("OLLAMA_CORS")
+var CORS = envconfig.Bool("SUSAN_CORS")
 
 // OllamaDotCom returns the URL for ollama.com, allowing override via environment variable
 var OllamaDotCom = func() string {
-	if url := os.Getenv("OLLAMA_DOT_COM_URL"); url != "" {
+	if url := os.Getenv("SUSAN_DOT_COM_URL"); url != "" {
 		return url
 	}
 	return "https://ollama.com"

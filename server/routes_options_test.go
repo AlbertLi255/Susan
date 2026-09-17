@@ -94,7 +94,7 @@ func TestModelOptionsNumCtxPriority(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Set or clear environment variable
 			if tt.envContextLen != "" {
-				t.Setenv("OLLAMA_CONTEXT_LENGTH", tt.envContextLen)
+				t.Setenv("SUSAN_CONTEXT_LENGTH", tt.envContextLen)
 			}
 
 			// Create server with VRAM-based default

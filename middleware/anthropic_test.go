@@ -914,8 +914,8 @@ func TestWebSearchToolPresent_ModelCallsIt_NonStreaming(t *testing.T) {
 	}))
 	defer followupServer.Close()
 
-	// Set OLLAMA_HOST to our mock server so the followup call goes there
-	t.Setenv("OLLAMA_HOST", followupServer.URL)
+	// Set SUSAN_HOST to our mock server so the followup call goes there
+	t.Setenv("SUSAN_HOST", followupServer.URL)
 
 	// Also mock the web search API
 	searchServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -1036,7 +1036,7 @@ func TestWebSearchToolPresent_ModelCallsIt_Streaming(t *testing.T) {
 		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer followupServer.Close()
-	t.Setenv("OLLAMA_HOST", followupServer.URL)
+	t.Setenv("SUSAN_HOST", followupServer.URL)
 
 	// Mock web search API
 	searchServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -1602,7 +1602,7 @@ func TestWebSearchCloudModelGating(t *testing.T) {
 			_ = json.NewEncoder(w).Encode(resp)
 		}))
 		defer followupServer.Close()
-		t.Setenv("OLLAMA_HOST", followupServer.URL)
+		t.Setenv("SUSAN_HOST", followupServer.URL)
 
 		// Mock search server
 		searchServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -1775,7 +1775,7 @@ func TestWebSearchCloudModelGating(t *testing.T) {
 	})
 
 	t.Run("cloud disabled blocks web search for cloud model", func(t *testing.T) {
-		t.Setenv("OLLAMA_NO_CLOUD", "1")
+		t.Setenv("SUSAN_NO_CLOUD", "1")
 
 		handlerCalled := false
 		router := gin.New()
@@ -1807,7 +1807,7 @@ func TestWebSearchCloudModelGating(t *testing.T) {
 	})
 
 	t.Run("cloud disabled does not block local model if web_search is not called", func(t *testing.T) {
-		t.Setenv("OLLAMA_NO_CLOUD", "1")
+		t.Setenv("SUSAN_NO_CLOUD", "1")
 
 		handlerCalled := false
 		router := gin.New()
@@ -1871,7 +1871,7 @@ func TestWebSearchDoesNotRequireAuthorizationHeaderForMockEndpoint(t *testing.T)
 		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer followupServer.Close()
-	t.Setenv("OLLAMA_HOST", followupServer.URL)
+	t.Setenv("SUSAN_HOST", followupServer.URL)
 
 	router := gin.New()
 	router.Use(AnthropicMessagesMiddleware())
@@ -2010,7 +2010,7 @@ func TestWebSearchStreamingImmediateTakeover(t *testing.T) {
 		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer followupServer.Close()
-	t.Setenv("OLLAMA_HOST", followupServer.URL)
+	t.Setenv("SUSAN_HOST", followupServer.URL)
 
 	searchServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		resp := anthropic.OllamaWebSearchResponse{
@@ -2122,7 +2122,7 @@ func TestWebSearchStreamingUsageUsesObservedChunkMetrics(t *testing.T) {
 		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer followupServer.Close()
-	t.Setenv("OLLAMA_HOST", followupServer.URL)
+	t.Setenv("SUSAN_HOST", followupServer.URL)
 
 	searchServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		resp := anthropic.OllamaWebSearchResponse{
@@ -2238,7 +2238,7 @@ func TestWebSearchMixedToolCallsPreferWebSearch(t *testing.T) {
 		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer followupServer.Close()
-	t.Setenv("OLLAMA_HOST", followupServer.URL)
+	t.Setenv("SUSAN_HOST", followupServer.URL)
 
 	searchServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		resp := anthropic.OllamaWebSearchResponse{
@@ -2353,7 +2353,7 @@ func TestWebSearchFollowupClientToolStopReasonToolUse(t *testing.T) {
 		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer followupServer.Close()
-	t.Setenv("OLLAMA_HOST", followupServer.URL)
+	t.Setenv("SUSAN_HOST", followupServer.URL)
 
 	searchServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		resp := anthropic.OllamaWebSearchResponse{
@@ -2497,7 +2497,7 @@ func TestWebSearchMultiIterationLoop(t *testing.T) {
 		}
 	}))
 	defer followupServer.Close()
-	t.Setenv("OLLAMA_HOST", followupServer.URL)
+	t.Setenv("SUSAN_HOST", followupServer.URL)
 
 	searchServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		resp := anthropic.OllamaWebSearchResponse{
@@ -2615,7 +2615,7 @@ func TestWebSearchLoopMaxLimit(t *testing.T) {
 		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer followupServer.Close()
-	t.Setenv("OLLAMA_HOST", followupServer.URL)
+	t.Setenv("SUSAN_HOST", followupServer.URL)
 
 	searchServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		resp := anthropic.OllamaWebSearchResponse{
@@ -2723,7 +2723,7 @@ func TestWebSearchStreamingFinalStopReasonToolUse(t *testing.T) {
 		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer followupServer.Close()
-	t.Setenv("OLLAMA_HOST", followupServer.URL)
+	t.Setenv("SUSAN_HOST", followupServer.URL)
 
 	searchServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		resp := anthropic.OllamaWebSearchResponse{
@@ -2843,7 +2843,7 @@ func TestWebSearchFollowupNon200ReturnsApiError(t *testing.T) {
 		http.Error(w, "boom", http.StatusInternalServerError)
 	}))
 	defer followupServer.Close()
-	t.Setenv("OLLAMA_HOST", followupServer.URL)
+	t.Setenv("SUSAN_HOST", followupServer.URL)
 
 	searchServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		resp := anthropic.OllamaWebSearchResponse{

@@ -1,7 +1,7 @@
 ## CPU only
 
 ```shell
-docker run -d -v susan:/root/.susan -p 14343:14343 --name susan ollama/ollama
+docker run -d -v susan:/root/.susan -p 14343:14343 --name susan susan/susan
 ```
 
 ## Nvidia GPU
@@ -52,7 +52,7 @@ sudo systemctl restart docker
 ### Start the container
 
 ```shell
-docker run -d --gpus=all -v susan:/root/.susan -p 14343:14343 --name susan ollama/ollama
+docker run -d --gpus=all -v susan:/root/.susan -p 14343:14343 --name susan susan/susan
 ```
 
 <Note>
@@ -65,19 +65,19 @@ docker run -d --gpus=all -v susan:/root/.susan -p 14343:14343 --name susan ollam
 To run Susan using Docker with AMD GPUs, use the `rocm` tag and the following command:
 
 ```shell
-docker run -d --device /dev/kfd --device /dev/dri -v susan:/root/.susan -p 14343:14343 --name susan ollama/ollama:rocm
+docker run -d --device /dev/kfd --device /dev/dri -v susan:/root/.susan -p 14343:14343 --name susan susan/susan:rocm
 ```
 
 ## Vulkan Support
 
-Vulkan is bundled into the `ollama/ollama` image and is enabled by default when
+Vulkan is bundled into the `susan/susan` image and is enabled by default when
 the container can access the GPU devices.
 
 ```shell
-docker run -d --device /dev/kfd --device /dev/dri -v susan:/root/.susan -p 14343:14343 --name susan ollama/ollama
+docker run -d --device /dev/kfd --device /dev/dri -v susan:/root/.susan -p 14343:14343 --name susan susan/susan
 ```
 
-Use `OLLAMA_VULKAN=0` to disable Vulkan, or `GGML_VK_VISIBLE_DEVICES=<ids>` to
+Use `SUSAN_VULKAN=0` to disable Vulkan, or `GGML_VK_VISIBLE_DEVICES=<ids>` to
 select specific Vulkan devices.
 
 

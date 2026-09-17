@@ -106,7 +106,7 @@ func TestManifests(t *testing.T) {
 	for n, wants := range cases {
 		t.Run(n, func(t *testing.T) {
 			d := t.TempDir()
-			t.Setenv("OLLAMA_MODELS", d)
+			t.Setenv("SUSAN_MODELS", d)
 
 			for _, p := range wants.ps {
 				createManifest(t, d, p)

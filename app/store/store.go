@@ -146,7 +146,7 @@ type Settings struct {
 	// WorkingDir specifies the working directory for all agent operations
 	WorkingDir string
 
-	// ContextLength specifies the context length for the ollama server (using OLLAMA_CONTEXT_LENGTH)
+	// ContextLength specifies the context length for the ollama server (using SUSAN_CONTEXT_LENGTH)
 	ContextLength int
 
 	// TurboEnabled indicates if Ollama Turbo features are enabled
@@ -280,7 +280,7 @@ func (s *Store) ensureDB() error {
 }
 
 // migrateCloudSetting migrates legacy airplane_mode into server.json exactly once.
-// After this, cloud state is sourced from server.json OR OLLAMA_NO_CLOUD.
+// After this, cloud state is sourced from server.json OR SUSAN_NO_CLOUD.
 func (s *Store) migrateCloudSetting(database *database) error {
 	migrated, err := database.isCloudSettingMigrated()
 	if err != nil {
@@ -400,7 +400,7 @@ func (s *Store) Settings() (Settings, error) {
 
 	// Set default models directory if not set
 	if settings.Models == "" {
-		dir := os.Getenv("OLLAMA_MODELS")
+		dir := os.Getenv("SUSAN_MODELS")
 		if dir != "" {
 			settings.Models = dir
 		} else {

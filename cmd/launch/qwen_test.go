@@ -125,14 +125,14 @@ func TestQwenConfigureMergesWithExistingSettings(t *testing.T) {
   "theme": "dark",
   "env": {
     "OPENROUTER_API_KEY": "openrouter-key",
-    "OLLAMA_API_KEY": "old-ollama-key"
+    "SUSAN_API_KEY": "old-ollama-key"
   },
   "modelProviders": {
     "openai": [
       {
         "id": "old-ollama",
         "name": "old-ollama (Ollama)",
-        "envKey": "OLLAMA_API_KEY",
+        "envKey": "SUSAN_API_KEY",
         "baseUrl": "` + qwenBaseURL() + `"
       },
       {
@@ -145,7 +145,7 @@ func TestQwenConfigureMergesWithExistingSettings(t *testing.T) {
       {
         "id": "remote-ollama",
         "name": "Remote Ollama",
-        "envKey": "OLLAMA_API_KEY",
+        "envKey": "SUSAN_API_KEY",
         "baseUrl": "http://10.0.0.20:11434/v1"
       }
     ],

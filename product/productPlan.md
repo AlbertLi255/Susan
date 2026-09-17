@@ -8,7 +8,8 @@
 | 项 | 值 |
 |---|---|
 | GitHub 仓库 | https://github.com/AlbertLi255/Susan （当前 public，稍后改 private） |
-| Go module 路径 | `github.com/AlbertLi255/Susan` |
+| Go module 路径 | **保持** `github.com/ollama/ollama`（A1 不做，为了 `git merge upstream/main`）。仓库 URL 与 module 路径不必相同。 |
+| 运行时环境变量 | `OLLAMA_HOST=http://localhost:11434` → `SUSAN_HOST=http://localhost:14343`（其余 `OLLAMA_*` 同样改为 `SUSAN_*`） |
 | 数据目录 | `%LOCALAPPDATA%\Susan`（直接改名，**不做迁移**） |
 | 域名 | 自行购买 `susan.com`（官网 www / 文档 docs / cloud api / registry） |
 | Model Hub 就绪前 | **继续使用 ollama registry**（registry.ollama.com），不急于切换 |
@@ -23,10 +24,10 @@
 
 按依赖顺序：
 
-### 1. A1 模块路径改名
-- `go.mod` 第 1 行：`module github.com/ollama/ollama` → `module github.com/AlbertLi255/Susan`
-- 全仓所有 import 路径 `github.com/ollama/ollama/...` → `github.com/AlbertLi255/Susan/...` 联动替换
-- 注意：这一步会影响所有 .go 文件的 import，必须最后做，否则中途编译失败
+### 1. A1 模块路径改名（**不做**）
+- 原计划：`go.mod` 第 1 行 `module github.com/ollama/ollama` → `module github.com/AlbertLi255/Susan`，并全仓替换 import。
+- **决定：不做。** 为了保持和上游 `git merge upstream/main` 可合入：Go module 路径与所有 `.go` import 继续使用 `github.com/ollama/ollama`。GitHub 仓库仍是 `AlbertLi255/Susan`，仓库 URL 与 module 路径不必相同。
+- 构建 ldflags 继续 `-X=github.com/ollama/ollama/version.Version=...`，不随品牌改名。
 
 ### 2. A2 数据目录直接改名（不迁移）
 - 将代码中所有 `"Ollama"` 数据目录引用改为 `"Susan"`：
@@ -44,16 +45,16 @@
 
 ### 3.5. 端口改造（只改端口号 11434 → 14343，其余沿用 Ollama 设计）
 - **产品决策**：只把默认端口从 `11434` 改成 `14343`，避免和本机 Ollama 抢端口。
-- **不改默认监听地址**：继续与 Ollama 一致，未设置 `OLLAMA_HOST` 时默认为 **`127.0.0.1:14343`**（仅本机 loopback）。不要把默认 host 改成 `0.0.0.0`。
-- **Ollama 原设计（保持）**：
-  - `Host()` 由环境变量 `OLLAMA_HOST` 同时驱动服务端 `Listen` 和客户端连接 URL。
+- **不改默认监听地址**：继续与 Ollama 一致，未设置 `SUSAN_HOST` 时默认为 **`127.0.0.1:14343`**（仅本机 loopback）。不要把默认 host 改成 `0.0.0.0`。
+- **Ollama 原设计（保持，仅变量名按 I 改为 `SUSAN_HOST`）**：
+  - `Host()` 由环境变量 `SUSAN_HOST` 同时驱动服务端 `Listen` 和客户端连接 URL。
   - 默认 `127.0.0.1`，外网/局域网进不来。
-  - 用户要对外提供 API 时，自行设置 `OLLAMA_HOST=0.0.0.0:14343`（bind 语义：所有网卡）。
+  - 用户要对外提供 API 时，自行设置 `SUSAN_HOST=0.0.0.0:14343`（bind 语义：所有网卡）。
   - 客户端不要直连 `0.0.0.0`：继续用已有的 `ConnectableHost()`，把未指定地址换成 `127.0.0.1` / `::1`（Windows 上直连 `0.0.0.0` 会失败）。
 - 代码：
   - [envconfig/config.go](file:///d:/projects/susanAssist/susanPlatform/Susan/envconfig/config.go)：`defaultPort := "14343"`；默认 host 保持 `"127.0.0.1"`。
   - 注释/环境变量说明表同步为 `127.0.0.1:14343`。
-- 测试与文档：把示例里的 **`11434` 换成 `14343`**；FAQ 里「如何对外暴露」仍可写 `OLLAMA_HOST=0.0.0.0:14343`，那是用户显式配置，不是默认值。
+- 测试与文档：把示例里的 **`11434` 换成 `14343`**；FAQ 里「如何对外暴露」写 `SUSAN_HOST=0.0.0.0:14343`，那是用户显式配置，不是默认值。
 - **已验证**：14343 端口在本机空闲可用。
 - 误改记录：批次 2 曾把默认 host 改成 `0.0.0.0`（文档写错）。已改回 `127.0.0.1`，与 Ollama 一致。
 
@@ -75,18 +76,18 @@
 - ~40 个 .mdx 全文 "Ollama" → "Susan"、"ollama.com" → "susan.com"（可脚本化批量替换）
 
 ### 7. G 构建脚本联动
-- [scripts/build_windows.ps1:904-994](file:///d:/projects/susanAssist/susanPlatform/Susan/scripts/build_windows.ps1#L904-L994)：产物名 `windows-ollama-app-${arch}.exe` → `windows-susan-app-${arch}.exe`；ldflags 路径联动 A1
-- [app/ollama.iss](file:///d:/projects/susanAssist/susanPlatform/Susan/app/ollama.iss)（建议改名 `susan.iss`）：`MyAppURL`、打包文件名联动
+- [scripts/build_windows.ps1:904-994](file:///d:/projects/susanAssist/susanPlatform/Susan/scripts/build_windows.ps1#L904-L994)：产物名 `windows-ollama-app-${arch}.exe` → `windows-susan-app-${arch}.exe`。**ldflags 的 module 路径不改**（A1 不做，保持 `github.com/ollama/ollama`）。
+- [app/ollama.iss](file:///d:/projects/susanAssist/susanPlatform/Susan/app/ollama.iss)：`MyAppURL`、打包文件名联动。文件名暂保持 `ollama.iss`（内容已是 Susan）。
 - [scripts/install.ps1](file:///d:/projects/susanAssist/susanPlatform/Susan/scripts/install.ps1)：下载域名 `ollama.com/download` → `susan.com/download`；签名组织 `O=Ollama Inc.` → 新证书主体
-- [CMakeLists.txt:3-55](file:///d:/projects/susanAssist/susanPlatform/Susan/CMakeLists.txt#L3-L55)：project 名（可选，纯内部不影响产物）
-- Dockerfile / .github/workflows/：镜像名 `ollama` → `susan`
+- [CMakeLists.txt:3-55](file:///d:/projects/susanAssist/susanPlatform/Susan/CMakeLists.txt#L3-L55)：project 名**不改**（可选，且 CMake 内部 `OLLAMA_*` 缓存变量保持原名，便于合上游）
+- Dockerfile / .github/workflows/：镜像名 `ollama/ollama` → `susan/susan`
 
-### 8. I 环境变量前缀改造（OLLAMA_ → SUSAN_）
-- 当前代码使用 `OLLAMA_HOST`、`OLLAMA_MODELS`、`OLLAMA_ORIGINS`、`OLLAMA_KEEP_ALIVE`、`OLLAMA_DEBUG` 等环境变量
-- 统一改为 `SUSAN_` 前缀：`SUSAN_HOST`、`SUSAN_MODELS`、`SUSAN_ORIGINS`、`SUSAN_KEEP_ALIVE`、`SUSAN_DEBUG` 等
-- 改动点：[envconfig/config.go](file:///d:/projects/susanAssist/susanPlatform/Susan/envconfig/config.go) 中所有 `Var("OLLAMA_*")` 调用，以及 [config.go:322](file:///d:/projects/susanAssist/susanPlatform/Susan/envconfig/config.go#L322) 的环境变量说明表
-- 联动：测试文件里的 `t.Setenv("OLLAMA_*", ...)` → `t.Setenv("SUSAN_*", ...)`、文档站里的环境变量说明
-- 改后默认示例：`SUSAN_HOST=127.0.0.1:14343`；若要对外监听再设 `SUSAN_HOST=0.0.0.0:14343`
+### 8. I 环境变量前缀改造（OLLAMA_ → SUSAN_）（**已做**）
+- `OLLAMA_HOST=http://localhost:11434` → `SUSAN_HOST=http://localhost:14343`
+- 其余运行时变量同样改前缀：`SUSAN_MODELS`、`SUSAN_ORIGINS`、`SUSAN_KEEP_ALIVE`、`SUSAN_DEBUG` 等
+- 改动文件：[envconfig/config.go](file:///d:/projects/susanAssist/susanPlatform/Susan/envconfig/config.go)、测试 `t.Setenv`、文档
+- CMake / CI 构建变量（如 `-DOLLAMA_LLAMA_BACKENDS`）不改
+- 合上游时，环境变量相关文件会有冲突
 
 ---
 
@@ -278,10 +279,10 @@
   - 模拟 server 中途 kill，UI 应每秒重试，server 重启后自动恢复
 - **关联代码**：[app/ui/app/src/hooks/useHealth.ts](file:///d:/projects/susanAssist/susanPlatform/Susan/app/ui/app/src/hooks/useHealth.ts)、[app/ui/app/src/components/ModelPicker.tsx](file:///d:/projects/susanAssist/susanPlatform/Susan/app/ui/app/src/components/ModelPicker.tsx#L167-L169)（消费 `isDisabled` 显示 Loading 文案）
 
-### 批次 4：模块路径 + 构建脚本 + 环境变量联动（最后做）
-- A1：go.mod + 全仓 import 路径替换
-- G：构建脚本产物名、iss、install.ps1、Dockerfile、CI 联动
-- I：环境变量前缀 OLLAMA_ → SUSAN_
+### 批次 4：构建脚本 + 环境变量联动（**已做**）
+- A1：**不做。** go.mod / import 路径保持 `github.com/ollama/ollama`，为了保持和上游的合并。
+- G：构建脚本产物名、iss 内容、install.ps1、Dockerfile、CI 镜像名已联动。ldflags 的 module 路径不改。
+- I：`OLLAMA_HOST=http://localhost:11434` → `SUSAN_HOST=http://localhost:14343`。合上游时这里会有冲突。
 
 ### 批次 5：Cloud 后端
 - D1-D3：cloud_proxy.go URL 替换

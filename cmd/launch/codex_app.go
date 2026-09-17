@@ -33,7 +33,7 @@ const (
 	codexAppBundleID               = "com.openai.codex"
 	codexAppModelCatalogFilename   = proxy.CodexDesktopModelCatalogFilename
 	codexAppRoutingCatalogFilename = proxy.CodexDesktopRoutingCatalogFilename
-	codexAppAutoReviewModelEnv     = "OLLAMA_CODEX_AUTO_REVIEW_MODEL"
+	codexAppAutoReviewModelEnv     = "SUSAN_CODEX_AUTO_REVIEW_MODEL"
 	codexAppOllamaProfileDirName   = "chatgpt-susan"
 	codexAppOllamaUserDataName     = "electron-data"
 	codexAppOllamaPIDFilename      = "chatgpt.pid"

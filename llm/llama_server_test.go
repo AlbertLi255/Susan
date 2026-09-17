@@ -1104,7 +1104,7 @@ func TestLlamaServerWaitUntilRunningWaitsOnRecoverableStartupOOM(t *testing.T) {
 }
 
 func TestLlamaServerWaitUntilRunningTimesOutWhenLoadStalls(t *testing.T) {
-	t.Setenv("OLLAMA_LOAD_TIMEOUT", "10ms")
+	t.Setenv("SUSAN_LOAD_TIMEOUT", "10ms")
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/health" {
@@ -1135,7 +1135,7 @@ func TestLlamaServerWaitUntilRunningTimesOutWhenLoadStalls(t *testing.T) {
 }
 
 func TestLlamaServerWaitUntilRunningExtendsTimeoutOnOutputActivity(t *testing.T) {
-	t.Setenv("OLLAMA_LOAD_TIMEOUT", "100ms")
+	t.Setenv("SUSAN_LOAD_TIMEOUT", "100ms")
 
 	var activityCount atomic.Int32
 	var activityStarted atomic.Bool
@@ -1355,7 +1355,7 @@ func TestSetupLlamaServerCommandEnv(t *testing.T) {
 	t.Setenv(pathEnv, userLibDir)
 
 	cmd := exec.Command("echo")
-	SetupLlamaServerCommandEnv(cmd, exe, []string{ml.LibOllamaPath, gpuDir}, map[string]string{"OLLAMA_DEBUG": "1"})
+	SetupLlamaServerCommandEnv(cmd, exe, []string{ml.LibOllamaPath, gpuDir}, map[string]string{"SUSAN_DEBUG": "1"})
 
 	env := make(map[string]string)
 	for _, kv := range cmd.Env {
@@ -1368,8 +1368,8 @@ func TestSetupLlamaServerCommandEnv(t *testing.T) {
 	if got := env["GGML_BACKEND_PATH"]; got != backendPath {
 		t.Fatalf("GGML_BACKEND_PATH = %q, want %q", got, backendPath)
 	}
-	if got := env["OLLAMA_DEBUG"]; got != "1" {
-		t.Fatalf("OLLAMA_DEBUG = %q, want %q", got, "1")
+	if got := env["SUSAN_DEBUG"]; got != "1" {
+		t.Fatalf("SUSAN_DEBUG = %q, want %q", got, "1")
 	}
 
 	paths := filepath.SplitList(env[strings.ToUpper(pathEnv)])
@@ -1389,8 +1389,8 @@ func TestSetupLlamaServerCommandEnv(t *testing.T) {
 
 func TestFilteredEnvLogValue(t *testing.T) {
 	attrs := filteredEnv([]string{
-		"OLLAMA_DEBUG=1",
-		"OLLAMA_API_KEY=ollama-secret",
+		"SUSAN_DEBUG=1",
+		"SUSAN_API_KEY=ollama-secret",
 		"OPENAI_API_KEY=openai-secret",
 		"HF_TOKEN=hf-secret",
 		"GGML_BACKEND_PATH=/tmp/ggml",
@@ -1405,7 +1405,7 @@ func TestFilteredEnvLogValue(t *testing.T) {
 		got[attr.Key] = attr.Value.String()
 	}
 
-	for _, key := range []string{"OLLAMA_DEBUG", "OLLAMA_API_KEY", "OPENAI_API_KEY", "HF_TOKEN"} {
+	for _, key := range []string{"SUSAN_DEBUG", "SUSAN_API_KEY", "OPENAI_API_KEY", "HF_TOKEN"} {
 		if _, ok := got[key]; ok {
 			t.Fatalf("%s should not be logged: %#v", key, got)
 		}
@@ -2623,15 +2623,15 @@ func setFlashAttentionEnv(t *testing.T, value string, set bool) {
 	t.Helper()
 
 	if set {
-		t.Setenv("OLLAMA_FLASH_ATTENTION", value)
+		t.Setenv("SUSAN_FLASH_ATTENTION", value)
 		return
 	}
 
-	old, ok := os.LookupEnv("OLLAMA_FLASH_ATTENTION")
+	old, ok := os.LookupEnv("SUSAN_FLASH_ATTENTION")
 	if ok {
-		t.Setenv("OLLAMA_FLASH_ATTENTION", old)
+		t.Setenv("SUSAN_FLASH_ATTENTION", old)
 	}
-	os.Unsetenv("OLLAMA_FLASH_ATTENTION")
+	os.Unsetenv("SUSAN_FLASH_ATTENTION")
 }
 
 func TestNormalizeEmbeddingError(t *testing.T) {

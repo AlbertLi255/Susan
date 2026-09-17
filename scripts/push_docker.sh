@@ -10,5 +10,5 @@ docker build \
     --platform=linux/arm64,linux/amd64 \
     --build-arg=GOFLAGS \
     -f Dockerfile \
-    -t ollama/ollama -t ollama/ollama:$VERSION \
+    -t susan/susan -t susan/susan:$VERSION \
     .

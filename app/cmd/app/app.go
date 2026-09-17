@@ -38,7 +38,7 @@ var (
 	appStore     *store.Store
 )
 
-var debug = strings.EqualFold(os.Getenv("OLLAMA_DEBUG"), "true") || os.Getenv("OLLAMA_DEBUG") == "1"
+var debug = strings.EqualFold(os.Getenv("SUSAN_DEBUG"), "true") || os.Getenv("SUSAN_DEBUG") == "1"
 
 var (
 	fastStartup = false
@@ -203,7 +203,7 @@ func main() {
 
 	st := &store.Store{}
 	if devMode {
-		if dbPath := strings.TrimSpace(os.Getenv("OLLAMA_APP_DB_PATH")); dbPath != "" {
+		if dbPath := strings.TrimSpace(os.Getenv("SUSAN_APP_DB_PATH")); dbPath != "" {
 			st.DBPath = dbPath
 			slog.Debug("using development app database", "path", dbPath)
 		}
@@ -212,7 +212,7 @@ func main() {
 
 	// Enable CORS in development mode
 	if devMode {
-		os.Setenv("OLLAMA_CORS", "1")
+		os.Setenv("SUSAN_CORS", "1")
 
 		// Check if Vite dev server is running on port 5173
 		var conn net.Conn

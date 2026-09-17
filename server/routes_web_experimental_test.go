@@ -216,7 +216,7 @@ func TestExperimentalWebEndpointsMissingBody(t *testing.T) {
 func TestExperimentalWebEndpointsCloudDisabled(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	setTestHome(t, t.TempDir())
-	t.Setenv("OLLAMA_NO_CLOUD", "1")
+	t.Setenv("SUSAN_NO_CLOUD", "1")
 
 	s := &Server{}
 	router, err := s.GenerateRoutes()

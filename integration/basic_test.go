@@ -110,7 +110,7 @@ func runUnicodeModelDir(t *testing.T) {
 		t.Skip("Unicode test only applicable to windows")
 	}
 	// Only works for local testing
-	if os.Getenv("OLLAMA_TEST_EXISTING") != "" {
+	if os.Getenv("SUSAN_TEST_EXISTING") != "" {
 		t.Skip("runUnicodeModelDir only works for local testing, skipping")
 	}
 
@@ -119,9 +119,9 @@ func runUnicodeModelDir(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(modelDir)
-	slog.Info("unicode", "OLLAMA_MODELS", modelDir)
+	slog.Info("unicode", "SUSAN_MODELS", modelDir)
 
-	t.Setenv("OLLAMA_MODELS", modelDir)
+	t.Setenv("SUSAN_MODELS", modelDir)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Minute)
 	defer cancel()

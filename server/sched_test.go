@@ -21,7 +21,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	os.Setenv("OLLAMA_DEBUG", "1")
+	os.Setenv("SUSAN_DEBUG", "1")
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
 	slog.SetDefault(logger)
 	os.Exit(m.Run())
@@ -426,7 +426,7 @@ func TestSchedRequestsMultipleLoadedModels(t *testing.T) {
 	require.Len(t, s.loaded, 1)
 	s.loadedMu.Unlock()
 
-	t.Setenv("OLLAMA_MAX_LOADED_MODELS", "0")
+	t.Setenv("SUSAN_MAX_LOADED_MODELS", "0")
 	s.newServerFn = b.newServer
 	slog.Info("Loading B")
 	s.pendingReqCh <- b.req
@@ -517,7 +517,7 @@ func TestSchedGetRunner(t *testing.T) {
 	a := newScenarioRequest(t, ctx, "ollama-model-1a", 10, &api.Duration{Duration: 2 * time.Millisecond}, nil)
 	b := newScenarioRequest(t, ctx, "ollama-model-1b", 10, &api.Duration{Duration: 2 * time.Millisecond}, nil)
 	c := newScenarioRequest(t, ctx, "ollama-model-1c", 10, &api.Duration{Duration: 2 * time.Millisecond}, nil)
-	t.Setenv("OLLAMA_MAX_QUEUE", "1")
+	t.Setenv("SUSAN_MAX_QUEUE", "1")
 	s := InitScheduler(ctx)
 	s.waitForRecovery = 10 * time.Millisecond
 	s.getGpuFn = getGpuFn
@@ -1335,7 +1335,7 @@ func TestSchedLlamaServerFitsAlongside(t *testing.T) {
 func TestSchedLlamaServerPredictionUsesTotalParallelContext(t *testing.T) {
 	ctx, done := context.WithTimeout(t.Context(), 500*time.Millisecond)
 	defer done()
-	t.Setenv("OLLAMA_NUM_PARALLEL", "2")
+	t.Setenv("SUSAN_NUM_PARALLEL", "2")
 
 	s := InitScheduler(ctx)
 	s.waitForRecovery = 10 * time.Millisecond
@@ -1562,7 +1562,7 @@ func TestSelectLlamaServerPlacement(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Setenv("OLLAMA_SCHED_SPREAD", tt.schedSpread)
+			t.Setenv("SUSAN_SCHED_SPREAD", tt.schedSpread)
 
 			selected, launchOpts := selectLlamaServerPlacement(systemInfo, tt.gpus, tt.predictedVRAM, tt.opts)
 			require.Len(t, selected, tt.wantSelectedGPUs)

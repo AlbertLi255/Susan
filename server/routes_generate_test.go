@@ -200,32 +200,32 @@ func createMinimalGGUFModel(t *testing.T, s *Server, name string, kv ggml.KV, tm
 }
 
 func TestChatModeForModel(t *testing.T) {
-	t.Setenv("OLLAMA_GO_TEMPLATE", "")
+	t.Setenv("SUSAN_GO_TEMPLATE", "")
 	if got := chatModeForModel(&Model{HasChatTemplate: true, HasGoTemplate: true}); got != chatExecutionModeRendered {
 		t.Fatalf("chatModeForModel with default go template env = %v, want rendered", got)
 	}
 
-	t.Setenv("OLLAMA_GO_TEMPLATE", "0")
+	t.Setenv("SUSAN_GO_TEMPLATE", "0")
 	if got := chatModeForModel(&Model{HasChatTemplate: true, HasGoTemplate: true}); got != chatExecutionModeNative {
 		t.Fatalf("chatModeForModel with go template env disabled = %v, want chat_template route", got)
 	}
 
-	t.Setenv("OLLAMA_GO_TEMPLATE", "1")
+	t.Setenv("SUSAN_GO_TEMPLATE", "1")
 	if got := chatModeForModel(&Model{HasChatTemplate: true, HasGoTemplate: true}); got != chatExecutionModeRendered {
 		t.Fatalf("chatModeForModel with go template env enabled = %v, want rendered", got)
 	}
 
-	t.Setenv("OLLAMA_GO_TEMPLATE", "1")
+	t.Setenv("SUSAN_GO_TEMPLATE", "1")
 	if got := chatModeForModel(&Model{HasChatTemplate: true, HasGoTemplate: true, PreferChatTemplate: true}); got != chatExecutionModeRendered {
 		t.Fatalf("chatModeForModel with explicit go template env and chat_template preference = %v, want rendered", got)
 	}
 
-	t.Setenv("OLLAMA_GO_TEMPLATE", "")
+	t.Setenv("SUSAN_GO_TEMPLATE", "")
 	if got := chatModeForModel(&Model{HasChatTemplate: true, HasGoTemplate: true, PreferChatTemplate: true}); got != chatExecutionModeNative {
 		t.Fatalf("chatModeForModel with default go template env and chat_template preference = %v, want chat_template route", got)
 	}
 
-	t.Setenv("OLLAMA_GO_TEMPLATE", "0")
+	t.Setenv("SUSAN_GO_TEMPLATE", "0")
 	parserModel := &Model{Config: model.ConfigV2{Parser: "gemma4"}, HasChatTemplate: true}
 	if got := chatModeForModel(parserModel); got != chatExecutionModeRendered {
 		t.Fatalf("chatModeForModel with parser = %v, want rendered", got)
@@ -254,7 +254,7 @@ func TestChatModeForModel(t *testing.T) {
 		t.Fatalf("chatModeForModel with harmony = %v, want rendered", got)
 	}
 
-	t.Setenv("OLLAMA_GO_TEMPLATE", "")
+	t.Setenv("SUSAN_GO_TEMPLATE", "")
 	if got := chatModeForModel(&Model{Config: model.ConfigV2{ModelFamily: "unknown"}, HasChatTemplate: true}); got != chatExecutionModeNative {
 		t.Fatalf("chatModeForModel without Go TEMPLATE = %v, want chat_template route", got)
 	}
@@ -272,8 +272,8 @@ func TestChatModeForModel(t *testing.T) {
 }
 
 func TestChatHandlerChatTemplateRoute(t *testing.T) {
-	t.Setenv("OLLAMA_CONTEXT_LENGTH", "4096")
-	t.Setenv("OLLAMA_GO_TEMPLATE", "")
+	t.Setenv("SUSAN_CONTEXT_LENGTH", "4096")
+	t.Setenv("SUSAN_GO_TEMPLATE", "")
 	gin.SetMode(gin.TestMode)
 
 	mock := mockRunner{
@@ -327,8 +327,8 @@ func TestChatHandlerChatTemplateRoute(t *testing.T) {
 }
 
 func TestChatHandlerChatTemplateRouteTruncatesMessages(t *testing.T) {
-	t.Setenv("OLLAMA_CONTEXT_LENGTH", "4096")
-	t.Setenv("OLLAMA_GO_TEMPLATE", "")
+	t.Setenv("SUSAN_CONTEXT_LENGTH", "4096")
+	t.Setenv("SUSAN_GO_TEMPLATE", "")
 	gin.SetMode(gin.TestMode)
 
 	mock := mockRunner{
@@ -387,8 +387,8 @@ func TestChatHandlerChatTemplateRouteTruncatesMessages(t *testing.T) {
 }
 
 func TestChatHandlerTemplateEnvUsesRenderedRoute(t *testing.T) {
-	t.Setenv("OLLAMA_CONTEXT_LENGTH", "4096")
-	t.Setenv("OLLAMA_GO_TEMPLATE", "1")
+	t.Setenv("SUSAN_CONTEXT_LENGTH", "4096")
+	t.Setenv("SUSAN_GO_TEMPLATE", "1")
 	gin.SetMode(gin.TestMode)
 
 	mock := mockRunner{
@@ -423,8 +423,8 @@ func TestChatHandlerTemplateEnvUsesRenderedRoute(t *testing.T) {
 }
 
 func TestChatHandlerHarmonyPreservesStructuralTokens(t *testing.T) {
-	t.Setenv("OLLAMA_CONTEXT_LENGTH", "4096")
-	t.Setenv("OLLAMA_GO_TEMPLATE", "")
+	t.Setenv("SUSAN_CONTEXT_LENGTH", "4096")
+	t.Setenv("SUSAN_GO_TEMPLATE", "")
 	gin.SetMode(gin.TestMode)
 
 	mock := mockRunner{
@@ -477,8 +477,8 @@ func TestChatHandlerHarmonyPreservesStructuralTokens(t *testing.T) {
 }
 
 func TestGenerateHandlerChatTemplateRoute(t *testing.T) {
-	t.Setenv("OLLAMA_CONTEXT_LENGTH", "4096")
-	t.Setenv("OLLAMA_GO_TEMPLATE", "")
+	t.Setenv("SUSAN_CONTEXT_LENGTH", "4096")
+	t.Setenv("SUSAN_GO_TEMPLATE", "")
 	gin.SetMode(gin.TestMode)
 
 	t.Run("uses GGUF chat_template when no Go TEMPLATE exists", func(t *testing.T) {
@@ -699,7 +699,7 @@ func TestGenerateChatRemote(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	t.Setenv("OLLAMA_REMOTES", p.Hostname())
+	t.Setenv("SUSAN_REMOTES", p.Hostname())
 	s := Server{}
 	w := createRequest(t, s.CreateHandler, api.CreateRequest{
 		Model:      "test-cloud",
@@ -751,8 +751,8 @@ func TestGenerateChatRemote(t *testing.T) {
 }
 
 func TestGenerateChat(t *testing.T) {
-	t.Setenv("OLLAMA_CONTEXT_LENGTH", "4096")
-	t.Setenv("OLLAMA_GO_TEMPLATE", "1")
+	t.Setenv("SUSAN_CONTEXT_LENGTH", "4096")
+	t.Setenv("SUSAN_GO_TEMPLATE", "1")
 	gin.SetMode(gin.TestMode)
 
 	mock := mockRunner{
@@ -1473,7 +1473,7 @@ func TestGenerateChat(t *testing.T) {
 }
 
 func TestGenerate(t *testing.T) {
-	t.Setenv("OLLAMA_CONTEXT_LENGTH", "4096")
+	t.Setenv("SUSAN_CONTEXT_LENGTH", "4096")
 	gin.SetMode(gin.TestMode)
 
 	mock := mockRunner{
@@ -2222,7 +2222,7 @@ func TestChatLogprobs(t *testing.T) {
 	})
 
 	t.Run("returns logprob bytes when requested", func(t *testing.T) {
-		t.Setenv("OLLAMA_GO_TEMPLATE", "1")
+		t.Setenv("SUSAN_GO_TEMPLATE", "1")
 		gin.SetMode(gin.TestMode)
 
 		mock := &mockRunner{}
@@ -2360,7 +2360,7 @@ func TestChatLogprobs(t *testing.T) {
 }
 
 func TestChatWithPromptEndingInThinkTag(t *testing.T) {
-	t.Setenv("OLLAMA_GO_TEMPLATE", "1")
+	t.Setenv("SUSAN_GO_TEMPLATE", "1")
 	gin.SetMode(gin.TestMode)
 
 	// Helper to create a standard thinking test setup
@@ -3284,11 +3284,11 @@ func TestGenerateWithImages(t *testing.T) {
 }
 
 func TestImageGenerateUnsupported(t *testing.T) {
-	t.Setenv("OLLAMA_CONTEXT_LENGTH", "4096")
+	t.Setenv("SUSAN_CONTEXT_LENGTH", "4096")
 	gin.SetMode(gin.TestMode)
 
 	p := t.TempDir()
-	t.Setenv("OLLAMA_MODELS", p)
+	t.Setenv("SUSAN_MODELS", p)
 
 	n := model.ParseName("test-image")
 	cfg := model.ConfigV2{Capabilities: []string{"image"}}

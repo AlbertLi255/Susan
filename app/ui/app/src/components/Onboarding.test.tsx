@@ -64,7 +64,7 @@ describe("Onboarding", () => {
 
   it("hides the Claude and ChatGPT desktop integrations on Windows", () => {
     vi.stubGlobal("window", {
-      OLLAMA_PLATFORM: "windows",
+      SUSAN_PLATFORM: "windows",
       innerHeight: 660,
     });
     vi.stubGlobal("navigator", { platform: "MacIntel" });
@@ -188,7 +188,7 @@ describe("Onboarding", () => {
 
     vi.stubGlobal("navigator", { platform: "MacIntel" });
     vi.stubGlobal("window", {
-      OLLAMA_PLATFORM: "darwin",
+      SUSAN_PLATFORM: "darwin",
       innerHeight: 660,
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
@@ -317,7 +317,7 @@ describe("Onboarding", () => {
     const setClaudeConnected = vi.fn().mockReturnValue(nativeAction);
     vi.stubGlobal("navigator", { platform: "MacIntel" });
     vi.stubGlobal("window", {
-      OLLAMA_PLATFORM: "darwin",
+      SUSAN_PLATFORM: "darwin",
       innerHeight: 660,
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),

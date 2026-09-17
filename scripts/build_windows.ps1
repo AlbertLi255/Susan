@@ -586,9 +586,9 @@ function cudaArm64UnavailableReason {
 }
 
 function cudaArm64ArchitectureArgs {
-    if ($env:OLLAMA_WOA_CUDA_ARCHITECTURES) {
-        Write-Output "Overriding Windows ARM64 CUDA architectures: $env:OLLAMA_WOA_CUDA_ARCHITECTURES"
-        return @("-DCMAKE_CUDA_ARCHITECTURES=$env:OLLAMA_WOA_CUDA_ARCHITECTURES")
+    if ($env:SUSAN_WOA_CUDA_ARCHITECTURES) {
+        Write-Output "Overriding Windows ARM64 CUDA architectures: $env:SUSAN_WOA_CUDA_ARCHITECTURES"
+        return @("-DCMAKE_CUDA_ARCHITECTURES=$env:SUSAN_WOA_CUDA_ARCHITECTURES")
     }
 
     return @()
@@ -981,7 +981,7 @@ function buildApp {
     param (
         [string]$arch
     )
-	& go build -trimpath -ldflags "-s -w -H windowsgui -X=github.com/ollama/ollama/app/version.Version=$script:VERSION" -o .\dist\windows-ollama-app-${arch}.exe ./app/cmd/app/
+	& go build -trimpath -ldflags "-s -w -H windowsgui -X=github.com/ollama/ollama/app/version.Version=$script:VERSION" -o .\dist\windows-susan-app-${arch}.exe ./app/cmd/app/
     if ($LASTEXITCODE -ne 0) { exit($LASTEXITCODE)}
 }
 

@@ -303,7 +303,7 @@ func (p *ClaudeDesktop) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Claude Desktop uses a native HTTP client, not a browser. Reject every
-	// request carrying an Origin so the upstream OLLAMA_ORIGINS policy cannot
+	// request carrying an Origin so the upstream SUSAN_ORIGINS policy cannot
 	// enable CORS on this loopback-only gateway.
 	if r.Header.Get("Origin") != "" {
 		http.Error(w, "forbidden", http.StatusForbidden)

@@ -33,7 +33,7 @@ func decodeTestImages(t *testing.T) (abbeyRoad, docs, ollamaHome api.ImageData) 
 }
 
 // skipIfNoVisionOverride skips the entire test (at parent level) when
-// OLLAMA_TEST_MODEL is set to a non-vision model. This prevents the parent
+// SUSAN_TEST_MODEL is set to a non-vision model. This prevents the parent
 // test from reporting PASS when all subtests are skipped.
 func skipIfNoVisionOverride(t *testing.T) {
 	t.Helper()

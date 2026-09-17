@@ -26,7 +26,7 @@ func findLlamaQuantize() (string, error) {
 // progressRegex matches llama-quantize output lines like "[ 42/ 200]"
 var progressRegex = regexp.MustCompile(`\[\s*(\d+)/\s*(\d+)\]`)
 
-const llamaCppCompatEnv = "OLLAMA_LLAMA_CPP_COMPAT"
+const llamaCppCompatEnv = "SUSAN_LLAMA_CPP_COMPAT"
 
 var runLlamaQuantize = runLlamaQuantizeCommand
 

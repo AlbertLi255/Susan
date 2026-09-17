@@ -17,6 +17,6 @@ jobs:
       - name: Run install script
         run: sh ./scripts/install.sh
         env:
-          OLLAMA_NO_START: 1 # do not start app
+          SUSAN_NO_START: 1 # do not start app
       - name: Verify susan is available
         run: susan --version

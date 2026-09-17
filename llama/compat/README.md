@@ -13,7 +13,7 @@ tensor layouts on disk, and this directory can be removed.
 The layer is applied automatically at build time via CMake `FetchContent`'s
 `PATCH_COMMAND` for normal fetched builds. If CMake is pointed at a source
 override through `FETCHCONTENT_SOURCE_DIR_LLAMA_CPP`, the same patch is applied
-during configure. If `OLLAMA_LLAMA_CPP_SOURCE` is set, the patch is
+during configure. If `SUSAN_LLAMA_CPP_SOURCE` is set, the patch is
 intentionally skipped so a developer can iterate on a local llama.cpp tree.
 
 ## Files
@@ -69,7 +69,7 @@ The layer runs at a small set of loader hook points:
    split, or zero-fill.
 
 Files that do not match a supported published-model marker are left unchanged.
-Setting `OLLAMA_LLAMA_CPP_COMPAT=0` disables the hook bodies for internal
+Setting `SUSAN_LLAMA_CPP_COMPAT=0` disables the hook bodies for internal
 create-time validation and for models that are already known to be
 llama.cpp-compatible on disk.
 

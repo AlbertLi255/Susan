@@ -64,7 +64,7 @@ func runMultiModelStress(t *testing.T) {
 	if testModel != "" {
 		t.Skip("uses hardcoded models, not applicable with model override")
 	}
-	s := os.Getenv("OLLAMA_MAX_VRAM")
+	s := os.Getenv("SUSAN_MAX_VRAM")
 	if s == "" {
 		s = "0"
 	}
@@ -148,7 +148,7 @@ chooseModels:
 	}
 	if targetLoadCount == len(chosenModels) {
 		// TODO consider retrying the medium models
-		slog.Warn("all models being used without exceeding VRAM, set OLLAMA_MAX_VRAM so test can pick larger models")
+		slog.Warn("all models being used without exceeding VRAM, set SUSAN_MAX_VRAM so test can pick larger models")
 	}
 
 	// For some iGPU/CPU systems we may end up with lingering 5 minute load timeouts chewing up memory - force unload everything we tried

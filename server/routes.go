@@ -88,7 +88,7 @@ func shouldUseHarmony(model *Model) bool {
 }
 
 func experimentEnabled(name string) bool {
-	return slices.Contains(strings.Split(os.Getenv("OLLAMA_EXPERIMENT"), ","), name)
+	return slices.Contains(strings.Split(os.Getenv("SUSAN_EXPERIMENT"), ","), name)
 }
 
 var useClient2 = experimentEnabled("client2")
@@ -2003,7 +2003,7 @@ func Serve(ln net.Listener) error {
 	}
 
 	if useClient2 {
-		slog.Warn("OLLAMA_EXPERIMENT=client2 is no longer available. Please remove this environment.")
+		slog.Warn("SUSAN_EXPERIMENT=client2 is no longer available. Please remove this environment.")
 	}
 
 	h, err := s.GenerateRoutes()

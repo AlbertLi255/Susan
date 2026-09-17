@@ -40,7 +40,7 @@ func DefaultBlobDir() string {
 }
 
 // DefaultManifestDir returns the manifest storage directory.
-// Respects OLLAMA_MODELS.
+// Respects SUSAN_MODELS.
 
 func DefaultManifestDir() string {
 	return filepath.Join(envconfig.Models(), "manifests")

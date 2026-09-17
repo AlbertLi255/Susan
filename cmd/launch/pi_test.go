@@ -271,7 +271,7 @@ exit 0
 			http.NotFound(w, r)
 		}))
 		t.Cleanup(srv.Close)
-		t.Setenv("OLLAMA_HOST", srv.URL)
+		t.Setenv("SUSAN_HOST", srv.URL)
 	}
 
 	setNpmRegistryVersion := func(t *testing.T, version string) {
@@ -922,7 +922,7 @@ func TestPiEdit(t *testing.T) {
 		w.WriteHeader(http.StatusNotFound)
 	}))
 	defer srv.Close()
-	t.Setenv("OLLAMA_HOST", srv.URL)
+	t.Setenv("SUSAN_HOST", srv.URL)
 
 	pi := &Pi{}
 	tmpDir := t.TempDir()
@@ -1013,7 +1013,7 @@ func TestPiEdit(t *testing.T) {
 		providers := cfg["providers"].(map[string]any)
 		ollama := providers["ollama"].(map[string]any)
 
-		// baseUrl must be overwritten to match OLLAMA_HOST (the test server)
+		// baseUrl must be overwritten to match SUSAN_HOST (the test server)
 		expectedBaseURL := strings.TrimRight(srv.URL, "/") + "/v1"
 		if ollama["baseUrl"] != expectedBaseURL {
 			t.Errorf("baseUrl = %v, want %v", ollama["baseUrl"], expectedBaseURL)
@@ -1408,7 +1408,7 @@ func TestPiEdit_CreatesDistinctBackupsForEachManagedFile(t *testing.T) {
 		w.WriteHeader(http.StatusNotFound)
 	}))
 	defer srv.Close()
-	t.Setenv("OLLAMA_HOST", srv.URL)
+	t.Setenv("SUSAN_HOST", srv.URL)
 
 	pi := &Pi{}
 	tmpDir := t.TempDir()
@@ -1573,7 +1573,7 @@ func TestPiModels(t *testing.T) {
 		}
 	})
 
-	t.Run("returns nil when baseUrl does not match OLLAMA_HOST", func(t *testing.T) {
+	t.Run("returns nil when baseUrl does not match SUSAN_HOST", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		setTestHome(t, tmpDir)
 
@@ -1597,7 +1597,7 @@ func TestPiModels(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// OLLAMA_HOST defaults to 127.0.0.1:14343, which differs from the
+		// SUSAN_HOST defaults to 127.0.0.1:14343, which differs from the
 		// baseUrl in the config, so Models() should return nil.
 		models := pi.Models()
 		if models != nil {
@@ -1605,12 +1605,12 @@ func TestPiModels(t *testing.T) {
 		}
 	})
 
-	t.Run("returns models when baseUrl matches OLLAMA_HOST", func(t *testing.T) {
+	t.Run("returns models when baseUrl matches SUSAN_HOST", func(t *testing.T) {
 		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 		}))
 		defer srv.Close()
-		t.Setenv("OLLAMA_HOST", srv.URL)
+		t.Setenv("SUSAN_HOST", srv.URL)
 
 		tmpDir := t.TempDir()
 		setTestHome(t, tmpDir)

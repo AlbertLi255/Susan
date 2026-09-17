@@ -1,4 +1,4 @@
-; Inno Setup Installer for Ollama
+; Inno Setup Installer for Susan
 ;
 ; To build the installer use the build script invoked from the top of the source tree
 ; 
@@ -12,7 +12,7 @@
   #define MyAppVersion "0.0.0"
 #endif
 #define MyAppPublisher "Susan"
-#define MyAppURL "https://ollama.com/"
+#define MyAppURL "https://susan.com/"
 #define MyAppExeName "susan app.exe"
 #define LlamaServerExeName "llama-server.exe"
 #define MyIcon ".\assets\susan.ico"
@@ -89,20 +89,20 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 DialogFontSize=12
 
 [Files]
-#if FileExists("..\dist\windows-ollama-app-amd64.exe")
-Source: "..\dist\windows-ollama-app-amd64.exe"; DestDir: "{app}"; DestName: "{#MyAppExeName}" ;Check: not IsArm64();  Flags: ignoreversion 64bit; BeforeInstall: TaskKill('{#MyAppExeName}')
+#if FileExists("..\dist\windows-susan-app-amd64.exe")
+Source: "..\dist\windows-susan-app-amd64.exe"; DestDir: "{app}"; DestName: "{#MyAppExeName}" ;Check: not IsArm64();  Flags: ignoreversion 64bit; BeforeInstall: TaskKill('{#MyAppExeName}')
 Source: "..\dist\windows-amd64\susan.exe"; DestDir: "{app}"; Check: not IsArm64(); Flags: ignoreversion 64bit; BeforeInstall: TaskKill('susan.exe')
 Source: "..\dist\windows-amd64\lib\ollama\*"; Excludes: "\mlx_*\*"; DestDir: "{app}\lib\ollama\"; Check: not IsArm64(); Flags: ignoreversion 64bit recursesubdirs
 #endif
 
 ; For local development, rely on binary compatibility at runtime since we can't cross compile
-#if FileExists("..\dist\windows-ollama-app-arm64.exe")
-Source: "..\dist\windows-ollama-app-arm64.exe"; DestDir: "{app}"; DestName: "{#MyAppExeName}" ;Check: IsArm64();  Flags: ignoreversion 64bit; BeforeInstall: TaskKill('{#MyAppExeName}')
+#if FileExists("..\dist\windows-susan-app-arm64.exe")
+Source: "..\dist\windows-susan-app-arm64.exe"; DestDir: "{app}"; DestName: "{#MyAppExeName}" ;Check: IsArm64();  Flags: ignoreversion 64bit; BeforeInstall: TaskKill('{#MyAppExeName}')
 #else 
-Source: "..\dist\windows-ollama-app-amd64.exe"; DestDir: "{app}"; DestName: "{#MyAppExeName}" ;Check: IsArm64();  Flags: ignoreversion 64bit; BeforeInstall: TaskKill('{#MyAppExeName}')
+Source: "..\dist\windows-susan-app-amd64.exe"; DestDir: "{app}"; DestName: "{#MyAppExeName}" ;Check: IsArm64();  Flags: ignoreversion 64bit; BeforeInstall: TaskKill('{#MyAppExeName}')
 #endif
 
-#if FileExists("..\dist\windows-arm64\ollama.exe")
+#if FileExists("..\dist\windows-arm64\susan.exe")
 Source: "..\dist\windows-arm64\susan.exe"; DestDir: "{app}"; Check: IsArm64(); Flags: ignoreversion 64bit; BeforeInstall: TaskKill('susan.exe')
 #endif
 #if DirExists("..\dist\windows-arm64\lib\ollama")
@@ -138,7 +138,7 @@ Type: filesandordirs; Name: "{%LOCALAPPDATA}\Susan"
 Type: filesandordirs; Name: "{%LOCALAPPDATA}\Programs\Susan"
 Type: filesandordirs; Name: "{%USERPROFILE}\.susan\history"
 Type: filesandordirs; Name: "{userstartup}\{#MyAppName}.lnk"
-; NOTE: if the user has a custom OLLAMA_MODELS it will be preserved
+; NOTE: if the user has a custom SUSAN_MODELS it will be preserved
 
 [InstallDelete]
 Type: filesandordirs; Name: "{%TEMP}\susan*"

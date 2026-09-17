@@ -1161,7 +1161,7 @@ func TestOpenCodeEdit_BaseURL(t *testing.T) {
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
 
-	// Default OLLAMA_HOST
+	// Default SUSAN_HOST
 	o.Edit(testLaunchModels("llama3.2"))
 
 	var cfg map[string]any

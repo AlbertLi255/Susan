@@ -14,7 +14,7 @@ import {
 import { parseJsonlFromResponse } from "./util/jsonl-parsing";
 import { ollamaClient as ollama } from "./lib/susan-client";
 import type { ModelResponse } from "ollama/browser";
-import { API_BASE, OLLAMA_DOT_COM } from "./lib/config";
+import { API_BASE, SUSAN_DOT_COM } from "./lib/config";
 
 // Extend Model class with utility methods
 declare module "@/gotypes" {
@@ -75,7 +75,7 @@ export async function fetchUser(): Promise<User | null> {
     const userData: User = await response.json();
 
     if (userData.avatarurl && !userData.avatarurl.startsWith("http")) {
-      userData.avatarurl = `${OLLAMA_DOT_COM}${userData.avatarurl}`;
+      userData.avatarurl = `${SUSAN_DOT_COM}${userData.avatarurl}`;
     }
 
     return userData;

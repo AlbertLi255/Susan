@@ -597,7 +597,7 @@ func startClaudeAppProxy() error {
 	}
 	if ollamaURL.Port() == gatewayPort {
 		return recordClaudeProxyFailure(
-			fmt.Errorf("OLLAMA_HOST cannot use port %s because it is reserved for Claude", gatewayPort),
+			fmt.Errorf("SUSAN_HOST cannot use port %s because it is reserved for Claude", gatewayPort),
 			claudeProxyFailurePortConflict,
 		)
 	}

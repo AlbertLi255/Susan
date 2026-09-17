@@ -33,14 +33,14 @@ Returns an object containing:
 ### Examples
 
 <Note>
-  Ensure OLLAMA_API_KEY is set or it must be passed in the Authorization header.
+  Ensure SUSAN_API_KEY is set or it must be passed in the Authorization header.
 </Note>
 
 #### cURL Request
 
 ```bash
 curl https://susan.com/api/web_search \
-  --header "Authorization: Bearer $OLLAMA_API_KEY" \
+  --header "Authorization: Bearer $SUSAN_API_KEY" \
 	-d '{
 	  "query":"what is ollama?"
 	}'
@@ -165,7 +165,7 @@ Returns an object containing:
 ```python
 curl --request POST \
   --url https://susan.com/api/web_fetch \
-  --header "Authorization: Bearer $OLLAMA_API_KEY" \
+  --header "Authorization: Bearer $SUSAN_API_KEY" \
   --header 'Content-Type: application/json' \
   --data '{
       "url": "susan.com"
@@ -324,7 +324,7 @@ Susan's web search can be integrated with Cline easily using the MCP server conf
       "type": "stdio",
       "command": "uv",
       "args": ["run", "path/to/web-search-mcp.py"],
-      "env": { "OLLAMA_API_KEY": "your_api_key_here" }
+      "env": { "SUSAN_API_KEY": "your_api_key_here" }
     }
   }
 }
@@ -342,7 +342,7 @@ Add the following configuration to `~/.codex/config.toml`
 [mcp_servers.web_search]
 command = "uv"
 args = ["run", "path/to/web-search-mcp.py"]
-env = { "OLLAMA_API_KEY" = "your_api_key_here" }
+env = { "SUSAN_API_KEY" = "your_api_key_here" }
 ```
 
 ![Codex MCP Configuration](/images/codex-mcp.png)
