@@ -20,7 +20,7 @@ Susan = 基于 Ollama 开源项目进行产品化、品牌化和商业化开发�
 - Susan Account
 - Susan Cloud API（MVP 阶段开始建设，云端付费服务，定价待定）
 - Susan Cloud Runtime（MVP 阶段开始建设，第一台 GPU 服务器即 Susan Cloud MVP）
-- Billing / Usage / Commercial Cloud-Susan Cloud
+- Billing / Usage / Commercial Cloud即Susan Cloud
 
 Susan Cloud 定位：
 - Susan Cloud 是 Susan 的云端付费服务品牌。
@@ -51,6 +51,7 @@ susan.com
 │
 ├── /signin  （要和 susan-cli, app, 结合, 打通）
 ├── /signup  （要和 susan-cli, app, 结合, 打通）
+├── /device  （OAuth Device Flow 用户授权页，verification_uri）
 │
 ├── /account （要和 susan-cli, app, 结合, 打通）
 │   ├── /profile
@@ -225,6 +226,11 @@ Susan 内部管理后台。
 
 安全策略详见第八章。
 
+22. /device
+OAuth Device Flow 用户授权页（verification_uri）。
+用户在浏览器打开 https://susan.com/device，输入 user_code 并登录授权。
+详见「认证流程」节。
+
 
 三、最终 API 结构
 ----------------------------------------
@@ -266,7 +272,9 @@ api.susan.com
 │   ├── /verify-email
 │   ├── /forgot-password
 │   ├── /reset-password
-│   └── /me
+│   ├── /me
+│   ├── /device                   # [新增] OAuth Device Authorization Grant（RFC 8628）
+│   └── /token                    # [新增] Device Flow 轮询换票
 │
 ├── /user/                        # User account
 │   ├── /profile
@@ -319,6 +327,31 @@ POST /api/generate
 
 POST /api/chat
 对话生成，支持 Streaming。
+
+流式传输错误处理协议：
+
+Susan 原生采用 NDJSON (application/x-ndjson)，
+在兼容 OpenAI 时采用 SSE (text/event-stream)。
+两种模式的中途错误处理如下。
+
+方案 A：Ollama 原生 NDJSON 模式（推荐，用于 /api/chat、/api/generate）
+
+流式传输过程中出现中途断网或 GPU OOM 时，
+在流的最后一行直接输出带有 "error" 字段的 JSON 对象并立即断开连接：
+
+{"model": "qwen2.5:70b", "created_at": "2026-09-18T03:00:00Z", "response": "这是前半句..."}
+{"error": "CUDA out of memory: failed to allocate 4.20 GiB", "done": true}
+
+方案 B：OpenAI 兼容 SSE 模式（用于 /v1/chat/completions 等）
+
+由于 HTTP Status 在响应启动时已设为 200 OK，
+中断错误需通过 SSE data: 规范推送，随后推送 [DONE] 结束：
+
+data: {"id":"chatcmpl-123","object":"chat.completion.chunk","choices":[{"delta":{"content":"这是前半句"}}]}
+
+data: {"error": {"message": "CUDA out of memory", "type": "server_error", "code": 500}}
+
+data: [DONE]
 
 POST /api/embed
 Embedding。
@@ -388,6 +421,8 @@ POST /v1/chat/completions
 
 这样 OpenAI SDK、各种 Agent、LangChain、LlamaIndex、Coding Tool 等可以连接 Susan。
 
+OpenAI 兼容流式错误处理见方案 B（SSE / 流式传输错误处理协议）。
+
 3. /auth/
 身份认证。
 
@@ -399,6 +434,10 @@ POST /v1/chat/completions
 - Email Verification
 - Password Reset
 - 当前用户
+
+Device Flow 相关（RFC 8628）：
+POST /auth/device   申请 device_code / user_code
+POST /auth/token    CLI / Desktop 按 interval 轮询换 access_token / refresh_token
 
 认证属于 Susan Cloud / Web 层，不属于 Local Engine。
 
@@ -466,6 +505,10 @@ Susan Cloud 控制层。
 - Cloud Runtime
 - GPU Node
 - GPU Cluster
+
+推理入口仍是 /api/chat、/api/generate、/v1/chat/completions。
+用 model 字段的 cloud/ 前缀分流（见「8.5 云端模型调用路由标记」），
+不用 /cloud/ 做推理，也不用请求体 {"cloud": true} 等非标准字段。
 
 8. /system/
 系统接口。
@@ -546,7 +589,7 @@ Susan Cloud 控制层。
 
 04. localhost:11434
     ↓
-    Susan Local API（监听 127.0.0.1:14343）
+    Susan Local API（监听 127.0.0.1:14343）localhost:14343/api
 
     类型：Local API
 
@@ -679,6 +722,9 @@ Susan Cloud 控制层。
     说明：
     用户可以在 /account/keys 管理 API Key。
     Cloud API 使用 Bearer Token / API Key 进行认证。
+    Key 格式：sk-susan-[32位 Base62 随机串]。
+    禁止明文存储，统一存 SHA-256 Hash，并采用本地内存 LRU + Redis 两级缓存。
+    详见「认证流程」节 3.2 Token 体系。
 
 
 16. Ollama Model Pull
@@ -857,7 +903,7 @@ Susan Cloud 控制层。
           │                       │
       Local GPU               GPU Pool
 
-    两者使用统一的模型、API、产品逻辑。
+    两者使用统一的模型、API、产品逻辑。在CLI和desktop端都有可以使用Cloud产品能力的入口的。
 
 
 五、最终 Susan 产品架构
@@ -949,6 +995,13 @@ Susan Cloud 控制层。
     - Storage
     - GPU Cluster
 
+11. 对齐 Ollama 原生设计哲学：
+    - 单文件极简架构
+    - 无状态 / 命名空间路由
+    - NDJSON 流式响应
+    - 基于 ~/.susan 的本地轻量存储
+    - 零 Payload 侵入（不用 {"cloud": true} 等非标准请求体字段）
+
 
 七、认证流程
 ----------------------------------------
@@ -971,6 +1024,29 @@ Susan 统一采用 OAuth 2.0 Device Authorization Grant（Device Code Flow）
 - 本地持久化 token（Susan 数据目录 ~/.susan/auth.json）
 - 后续 CLI / Desktop 用 Bearer Token 调用 api.susan.com/* 与本地 Susan Local API
 
+Device Flow 超时与轮询参数（严格对齐 RFC 8628 与 CLI 交互习惯）：
+
+expires_in：900（15 分钟 / 900 秒）。给用户预留充足的浏览器登录及二步验证时间。
+interval：5（5 秒）。CLI 轮询 /auth/token 的默认间隔，避免对 Auth 服务造成过高 Request 压力。
+
+POST /auth/device 响应 Payload：
+
+{
+  "device_code": "dc_susan_9a8b7c6d5e4f",
+  "user_code": "SUSA-8821",
+  "verification_uri": "https://susan.com/device",
+  "expires_in": 900,
+  "interval": 5
+}
+
+verification_uri 为 https://susan.com/device。
+CLI 亦可展示带 device_code 的完整链接（如 susan.com/connect?device_code=xxx），
+作为 verification_uri_complete 形态，方便用户一键打开。
+
+频率控制（Rate Limit）：
+若 CLI 轮询间隔低于 interval，后端返回 HTTP 400 Bad Request + {"error": "slow_down"}，
+CLI 捕获后自动将后续轮询间隔增加 5 秒。
+
 (3) 终端直接登录（Terminal Login，兜底）
 - 当 Device Flow 无法走（无浏览器、纯 SSH、受限网络）时使用
 - CLI 提示用户输入用户名 + 密码（或 API Key）
@@ -985,6 +1061,37 @@ Susan 统一采用 OAuth 2.0 Device Authorization Grant（Device Code Flow）
 - API Key 与 OAuth Token 的关系：API Key 是独立凭证，不依赖 refresh；
   OAuth Token 用于 CLI / Desktop 的用户级会话
 
+API Key 前缀与 Redis 校验缓存策略：
+
+Key 格式：sk-susan-[32位 Base62 随机串]
+示例：sk-susan-8f9a2b3c4d5e6f7a8b9c0d1e2f3a4b5c
+
+高性能双层缓存设计：
+
+存储安全：
+Redis 和主数据库中严禁存储明文 API Key，统一存入 SHA-256(API_Key) 的 Hash 值。
+
+Redis Key 规范：
+auth:key:sha256:<hash_value>
+使用 Redis String 或 Hash 数据结构。
+
+TTL 策略：
+Redis 设置 300 秒（5 分钟）过期时间。
+
+校验链路（解决高频 Chunk/Stream 瓶颈）：
+
+1. 本地内存一级缓存（Go 进程内 LRU）：
+   设置 10~30 秒超短 TTL，承载大模型流式生成过程中的极高频重复 Token 校验，避免网络 I/O。
+
+2. Redis 二级缓存（5 分钟 TTL）：
+   本地未命中时查询 Redis。查到后同步写入本地内存缓存。
+
+3. 主 DB（PostgreSQL/MySQL）：
+   两级缓存均未命中时查库，校验成功后异步回写 Redis。
+
+主动失效机制：
+用户撤销 API Key 时，通过 Redis Pub/Sub 广播清理所有 API 节点的本地内存与 Redis 缓存。
+
 3.3 CLI 与 Desktop 的「打通」
 
 - CLI / Desktop 通过 Device Flow 拿到 token 后，写入本地数据目录
@@ -992,6 +1099,35 @@ Susan 统一采用 OAuth 2.0 Device Authorization Grant（Device Code Flow）
 - 未登录时 Desktop UI 显示「Sign In」入口，点击触发 Device Flow
 - Susan Local API（127.0.0.1:14343）不强制鉴权（本机 loopback）
 - Susan Cloud API（api.susan.com）强制鉴权（Bearer Token）
+
+3.4 单机 MVP 本地存储目录与权限规范
+
+目录结构（对齐 ~/.ollama 标准）：
+
+Linux / macOS：~/.susan/
+Windows：C:\Users\<Username>\.susan\
+支持环境变量 SUSAN_HOME 重定向。
+
+文件布局：
+
+~/.susan/
+├── config.json       # 基础配置（API 地址、默认模型等）
+├── auth.json         # 敏感配置（Access Token / OAuth 信息）
+├── id_ed25519        # 设备私钥（用于设备级签名）
+└── id_ed25519.pub    # 设备公钥
+
+三端安全权限策略：
+
+Linux / macOS：
+- 目录权限：严格限制为 0700 (drwx------)。
+- auth.json 及密钥文件：强管制为 0600 (-rw-------)。
+- CLI 自动修复/校验机制：CLI 启动时自动读取文件 Status，
+  若 auth.json 权限大于 0600（如 0644），CLI 将自动执行 os.Chmod(file, 0600)；
+  若修改失败则拒绝启动并报错输出警告。
+
+Windows：
+程序创建 auth.json 时利用 Windows API / ACL 显式去除 Everyone 和 Users 组的读取权限，
+仅保留当前用户（Current User）及 SYSTEM 的完全控制权（Full Control）。
 
 
 八、模型 Namespace 命名规范
@@ -1047,6 +1183,37 @@ Susan 统一采用 OAuth 2.0 Device Authorization Grant（Device Code Flow）
 - Push（后续启用）：
     susan push alice/my-finetune:v1.0
     推送到 registry.susan.com（自建 Registry 建好后启用）
+
+8.5 云端模型调用路由标记
+
+Ollama 核心哲学：零 Payload 侵入，完全依靠模型名称 / 命名空间（Namespace）控制路由。
+
+不使用 {"cloud": true} 等非标准请求体参数，保持与 OpenAI 及 Ollama 核心 API 完全一致。
+
+路由实现规则：
+
+本地模型：qwen2.5:70b 或 llama3:latest
+云端模型：通过命名空间前缀或标签区分，如 cloud/qwen2.5:70b 或 qwen2.5:70b-cloud。
+
+路由解析逻辑：
+API Gateway / Local Daemon 收到请求后解析 "model" 字段：
+
+{
+  "model": "cloud/qwen2.5:70b",
+  "messages": [{"role": "user", "content": "Hello"}]
+}
+
+若判断前缀带有 cloud/，Gateway 直接转发至云端推理集群，
+并自动附带本机 Auth Header (Authorization: Bearer <token>)；
+
+若无 cloud/ 前缀，优先路由至本地 GPU 引擎运行。
+
+说明：
+cloud/ 是路由前缀，不是用户 Namespace。
+官方模型仍可写 library/qwen2.5:70b（见 8.2）；
+cloud/qwen2.5:70b 表示显式走 Susan Cloud Runtime。
+客户端默认仍不必关心 GPU 落在哪台机器上；
+cloud/ 仅作为 Local / Cloud 的显式选择标记。
 
 
 九、当前开发重点
