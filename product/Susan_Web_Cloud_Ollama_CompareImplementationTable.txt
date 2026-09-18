@@ -1,0 +1,1301 @@
+Susan Web / Cloud v1
+Ollama 对照架构与实施说明
+========================================
+
+一、定位
+----------------------------------------
+Susan 当前定位：
+
+Susan = 基于 Ollama 开源项目进行产品化、品牌化和商业化开发的独立软件。
+
+已经完成：
+- Susan CLI
+- Susan Desktop App
+- Susan Local Engine / Runtime
+- 本地模型运行与管理能力
+
+当前重点：
+- Susan Web
+- Susan Model Hub（继续使用 ollama registry**（registry.ollama.com），不急于切换 )
+- Susan Account
+- Susan Cloud API（MVP 阶段开始建设，云端付费服务，定价待定）
+- Susan Cloud Runtime（MVP 阶段开始建设，第一台 GPU 服务器即 Susan Cloud MVP）
+- Billing / Usage / Commercial Cloud-Susan Cloud
+
+Susan Cloud 定位：
+- Susan Cloud 是 Susan 的云端付费服务品牌。
+- MVP 阶段：Susan Desktop / CLI 可调用 Susan Cloud 上的模型（含 Susan 自有模型）。
+- Susan Desktop 不只有 Local 能力，付费后也可使用 Susan Cloud 上的模型。
+- 后续会提供 Susan 自有的专属模型（部署在 Susan Cloud 上）。
+
+本文件只保留最终网站结构、最终 API 结构以及 Ollama ↔ Susan 的 25 项对应关系。
+
+
+二、最终网站结构
+----------------------------------------
+
+susan.com
+│
+├── /
+├── /download
+│
+├── /library（继续使用 ollama registry，registry.ollama.com，不急于切换）
+│   ├── /
+│   ├── /search
+│   ├── /featured
+│   ├── /latest
+│   ├── /trending
+│   └── /{namespace}/{model}
+│
+├── /docs （主站 /docs 做 301 跳转到 docs.susan.com，文档站独立部署）
+│
+├── /signin  （要和 susan-cli, app, 结合, 打通）
+├── /signup  （要和 susan-cli, app, 结合, 打通）
+│
+├── /account （要和 susan-cli, app, 结合, 打通）
+│   ├── /profile
+│   ├── /models
+│   ├── /keys
+│   ├── /devices
+│   ├── /usage
+│   ├── /billing
+│   └── /settings
+│
+└── /blog
+
+（注意：/admin 不在主站 susan.com 路由下，独立部署为 admin.susan.com，见第八章安全策略）
+
+
+网站结构说明
+----------------------------------------
+
+1. /
+Susan 官网首页。
+
+主要展示：
+- Susan 是什么
+- 产品能力
+- Local AI
+- Cloud AI
+- Model Hub
+- Desktop / CLI 下载
+- 文档
+- 登录入口
+
+2. /download
+Susan 客户端下载中心。
+
+支持：
+- Windows
+- macOS
+- Linux
+
+同时可以提供：
+- 最新版本
+- 历史版本
+- Release Notes
+- 系统要求
+
+3. /library
+Susan Model Hub。
+
+这是 Susan Web 的核心页面之一。
+
+主要功能：
+- 模型搜索
+- 推荐模型
+- 最新模型
+- 热门模型
+- 模型分类
+- 模型详情
+- 模型版本
+- 模型标签
+- 模型能力
+- 模型参数
+- 模型使用方法
+
+4. /library/search
+模型搜索。
+
+可以按照：
+- 模型名称
+- 作者 / Namespace
+- 标签
+- 能力
+- 参数规模
+- 模态
+- 更新时间
+- 热度
+
+进行搜索。
+
+5. /library/featured
+官方推荐模型。
+
+6. /library/latest
+最新发布或最新更新的模型。
+
+7. /library/trending
+热门模型。
+
+8. /library/{namespace}/{model}
+模型详情页。
+
+例如：
+
+susan.com/library/qwen/qwen3
+
+页面可以展示：
+- Model Name
+- Namespace
+- Description
+- Model Versions
+- Tags
+- Parameters
+- Context Length
+- Quantization
+- Capabilities
+- License
+- Downloads
+- Updated Time
+- Usage
+- Pull / Run 指令
+
+9. /docs
+Susan 官方文档。
+
+文档站独立部署在 docs.susan.com（Mintlify 默认子域）。
+主站 /docs 路径做 301 跳转到 docs.susan.com，方便老链接与直接访问的兼容。
+
+10. /signin
+用户登录。详见「认证流程」节。
+
+11. /signup
+用户注册。
+
+12. /account
+用户中心。
+
+包括：
+- Profile
+- Models
+- API Keys
+- Devices
+- Usage
+- Billing
+- Settings
+
+13. /account/profile
+用户资料。
+
+14. /account/models
+用户拥有、下载、发布或管理的模型。
+
+15. /account/keys
+API Key 管理。
+
+16. /account/devices
+已登录设备管理。
+
+17. /account/usage
+Cloud API / Cloud Inference 使用量。
+
+18. /account/billing
+订阅、余额、账单、支付。
+
+19. /account/settings
+用户设置。
+
+20. /blog
+Susan 官方博客 / 新闻 / 产品更新。
+
+21. admin.susan.com（独立子域，不在主站路由下）
+Susan 内部管理后台。
+
+管理：
+- Users
+- Models
+- Model Versions
+- GPU Nodes
+- Cloud Jobs
+- Usage
+- Billing
+- Logs
+- System
+
+安全策略详见第八章。
+
+
+三、最终 API 结构
+----------------------------------------
+
+api.susan.com
+│
+├── /api/                         # Susan / Ollama-compatible Native API
+│   │
+│   ├── /generate
+│   ├── /chat
+│   ├── /embed
+│   ├── /create
+│   ├── /tags
+│   ├── /show
+│   ├── /copy
+│   ├── /delete
+│   ├── /pull
+│   ├── /push
+│   ├── /ps
+│   ├── /version
+│   ├── /health                   # [新增] 健康检查接口
+│   ├── /abort                    # [新增] 中断当前生成任务
+│   ├── /manifests                 # [新增] 模型 Manifest 管理（自建 Registry 时需要）
+│   └── /blobs                     # [新增] 模型文件块 (Blob) 下载与上传（自建 Registry 时需要）
+│
+├── /v1/                          # Compatibility API
+│   │
+│   ├── /chat/completions         # OpenAI-compatible，当前已实现
+│   ├── /completions              # OpenAI-compatible，当前已实现
+│   ├── /embeddings               # OpenAI-compatible，当前已实现
+│   ├── /models                   # OpenAI-compatible，当前已实现
+│   └── /messages                 # (reserved) Anthropic-compatible 预留路径，未来计划支持
+│
+├── /auth/                        # Account authentication
+│   ├── /register
+│   ├── /login
+│   ├── /logout
+│   ├── /refresh
+│   ├── /verify-email
+│   ├── /forgot-password
+│   ├── /reset-password
+│   └── /me
+│
+├── /user/                        # User account
+│   ├── /profile
+│   ├── /settings
+│   ├── /keys
+│   ├── /devices
+│   └── /sessions
+│
+├── /models/                      # Model Hub metadata
+│   ├── /search
+│   ├── /featured
+│   ├── /latest
+│   ├── /trending
+│   └── /{namespace}/{model}
+│
+├── /billing/                     # Commercial layer
+│   ├── /plans
+│   ├── /subscription
+│   ├── /usage
+│   ├── /credits
+│   └── /invoices
+│
+├── /cloud/                       # Cloud control APIs
+│   ├── /jobs
+│   ├── /deployments
+│   ├── /instances
+│   └── /usage
+│
+└── /system/
+    ├── /health
+    ├── /version
+    └── /status
+
+
+API 结构说明
+----------------------------------------
+
+1. /api/
+Susan Native API。
+
+这是最接近 Ollama Local API 的一层。
+
+核心原则：
+客户端不需要知道后端到底使用 Local GPU、Cloud GPU 还是 GPU Cluster。
+
+核心接口：
+
+POST /api/generate
+文本生成。
+
+POST /api/chat
+对话生成，支持 Streaming。
+
+POST /api/embed
+Embedding。
+
+POST /api/create
+创建模型。
+
+GET /api/tags
+获取模型列表。
+
+POST /api/show
+获取模型详细信息。
+
+POST /api/copy
+复制模型。
+
+DELETE /api/delete
+删除模型。
+
+POST /api/pull
+下载 / 拉取模型。
+
+POST /api/push
+发布 / 上传模型。
+
+GET /api/ps
+查看当前运行模型。
+
+GET /api/version
+查看 Susan Engine / API 版本。
+
+GET /api/health  [新增]
+健康检查。Local 与 Cloud 两侧都应支持，用于探活与监控。
+
+POST /api/abort  [新增]
+中断进行中的生成 / 对话任务，支持按 request_id 取消。
+
+GET /api/manifests  [新增]
+模型 Manifest 管理。当 Susan 自建 Registry 时启用，查询模型版本的文件清单、Digest、Blob 列表。
+
+GET /api/blobs  [新增]
+模型文件块 (Blob) 下载与上传。当 Susan 自建 Registry 时启用，用于大文件分块传输。
+
+2. /v1/
+兼容 API。
+
+主要目标：
+让已有 AI 软件生态可以直接连接 Susan。
+
+第一阶段（已实现）：
+- OpenAI-compatible API
+- Chat Completions
+- Completions
+- Embeddings
+- Models
+
+预留（reserved，未来计划支持）：
+- Anthropic-compatible Messages API
+- 路径：POST /v1/messages
+
+标注规则：在 API 结构图与文档中，对 /v1/messages 显式打上 (reserved) 标记，
+清晰区分「当前已实现的 OpenAI 兼容路径」与「未来计划支持的 Anthropic 预留路径」，
+避免开发者误以为 Susan 当前已完全实现 Claude 风格 API。
+
+例如：
+POST /v1/chat/completions
+
+这样 OpenAI SDK、各种 Agent、LangChain、LlamaIndex、Coding Tool 等可以连接 Susan。
+
+3. /auth/
+身份认证。
+
+负责：
+- 注册
+- 登录
+- 登出
+- Token Refresh
+- Email Verification
+- Password Reset
+- 当前用户
+
+认证属于 Susan Cloud / Web 层，不属于 Local Engine。
+
+4. /user/
+用户账户服务。
+
+负责：
+- 用户资料
+- 设置
+- API Keys
+- 登录设备
+- Session
+
+5. /models/
+Model Hub 后端。
+
+负责模型的：
+- 搜索
+- 推荐
+- 最新
+- 热门
+- Metadata
+- Version
+- Namespace
+- Tags
+
+注意：
+/models/ 主要管理模型元数据。
+
+真正的大模型文件不应该全部由 API Server 直接提供。
+
+6. /billing/
+商业计费。
+
+负责：
+- Plan
+- Subscription
+- Usage
+- Credits
+- Invoice
+- Payment
+
+这是 Susan 商业化阶段的重要模块。
+
+7. /cloud/
+Susan Cloud 控制层。
+
+负责：
+- Cloud Jobs
+- Deployments
+- GPU Instances
+- Cloud Usage
+
+注意：
+/cloud/ 不应该成为客户端进行模型推理的主要接口。
+
+客户端仍然应该调用：
+
+/api/chat
+/api/generate
+/v1/chat/completions
+
+然后由 Susan 后端决定请求最终进入：
+- Local Runtime
+- Cloud Runtime
+- GPU Node
+- GPU Cluster
+
+8. /system/
+系统接口。
+
+用于：
+- Health Check
+- Version
+- Status
+- Maintenance
+
+
+四、Ollama ↔ Susan 25 项最终对照
+----------------------------------------
+| ollama                              | susan                               | 类型                      | 说明                                                                                              |
+| :---------------------------------- | :---------------------------------- | :------------------------ | :------------------------------------------------------------------------------------------------ |
+| Ollama CLI                          | Susan CLI                           | 客户端                    | Susan CLI 已经完成，是 Ollama CLI 的 Susan 产品对应版本。                                           |
+| Ollama Desktop                      | Susan Desktop                       | 客户端                    | Susan Desktop 已经完成。Susan Desktop 不只有 Local 能力，付费后也可使用 Susan Cloud 上的模型。       |
+| Ollama Local Engine                 | Susan Engine                        | Runtime                   | Susan 已经完成本地 Engine / Runtime 方向。它负责本地模型加载、推理、模型管理以及 GPU / CPU Runtime。 |
+| localhost:11434                     | Susan Local API                     | Local API                 | 本地客户端通过本地 API 与 Susan Engine 通信。监听 127.0.0.1:14343（与 Ollama 一致，仅本机 loopback）。 |
+| ollama.com                          | susan.com                           | Website                   | Susan 的官方 Web 产品入口。负责品牌、产品介绍、下载、Model Hub、Docs、Account 等。                |
+| Ollama Model Library                | Susan Model Hub                     | Model Registry / Website  | Susan Web 的核心组成。负责模型发现、搜索、详情、版本、标签和模型生态。                              |
+| Ollama Model Detail                 | Susan Model Detail                  | Website                   | 展示单个模型的详细信息、版本、能力、参数、许可证、使用方式等。                                     |
+| Ollama Search                       | Susan Model Search                  | Website / API             | 用户可以搜索模型。后端对应 `/models/search`。                                                  |
+| Ollama Account                      | Susan Account                       | User System               | 统一管理用户资料、模型、API Key、设备、Usage、Billing 和 Settings。                              |
+| Ollama Sign In                      | Susan Sign In                       | Authentication            | Susan Web 用户登录入口。对应 `/signin` 和 `/auth/login`。                                        |
+| Ollama Sign Up                      | Susan Sign Up                       | Authentication            | Susan Web 用户注册入口。对应 `/signup` 和 `/auth/register`。                                     |
+| Ollama API                          | Susan Native API                    | API                       | 使用 `/api/*`。这是 Susan 自己的 Native API，同时保持 Ollama 风格。                                |
+| ollama.com/api                      | api.susan.com/api                   | Cloud Native API          | Susan Cloud 的 Native API。客户端可以通过相同的模型操作逻辑访问 Cloud。                            |
+| ollama.com/v1                       | api.susan.com/v1                    | Compatibility API         | 提供 OpenAI-compatible API，并预留 Anthropic-compatible Messages API。                             |
+| Ollama API Key                      | Susan API Key                       | Authentication            | 用户可以在 `/account/keys` 管理 API Key。Cloud API 使用 Bearer Token / API Key 进行认证。           |
+| Ollama Model Pull                   | Susan Model Pull                    | Model Distribution       | 用户可以通过 Susan CLI / Desktop / API 拉取模型。                                                |
+| Ollama Model Push                   | Susan Model Push                    | Model Publishing          | 用户或官方可以发布模型到 Susan Model Hub。支持 Namespace / Model / Tag / Version / Manifest。       |
+| Ollama Model Manifest               | Susan Model Manifest                | Model Metadata            | 用于描述模型版本、文件、Digest、Blob 等信息。                                                    |
+| Ollama Cloud Models                 | Susan Cloud Models                  | Cloud AI                  | 用户可以选择 Cloud Model。客户端不需要关心实际运行模型的 GPU 在哪里。                              |
+| Ollama Cloud Runtime                | Susan Cloud Runtime                 | Inference Runtime         | 真正执行 Cloud Inference 的 Runtime。第一阶段可以只有一台 GPU Server，后续扩展 GPU Pool / Cluster。 |
+| Ollama Cloud Usage                  | Susan Usage                         | Usage / Metering          | 记录：User、Model、Request、Input Tokens、Output Tokens、Duration、GPU、Cost、Timestamp，为后续 Billing 提供数据。 |
+| Ollama Cloud Billing                | Susan Billing                       | Commercial                | 负责：Plans、Subscription、Credits、Usage、Invoice、Payment，属于商业化阶段。                     |
+| Ollama Model Storage / Dist         | Susan Model Storage / CDN           | Infrastructure            | API Server 不应该直接承担全部大型模型文件的下载压力。推荐通过 Model Hub → Model Metadata → Object Storage → CDN → User 结构。 |
+| Ollama Backend / Admin              | Susan Admin                         | Administration            | 管理：Users、Models、Model Versions、GPU Nodes、Cloud Jobs、Usage、Billing、Logs、System。独立部署在 admin.susan.com。 |
+| Ollama Local + Cloud Product       | Susan Local + Cloud Product         | 整体产品架构               | Susan 最终不是单纯的 Cloud AI，也不是单纯的 Local AI，而是 Local 与 Cloud 的统一模型、API 与产品逻辑。 |
+
+
+01. Ollama CLI
+    ↓
+    Susan CLI
+
+    类型：客户端
+
+    说明：
+    Susan CLI 已经完成，是 Ollama CLI 的 Susan 产品对应版本。
+
+
+02. Ollama Desktop
+    ↓
+    Susan Desktop
+
+    类型：客户端
+
+    说明：
+    Susan Desktop 已经完成。
+    Susan Desktop 不只有 Local 能力，付费后也可使用 Susan Cloud 上的模型。
+    后续 Susan 自有专属模型会部署在 Susan Cloud 上，供 Desktop 用户调用。
+
+
+03. Ollama Local Engine
+    ↓
+    Susan Engine
+
+    类型：Runtime
+
+    说明：
+    Susan 已经完成本地 Engine / Runtime 方向。
+    它负责本地模型加载、推理、模型管理以及 GPU / CPU Runtime。
+
+    注意：Susan Engine 专指 Local Engine。
+    Cloud 推理 Runtime 名称为 Susan Cloud Runtime，不要混用。
+
+
+04. localhost:11434
+    ↓
+    Susan Local API（监听 127.0.0.1:14343）
+
+    类型：Local API
+
+    说明：
+    本地客户端通过本地 API 与 Susan Engine 通信。
+    监听地址 127.0.0.1，端口 14343（仅本机 loopback，与 Ollama 一致）。
+    这一层应该尽可能保持与 Ollama API 的行为和接口兼容。
+    对外暴露需显式设置 SUSAN_HOST=0.0.0.0:14343，由用户自行决定。
+
+
+05. ollama.com
+    ↓
+    susan.com
+
+    类型：Website
+
+    说明：
+    Susan 的官方 Web 产品入口。
+    负责品牌、产品介绍、下载、Model Hub、Docs、Account 等。
+
+
+06. Ollama Model Library
+    ↓
+    Susan Model Hub
+
+    类型：Model Registry / Website
+
+    说明：
+    Susan Web 的核心组成。
+    负责模型发现、搜索、详情、版本、标签和模型生态。
+
+    命名统一：对外品牌名为 Model Hub（不叫 Library）。
+    Library 作为 Ollama 原始术语只在技术对照里保留。
+
+
+07. Ollama Model Detail
+    ↓
+    Susan Model Detail
+
+    类型：Website
+
+    说明：
+    展示单个模型的详细信息、版本、能力、参数、许可证、使用方式等。
+
+
+08. Ollama Search
+    ↓
+    Susan Model Search
+
+    类型：Website / API
+
+    说明：
+    用户可以搜索模型。
+    后端对应 /models/search。
+
+
+09. Ollama Account
+    ↓
+    Susan Account
+
+    类型：User System
+
+    说明：
+    统一管理用户资料、模型、API Key、设备、Usage、Billing 和 Settings。
+
+
+10. Ollama Sign In
+    ↓
+    Susan Sign In
+
+    类型：Authentication
+
+    说明：
+    Susan Web 用户登录入口。
+    对应 /signin 和 /auth/login。
+
+    认证流程详见「认证流程」节。
+
+
+11. Ollama Sign Up
+    ↓
+    Susan Sign Up
+
+    类型：Authentication
+
+    说明：
+    Susan Web 用户注册入口。
+    对应 /signup 和 /auth/register。
+
+
+12. Ollama API
+    ↓
+    Susan Native API
+
+    类型：API
+
+    说明：
+    使用 /api/*。
+    这是 Susan 自己的 Native API，同时保持 Ollama 风格。
+
+
+13. ollama.com/api
+    ↓
+    api.susan.com/api
+
+    类型：Cloud Native API
+
+    说明：
+    Susan Cloud 的 Native API。
+    客户端可以通过相同的模型操作逻辑访问 Cloud。
+
+
+14. ollama.com/v1
+    ↓
+    api.susan.com/v1
+
+    类型：Compatibility API
+
+    说明：
+    提供 OpenAI-compatible API，并预留 Anthropic-compatible API。
+    /v1/messages 标注为 (reserved)。
+
+
+15. Ollama API Key
+    ↓
+    Susan API Key
+
+    类型：Authentication
+
+    说明：
+    用户可以在 /account/keys 管理 API Key。
+    Cloud API 使用 Bearer Token / API Key 进行认证。
+
+
+16. Ollama Model Pull
+    ↓
+    Susan Model Pull
+
+    类型：Model Distribution
+
+    说明：
+    用户可以通过 Susan CLI / Desktop / API 拉取模型。
+
+    MVP 策略：
+    - MVP 阶段 pull 走 registry.ollama.com（只读）
+    - 后续 Susan Model Hub 建好后，pull/push 都切到 registry.susan.com
+
+
+17. Ollama Model Push
+    ↓
+    Susan Model Push
+
+    类型：Model Publishing
+
+    说明：
+    用户或官方可以发布模型到 Susan Model Hub。
+    支持 Namespace / Model / Tag / Version / Manifest。
+
+    MVP 策略：
+    - MVP 阶段 push 先占好位，API 形态保留，但实际写入端暂不开放
+    - 等待 Susan Model Hub（自建 Registry）建好后再启用 push
+    - 后续 pull/push 都切到 registry.susan.com
+
+
+18. Ollama Model Manifest
+    ↓
+    Susan Model Manifest
+
+    类型：Model Metadata
+
+    说明：
+    用于描述模型版本、文件、Digest、Blob 等信息。
+
+    Namespace 命名规范详见「模型 Namespace 命名规范」节。
+
+
+19. Ollama Cloud Models
+    ↓
+    Susan Cloud Models
+
+    类型：Cloud AI
+
+    说明：
+    用户可以选择 Cloud Model。
+    客户端不需要关心实际运行模型的 GPU 在哪里。
+    Susan Desktop 付费后可调用 Susan Cloud 上的模型，含 Susan 自有专属模型。
+
+
+20. Ollama Cloud Runtime
+    ↓
+    Susan Cloud Runtime
+
+    类型：Inference Runtime
+
+    说明：
+    真正执行 Cloud Inference 的 Runtime。
+    第一阶段可以只有一台 GPU Server，后续扩展 GPU Pool / Cluster。
+
+    注意：本项名称为 Susan Cloud Runtime，不要简写为 Susan Engine
+    （Susan Engine 专指 Local Engine）。
+
+
+21. Ollama Cloud Usage
+    ↓
+    Susan Usage
+
+    类型：Usage / Metering
+
+    说明：
+    记录：
+    - User
+    - Model
+    - Request
+    - Input Tokens
+    - Output Tokens
+    - Duration
+    - GPU
+    - Cost
+    - Timestamp
+
+    为后续 Billing 提供数据。
+
+
+22. Ollama Cloud Billing
+    ↓
+    Susan Billing
+
+    类型：Commercial
+
+    说明：
+    负责：
+    - Plans
+    - Subscription
+    - Credits
+    - Usage
+    - Invoice
+    - Payment
+
+    属于商业化阶段。
+
+
+23. Ollama Model Storage / Distribution
+    ↓
+    Susan Model Storage / CDN
+
+    类型：Infrastructure
+
+    说明：
+    API Server 不应该直接承担全部大型模型文件的下载压力。
+
+    推荐结构：
+
+    Model Hub
+        ↓
+    Model Metadata
+        ↓
+    Object Storage
+        ↓
+    CDN
+        ↓
+    User
+
+
+24. Ollama Backend / Administration
+    ↓
+    Susan Admin
+
+    类型：Administration
+
+    说明：
+    管理：
+    - Users
+    - Models
+    - Model Versions
+    - GPU Nodes
+    - Cloud Jobs
+    - Usage
+    - Billing
+    - Logs
+    - System
+
+    独立部署在 admin.susan.com，不在主站 susan.com 路由下。
+    安全策略详见第八章。
+
+
+25. Ollama Local + Cloud Product Model
+    ↓
+    Susan Local + Cloud Product Model
+
+    类型：整体产品架构
+
+    说明：
+
+    Susan 最终不是单纯的 Cloud AI，也不是单纯的 Local AI。
+
+    而是：
+
+                    Susan
+                      │
+          ┌───────────┴───────────┐
+          │                       │
+       Local                   Cloud
+          │                       │
+    Susan Desktop            Susan Web
+    Susan CLI                api.susan.com
+          │                       │
+    Susan Engine             Susan Cloud Runtime
+          │                       │
+      Local GPU               GPU Pool
+
+    两者使用统一的模型、API、产品逻辑。
+
+
+五、最终 Susan 产品架构
+----------------------------------------
+
+                         Susan
+                           │
+          ┌────────────────┼────────────────┐
+          │                │                │
+      Susan CLI       Susan Desktop      Susan Web
+          │                │                │
+          └────────────────┘                │
+                           │                │
+                    Susan Local Engine   api.susan.com
+                           │                │
+                       Local GPU      Susan Cloud Runtime
+                                            │
+                                         GPU Pool
+
+    说明：
+    - Susan CLI / Susan Desktop 既可走 Local（Susan Local Engine）
+      也可走 Cloud（api.susan.com → Susan Cloud Runtime）。
+    - Susan Web 是云端产品，挂在 api.susan.com 这一支下。
+    - Susan Engine 专指 Local Engine；Cloud 推理 Runtime 为 Susan Cloud Runtime。
+
+
+====================================================
+
+
+                         susan.com
+                            │
+       ┌────────────────────┼────────────────────┐
+       │                    │                    │
+    Website            Model Hub              Account
+       │                    │                    │
+       └────────────────────┼────────────────────┘
+                            │
+                     Authentication
+                            │
+                            ▼
+                     api.susan.com
+                            │
+             ┌──────────────┴──────────────┐
+             │                             │
+           /api/                          /v1/
+             │                             │
+             └──────────────┬──────────────┘
+                            │
+                       Susan Cloud
+                            │
+                       Cloud Runtime
+                            │
+                         GPU Pool
+
+    说明：本图仅展示 Web / Cloud 侧。Local 侧见上方第一张图。
+
+
+六、核心设计原则
+----------------------------------------
+
+1. Susan Local Engine 和 Susan Cloud Runtime 是两个 Runtime 层。
+
+2. Web 不应该直接控制 GPU。
+
+3. 客户端不应该关心推理请求最终运行在哪台 GPU。
+
+4. /api/ 是 Susan Native / Ollama-compatible API。
+
+5. /v1/ 是兼容 OpenAI / Anthropic 等生态的 API 层。
+
+6. /models/ 管理 Model Hub 的元数据，不等于模型文件存储。
+
+7. 大型模型文件应该逐渐迁移到 Object Storage + CDN。
+
+8. /cloud/ 是 Cloud 控制和管理层，而不是主要的客户端推理接口。
+
+9. Billing、Usage、Account 属于 Cloud / SaaS 层，不应该进入 Local Engine。
+
+10. 第一阶段可以采用 Modular Monolith：
+    一个 Susan Server 运行 Web/API/Auth/Models/Cloud 等模块。
+
+    后期用户量和 GPU 数量增加后，再拆分：
+    - API Service
+    - Auth Service
+    - Model Service
+    - Billing Service
+    - Scheduler
+    - Inference Service
+    - Storage
+    - GPU Cluster
+
+
+七、认证流程
+----------------------------------------
+
+Susan 统一采用 OAuth 2.0 Device Authorization Grant（Device Code Flow）
+作为 CLI / Desktop / 终端设备登录主流程，并配合终端直接登录（Terminal Login）作为统一兜底。
+
+3.1 三条登录路径
+
+(1) 网页登录（Web Sign In）
+- 用户在 susan.com/signin 输入账号密码
+- 后端调用 /auth/login 颁发 Session / JWT
+- 网页端用 cookie 持有 Session，后续调用 /user/* 与 /billing/* 等
+
+(2) CLI / Desktop 登录（OAuth 2.0 Device Code Flow）
+- CLI / Desktop 调用 /auth/device 接口，获取 device_code 与 user_code
+- CLI 显示 user_code 与验证 URL（如 susan.com/connect?device_code=xxx）
+- 用户在浏览器打开链接，登录并授权
+- CLI 轮询 /auth/token，拿到 access_token / refresh_token
+- 本地持久化 token（Susan 数据目录 ~/.susan/auth.json）
+- 后续 CLI / Desktop 用 Bearer Token 调用 api.susan.com/* 与本地 Susan Local API
+
+(3) 终端直接登录（Terminal Login，兜底）
+- 当 Device Flow 无法走（无浏览器、纯 SSH、受限网络）时使用
+- CLI 提示用户输入用户名 + 密码（或 API Key）
+- 调用 /auth/login 直接换 token
+- 适用于 CI、服务器、自动化脚本等场景
+
+3.2 Token 体系
+
+- access_token：短期（如 1 小时），放在 Authorization: Bearer 头
+- refresh_token：长期（如 30 天），用于刷新 access_token
+- API Key：长期、可吊销，放在 /account/keys 管理；可作为 Bearer Token 直接调用 Cloud API
+- API Key 与 OAuth Token 的关系：API Key 是独立凭证，不依赖 refresh；
+  OAuth Token 用于 CLI / Desktop 的用户级会话
+
+3.3 CLI 与 Desktop 的「打通」
+
+- CLI / Desktop 通过 Device Flow 拿到 token 后，写入本地数据目录
+- Desktop 启动时读 token，自动调用 /auth/me 校验
+- 未登录时 Desktop UI 显示「Sign In」入口，点击触发 Device Flow
+- Susan Local API（127.0.0.1:14343）不强制鉴权（本机 loopback）
+- Susan Cloud API（api.susan.com）强制鉴权（Bearer Token）
+
+
+八、模型 Namespace 命名规范
+----------------------------------------
+
+8.1 规范定义
+
+模型全路径统一为：
+
+    {namespace}/{model}:{tag}
+
+示例：
+    library/qwen3:latest
+    alice/my-finetune:v1.0
+
+8.2 官方模型简写规则
+
+省略 {namespace} 时，系统默认补充为 library。
+
+即：
+
+    susan run qwen3
+    等价于
+    susan run library/qwen3
+
+省略 {tag} 时，系统默认补充为 latest。
+
+即：
+    susan run library/qwen3
+    等价于
+    susan run library/qwen3:latest
+
+8.3 网页 URL 映射
+
+(1) 官方模型详情页
+    统一为：https://susan.com/library/models/{model}
+    示例：https://susan.com/library/models/qwen3
+
+    兼容形式：https://susan.com/library/library/{model}
+    （与 Ollama 的 /library/{namespace}/{model} 路径保持一致，用于历史链接兼容）
+
+(2) 用户 / 社区模型详情页
+    统一为：https://susan.com/library/{username}/{model}
+    示例：https://susan.com/library/alice/my-finetune
+
+8.4 Pull / Push 命名
+
+- Pull MVP：
+    susan pull qwen3
+    susan pull library/qwen3:latest
+    实际从 registry.ollama.com 拉取（MVP 阶段）
+
+- Push（后续启用）：
+    susan push alice/my-finetune:v1.0
+    推送到 registry.susan.com（自建 Registry 建好后启用）
+
+
+九、当前开发重点
+----------------------------------------
+
+你目前已经完成：
+
+[完成]
+- Susan CLI
+- Susan Desktop
+- Susan Local Engine
+- Local Model Runtime
+
+现在应该进入：
+
+[P0]
+1. susan.com
+2. Model Hub
+3. Model Detail
+4. Search
+5. Download
+6. Docs（docs.susan.com）
+7. Account
+8. Sign In / Sign Up（OAuth 2.0 Device Code Flow + Terminal Login）
+9. api.susan.com/api
+10. Cloud Model 基础能力（元数据列表 + 展示，不含推理）
+
+[P1]
+11. API Keys
+12. /v1/ OpenAI Compatible
+13. Anthropic Compatible（/v1/messages，reserved → 实现）
+14. Model Publishing（push MVP 策略：先占位，等 Model Hub 建好）
+15. Model Storage
+16. Cloud Runtime（Susan Cloud MVP 推理上线）
+17. Usage
+
+[P2]
+18. Billing
+19. Subscription
+20. Credits
+21. Payment
+22. Admin（admin.susan.com，独立部署 + 安全策略）
+23. GPU Scheduler
+24. Multi-GPU
+25. GPU Cluster
+
+
+十、第一台 Susan Server 的定位
+----------------------------------------
+
+3000～4000 元预算的第一台机器：
+
+不是最终生产级 Susan Cloud。
+
+而是：
+
+Susan Cloud MVP
++
+Susan Web Backend
++
+Susan API
++
+Model Hub Backend
++
+Cloud Runtime Development
++
+GPU Inference Development
+
+推荐思路：
+
+24GB NVIDIA GPU
++
+64～128GB RAM
++
+2TB NVMe
++
+16～24 核级 CPU
++
+2.5GbE
++
+Ubuntu 24.04 LTS
+
+第一阶段一台机器即可：
+
+    Internet
+        │
+        ▼
+    Nginx / Reverse Proxy
+        │
+        ▼
+    Susan Server
+        │
+        ├── Web
+        ├── API
+        ├── Auth
+        ├── Model Hub
+        ├── User
+        └── Cloud
+                │
+                ▼
+          Susan Cloud Runtime
+                │
+             GPU 24GB
+
+后期再扩展为：
+
+    Internet
+        │
+        ▼
+    CDN / Load Balancer
+        │
+        ▼
+    API Cluster
+        │
+        ├── Auth
+        ├── Model Service
+        ├── Billing
+        └── Scheduler
+                │
+          ┌─────┼─────┐
+          ▼     ▼     ▼
+        GPU1  GPU2  GPU3
+          │     │     │
+          └─────┼─────┘
+                │
+          Cloud Runtime
+
+注意：图中 Cloud 分支下的 Runtime 名称为 Susan Cloud Runtime，
+不要简写为 Susan Engine（Susan Engine 专指 Local Engine）。
+
+
+十一、admin.susan.com 安全策略
+----------------------------------------
+
+核心定位：
+将 /admin 移除出主站 susan.com 路径，独立部署为 admin.susan.com，
+以缩小系统受攻击面。
+
+访问隔离：
+在网关或网络层开启 IP 白名单、Basic Auth 或 VPN / Zero Trust 保护，
+仅限内部人员访问。
+
+架构解耦：
+管理后台作为独立前端应用构建，避免与官网 / 前台业务代码耦合。
+后端管理 API 与前台 API 分组部署，独立鉴权中间件。
+
+严密鉴权：
+后端 API 需设置 RBAC 角色校验，普通 API Key 及非管理员账号一律禁止调取管理端接口。
+管理员账号单独的角色与权限集合，操作日志全量记录，敏感操作二次确认。
+
+
+十二、最终结论
+----------------------------------------
+
+Susan 当前正确的产品路线：
+
+    Ollama Local Product
+            ↓
+    Susan Local Product
+            ↓
+    Susan Web
+            ↓
+    Susan Model Hub
+            ↓
+    Susan Cloud API
+            ↓
+    Susan Cloud Runtime
+            ↓
+    Susan Billing / Usage
+            ↓
+    Susan Commercial Cloud
+
+
+核心对应关系：
+
+    ollama CLI
+        ↓
+    susan CLI
+
+    Ollama Desktop
+        ↓
+    Susan Desktop
+
+    Ollama Engine
+        ↓
+    Susan Engine（Local）
+
+    localhost:11434/api
+        ↓
+    Susan Local API（127.0.0.1:14343）
+
+    ollama.com
+        ↓
+    susan.com
+
+    Ollama Model Library
+        ↓
+    Susan Model Hub
+
+    ollama.com/api
+        ↓
+    api.susan.com/api
+
+    ollama.com/v1
+        ↓
+    api.susan.com/v1
+
+    Ollama Cloud
+        ↓
+    Susan Cloud
+
+    Ollama Cloud Runtime
+        ↓
+    Susan Cloud Runtime
+
+    Ollama Cloud Usage
+        ↓
+    Susan Usage
+
+    Ollama Cloud Billing
+        ↓
+    Susan Billing
+
+
+最重要原则：
+
+不要重新创造一个“类似 Ollama”的产品架构。
+
+你现在已经完成 Ollama 的本地产品部分。
+
+接下来应该做的是：
+
+    Ollama Web / Cloud 产品结构
+              ↓
+    Susan Web / Cloud 对应实现
+
+并尽可能保持：
+- 产品逻辑一致
+- Model Hub 逻辑一致
+- Model 生命周期一致
+- API 逻辑一致
+- Local / Cloud Runtime 逻辑一致
+
+同时把：
+- Susan 品牌
+- Susan Account
+- Susan API Key
+- Susan Billing
+- Susan Model Hub
+- Susan Cloud
+
+作为 Susan 自己的商业化层。
