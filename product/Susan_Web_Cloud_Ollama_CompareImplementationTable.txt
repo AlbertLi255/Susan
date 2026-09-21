@@ -39,15 +39,18 @@ susan.com
 ├── /
 ├── /download
 │
-├── /library（继续使用 ollama registry，registry.ollama.com，不急于切换）
-│   ├── /
+├── /library                      # Model Hub（品牌名）；URL 段仍用 library
+│   ├── /                         # Hub 首页（列表入口）
 │   ├── /search
 │   ├── /featured
 │   ├── /latest
 │   ├── /trending
-│   └── /{namespace}/{model}
+│   ├── /{model}                  # 官方缺省简写：等价 namespace=official
+│   └── /{namespace}/{model}      # 统一详情公式（与 CLI 一对一映射）
 │
-├── /docs （主站 /docs 做 301 跳转到 docs.susan.com，文档站独立部署）
+├── /hf/{owner}/{model}           # Hugging Face 代理页（Hub 外通道，见 8.7.5）
+│
+├── /docs （导航直链 docs.susan.com；主站 /docs 保留 301 兼容）
 │
 ├── /signin  （要和 susan-cli, app, 结合, 打通）
 ├── /signup  （要和 susan-cli, app, 结合, 打通）
@@ -55,16 +58,29 @@ susan.com
 │
 ├── /account （要和 susan-cli, app, 结合, 打通）
 │   ├── /profile
-│   ├── /models
+│   ├── /models                   # 用户自己的模型管理（账号中心，不是 Hub 列表）
 │   ├── /keys
 │   ├── /devices
 │   ├── /usage
 │   ├── /billing
 │   └── /settings
 │
+├── /pricing                      # 定价页（保留字）
+├── /settings                     # 站点级设置入口（保留字，与 /account/settings 区分）
+│
 └── /blog
 
-（注意：/admin 不在主站 susan.com 路由下，独立部署为 admin.susan.com，见第八章安全策略）
+（注意：/admin 不在主站 susan.com 路由下，独立部署为 admin.susan.com，见第十一章安全策略）
+
+决策定稿（Web URL ↔ CLI 一对一，见 8.7.5）：
+- 对外品牌名是 Model Hub；列表路径保持 /library/search|featured|latest|trending。
+- 所有模型详情统一公式：susan.com/library/{namespace}/{model}
+  与 CLI susan pull|run {namespace}/{model} 精确一一对应。
+- 官方 library 命名空间可缺省：susan.com/library/{model} ⇔ susan run {model}。
+- 旧稿根路径 /{username}/{model}、以及 /library/models/{model}，改为兼容跳转
+  （301 → /library/{username}/{model}），不作新链接主规范。
+- 可选：/models 仅 301 到 /library（首页别名）。
+- 保留字与 susancloud 命名空间见 8.7.5；数据源 MVP 仍走 registry.ollama.ai。
 
 
 网站结构说明
@@ -98,9 +114,14 @@ Susan 客户端下载中心。
 - 系统要求
 
 3. /library
-Susan Model Hub。
+Susan Model Hub（品牌名）。
 
 这是 Susan Web 的核心页面之一。
+
+澄清（重要）：
+- 「Model Hub」是导航与对外品牌用语，不是强制把 URL 改成 /models/...。
+- Hub 列表与筛选路径保持 /library/...，与 Ollama 对照一致。
+- 曾误写的「/models/featured（原 /library/featured）」已撤回，不是定稿。
 
 主要功能：
 - 模型搜索
@@ -139,12 +160,23 @@ Susan Model Hub。
 7. /library/trending
 热门模型。
 
-8. /library/{namespace}/{model}
-模型详情页。
+8. /library/{namespace}/{model}（统一详情公式）
+模型详情页。与 CLI 全命名空间路径一对一映射，见 8.7.5。
 
-例如：
+分类示例：
+- Susan 云端专属：susan.com/library/susancloud/deepseek-r1
+  ↔ susan run susancloud/deepseek-r1:cloud
+- 厂商模型：susan.com/library/qwen/qwen2.5-70b
+  ↔ susan run qwen/qwen2.5-70b
+- 个人/社区：susan.com/library/alice/my-finetune
+  ↔ susan run alice/my-finetune
+- 官方缺省：susan.com/library/qwen3
+  ↔ susan run qwen3（namespace=official；亦可写 official/qwen3）
+- 完整形：susan.com/library/official/qwen3
+  ↔ susan run official/qwen3
+  （别名 susanofficial/qwen3 解析到同一官方模型）
 
-susan.com/library/qwen/qwen3
+HF 代理页仍为独立通道：susan.com/hf/{owner}/{model}（不是 Registry namespace 路径）。
 
 页面可以展示：
 - Model Name
@@ -160,13 +192,14 @@ susan.com/library/qwen/qwen3
 - Downloads
 - Updated Time
 - Usage
-- Pull / Run 指令
+- Pull / Run 指令（含本地与 :cloud 示例）
 
 9. /docs
 Susan 官方文档。
 
 文档站独立部署在 docs.susan.com（Mintlify 默认子域）。
-主站 /docs 路径做 301 跳转到 docs.susan.com，方便老链接与直接访问的兼容。
+决策定稿：主站导航与下载页「文档」入口直接链接到 docs.susan.com（利于 SEO、少一次跳转）；
+主站 /docs 路径保留 301 到 docs.susan.com，仅作旧链接兼容。
 
 10. /signin
 用户登录。详见「认证流程」节。
@@ -226,6 +259,9 @@ Susan 内部管理后台。
 
 安全策略详见第八章。
 
+勘误（交叉引用）：此处及下文多处的「第八章」应为「第十一章 admin.susan.com 安全策略」。
+本文件第八章为「模型 Namespace 命名规范」。
+
 22. /device
 OAuth Device Flow 用户授权页（verification_uri）。
 用户在浏览器打开 https://susan.com/device，输入 user_code 并登录授权。
@@ -283,7 +319,7 @@ api.susan.com
 │   ├── /devices
 │   └── /sessions
 │
-├── /models/                      # Model Hub metadata
+├── /library/                     # Model Hub metadata（与 Web 同路径：/library/{namespace}/{model}）
 │   ├── /search
 │   ├── /featured
 │   ├── /latest
@@ -342,6 +378,19 @@ Susan 原生采用 NDJSON (application/x-ndjson)，
 {"model": "qwen2.5:70b", "created_at": "2026-09-18T03:00:00Z", "response": "这是前半句..."}
 {"error": "CUDA out of memory: failed to allocate 4.20 GiB", "done": true}
 
+补充（与上游行为的差异）：
+上游 Ollama 在流式中途出错时只输出 {"error": "..."}，不带 done 字段。
+本文档额外带上 "done": true 属于 Susan 扩展。
+
+对 Susan 自带客户端无影响：api/client.go 的 stream 解析在回调前先短路判断 error 字段，
+只要 error 非空即返回错误，不会因为 done: true 被误判为正常结束。
+
+但其他语言的 Ollama SDK / 第三方客户端未必按同样顺序解析，
+存在把该行当作「正常结束帧」吞掉错误的风险。
+因此落地时二选一并保持全局统一：
+- 方案一（推荐，最大兼容）：与上游一致，只发 {"error": "..."}。
+- 方案二：保留 done: true，但必须在 docs.susan.com 的 API 文档中显式标注为 Susan 扩展字段。
+
 方案 B：OpenAI 兼容 SSE 模式（用于 /v1/chat/completions 等）
 
 由于 HTTP Status 在响应启动时已设为 200 OK，
@@ -386,8 +435,27 @@ GET /api/version
 GET /api/health  [新增]
 健康检查。Local 与 Cloud 两侧都应支持，用于探活与监控。
 
+勘误（与代码现状重叠）：
+代码中已存在 GET /api/status（server/routes.go 中注册为 s.StatusHandler），
+职责与本项高度重叠。落地时二选一，不要同时上线两个语义相同的探活接口：
+- 方案一（推荐）：沿用已有的 /api/status，本文档的 /api/health 取消。
+- 方案二：/api/health 只做「进程存活」浅探活，/api/status 保留「运行时状态」深探活，
+  并在文档中写清两者返回体差异。
+另注：/system/health 属于 Web / Cloud 侧网关探活，与 Engine 侧的 /api/* 探活不是同一层，
+两者不冲突。
+
 POST /api/abort  [新增]
 中断进行中的生成 / 对话任务，支持按 request_id 取消。
+
+落地前置条件（当前代码尚不具备）：
+代码中目前没有 request_id 概念，生成任务的取消依赖 HTTP 连接断开触发 context cancel。
+要实现 /api/abort，必须先补齐以下三件事，缺一不可：
+1. request_id 的生成与回传：服务端为每个 /api/generate、/api/chat 请求分配 ID，
+   通过响应头（如 X-Request-Id）以及流式首帧返回给客户端。
+2. 运行中请求注册表：进程内维护 request_id → cancelFunc 的映射，请求结束时清理。
+3. 多节点路由：云端多实例部署后，abort 请求可能落到非执行节点，
+   需要通过共享存储（Redis）或按 request_id 做一致性路由来定位执行节点。
+在以上三项完成前，/api/abort 只应停留在 API 结构占位，不要排进开发任务。
 
 GET /api/manifests  [新增]
 模型 Manifest 管理。当 Susan 自建 Registry 时启用，查询模型版本的文件清单、Digest、Blob 列表。
@@ -423,6 +491,66 @@ POST /v1/chat/completions
 
 OpenAI 兼容流式错误处理见方案 B（SSE / 流式传输错误处理协议）。
 
+与统一命名空间公式相关的注意点（/v1）：
+
+- 请求体中的 model 字段使用与 CLI 相同的全名，例如：
+    "model": "qwen/qwen2.5-70b"
+    "model": "susancloud/deepseek-r1:cloud"
+    "model": "qwen3"                  （官方缺省，等价 official/qwen3）
+    "model": "official/qwen3"         （官方完整形）
+    "model": "susanofficial/qwen3"    （官方别名，与 official 同义）
+- GET /v1/models/:model 路径参数若含 namespace 斜杠，客户端须 URL 编码
+  （qwen%2Fqwen2.5-70b），或改用已有的列表/检索接口；文档示例须写明编码规则。
+- /v1/models 列表项的 id 建议直接等于 full_name（namespace/model 或带 tag），
+  与 Web / Hub API 共用路径形态 /library/{namespace}/{model} 对齐
+  （注意：此处 /v1/models 是 OpenAI 兼容列表，不是 Hub 元数据 API）。
+
+
+勘误（/v1/messages 已实现，不再是 reserved）：
+代码中 POST /v1/messages 已注册并接入 AnthropicMessagesMiddleware
+（server/routes.go，与 /v1/chat/completions、/v1/responses 同组注册）。
+因此：
+- 上方 API 结构图中 /v1/messages 的「(reserved) 未来计划支持」标注已过期。
+- 第九章 P1 第 13 项「Anthropic Compatible（/v1/messages，reserved → 实现）」
+  应改为「验证 / 补文档 / 补测试」，而不是从零实现。
+- 「标注规则」一节中要求打 (reserved) 标记的约定同步作废，
+  对外文档应直接按「已支持 Anthropic Messages API」描述。
+
+
+2.1 补充：代码中已存在但未列入上方 API 结构图的路由
+
+上方结构图是「目标结构」，与仓库当前实现存在差集。
+以下路由在代码中已注册（server/routes.go），文档结构图中缺失。
+落地时需要逐条决定「保留 / 下线 / 仅本地可用 / 云端也暴露」，不要默认忽略：
+
+/v1 侧：
+- POST   /v1/responses            OpenAI Responses API（已实现）
+- POST   /v1/responses/compact    Responses 上下文压缩（Susan 扩展）
+- POST   /v1/audio/transcriptions 语音转写（已实现）
+- GET    /v1/models/:model        单模型详情（已实现；含 namespace 时须 URL 编码，见上文）
+
+/api 侧：
+- GET    /api/status              运行时状态（与本文档新增的 /api/health 重叠，见上文勘误）
+- POST   /api/me                  当前登录用户校验（注意：不是 /auth/me，见第七章勘误）
+- POST   /api/signout             登出
+- DELETE /api/user/keys/:encodedKey  登出（deprecated 路径，保留兼容）
+- POST   /api/embeddings          旧版 Embedding 路径（legacy，与 /api/embed 并存）
+- POST   /api/blobs/:digest       Blob 上传
+- HEAD   /api/blobs/:digest       Blob 存在性检查
+- POST   /api/experimental/web_search              联网搜索（experimental）
+- POST   /api/experimental/web_fetch               网页抓取（experimental）
+- GET    /api/experimental/model-recommendations   模型推荐（experimental）
+
+勘误（/api/blobs 并非「新增」）：
+上方结构图将 /blobs 标为「[新增] 自建 Registry 时需要」，
+但 /api/blobs/:digest 的 POST / HEAD 在代码中早已存在，用于 create 流程的模型文件上传。
+自建 Registry 需要新增的是 Registry 侧的 blob 分发端点（registry.susan.com），
+与 Engine 侧已有的 /api/blobs 不是同一个东西，文档中应分开描述。
+
+关于 experimental 路由：
+/api/experimental/* 属于上游随时可能变更的实验接口。
+Susan 对外文档不应承诺其稳定性，但需要在「上游同步策略」（第十七章）中纳入跟踪范围。
+
 3. /auth/
 身份认证。
 
@@ -451,8 +579,8 @@ POST /auth/token    CLI / Desktop 按 interval 轮询换 access_token / refresh_
 - 登录设备
 - Session
 
-5. /models/
-Model Hub 后端。
+5. /library/
+Model Hub 后端（元数据 API，挂在 api.susan.com）。
 
 负责模型的：
 - 搜索
@@ -465,9 +593,69 @@ Model Hub 后端。
 - Tags
 
 注意：
-/models/ 主要管理模型元数据。
-
+/library/ 主要管理模型元数据。
 真正的大模型文件不应该全部由 API Server 直接提供。
+
+【决策定稿】Web 与 Hub 元数据 API 使用同一路径公式（仅主机不同）：
+
+    网页：susan.com/library/{namespace}/{model}
+    API ：api.susan.com/library/{namespace}/{model}
+
+例子（模型 qwen/qwen2.5-70b）：
+
+    网页：susan.com/library/qwen/qwen2.5-70b
+    API ：api.susan.com/library/qwen/qwen2.5-70b
+
+跨层对照：
+
+    层                形态                                              例子
+    ---------------------------------------------------------------------------------
+    Web 详情          susan.com/library/{namespace}/{model}             /library/qwen/qwen2.5-70b
+    Hub 元数据 API    api.susan.com/library/{namespace}/{model}         /library/qwen/qwen2.5-70b
+    Registry 协议     .../v2/{namespace}/{model}/manifests/{tag}         /v2/qwen/qwen2.5-70b/...
+    推理请求体        "model": "{namespace}/{model}:{tag}[:cloud]"      "qwen/qwen2.5-70b:latest"
+    CLI               susan pull|run {namespace}/{model}[:tag][:cloud]  susan run qwen/qwen2.5-70b
+
+要点：
+- 站点与 Hub API 的 path 完全一致，都是 /library/...；前端同一字符串换主机即可。
+- 旧稿曾写 api.susan.com/models/... 作为 Hub 元数据 API，已废止，改为 /library/...。
+- OpenAI 兼容层的 /v1/models、/v1/models/:model 保持不动（生态兼容路径，不是 Hub 元数据）。
+- /account/models 是账号中心「我的模型」，与 Hub /library 无关。
+- 官方缺省：短链 /library/{model} ⇔ CLI 省略 namespace ⇔ API 同为 /library/{model}
+  （完整形 /library/official/{model}）。
+- 官方别名 susanofficial 与 official 同义（见 8.2）。
+- susancloud 专属：api.susan.com/library/susancloud/{model}，
+  推理常用 "model": "susancloud/{model}:cloud"。
+
+白话说明：
+
+① 同一个模型，网页和查资料 API 的路径一模一样，只换域名：
+     susan.com/library/qwen/qwen2.5-70b
+     api.susan.com/library/qwen/qwen2.5-70b
+
+② 「susancloud」和「:cloud」不是一回事：
+     susancloud/xxx  —— 这是谁的模型（Susan 云端收费产品线）
+     xxx:cloud      —— 这次请求跑在哪里（走云端 GPU）
+   常见写法：susan run susancloud/deepseek-r1:cloud
+
+③ OpenAI 兼容的「用 URL 查模型」仍要注意斜杠：
+     GET /v1/models/qwen/qwen2.5-70b     ← 易 404
+     GET /v1/models/qwen%2Fqwen2.5-70b   ← 编码后可用
+   或直接走 Hub API（路径与网页一致，无此问题）：
+     GET https://api.susan.com/library/qwen/qwen2.5-70b
+   日常聊天把名字放 JSON 身体里即可：
+     POST /v1/chat/completions  {"model":"qwen/qwen2.5-70b", ...}
+
+列表类 API 与 Web 列表页对应（path 相同，仅主机不同）：
+- GET api.../library/search    ↔  susan.com/library/search
+- GET api.../library/featured  ↔  susan.com/library/featured
+- GET api.../library/latest    ↔  susan.com/library/latest
+- GET api.../library/trending  ↔  susan.com/library/trending
+
+详情响应建议至少包含：
+namespace、model、full_name（namespace/model）、web_url、tags、
+license、commercial_use、is_cloud_exclusive（susancloud 为 true）等字段，
+便于前端与计费无需再拼接猜测。
 
 6. /billing/
 商业计费。
@@ -507,8 +695,11 @@ Susan Cloud 控制层。
 - GPU Cluster
 
 推理入口仍是 /api/chat、/api/generate、/v1/chat/completions。
-用 model 字段的 cloud/ 前缀分流（见「8.5 云端模型调用路由标记」），
+用 model 字段的 :cloud / :local 后缀分流（见「8.7 一体化规范」），
 不用 /cloud/ 做推理，也不用请求体 {"cloud": true} 等非标准字段。
+网关在转发前剥离路由后缀，还原真实模型名再投递 Runtime。
+model 全名中的 {namespace}/{model} 与 Web / Hub API 的
+/library/{namespace}/{model}（仅主机不同）为同一路径键（见第三章 /library/ 对照表）。
 
 8. /system/
 系统接口。
@@ -531,7 +722,7 @@ Susan Cloud 控制层。
 | ollama.com                          | susan.com                           | Website                   | Susan 的官方 Web 产品入口。负责品牌、产品介绍、下载、Model Hub、Docs、Account 等。                |
 | Ollama Model Library                | Susan Model Hub                     | Model Registry / Website  | Susan Web 的核心组成。负责模型发现、搜索、详情、版本、标签和模型生态。                              |
 | Ollama Model Detail                 | Susan Model Detail                  | Website                   | 展示单个模型的详细信息、版本、能力、参数、许可证、使用方式等。                                     |
-| Ollama Search                       | Susan Model Search                  | Website / API             | 用户可以搜索模型。后端对应 `/models/search`。                                                  |
+| Ollama Search                       | Susan Model Search                  | Website / API             | 用户可以搜索模型。Web `/library/search`；API `api.susan.com/library/search`。 |
 | Ollama Account                      | Susan Account                       | User System               | 统一管理用户资料、模型、API Key、设备、Usage、Billing 和 Settings。                              |
 | Ollama Sign In                      | Susan Sign In                       | Authentication            | Susan Web 用户登录入口。对应 `/signin` 和 `/auth/login`。                                        |
 | Ollama Sign Up                      | Susan Sign Up                       | Authentication            | Susan Web 用户注册入口。对应 `/signup` 和 `/auth/register`。                                     |
@@ -599,6 +790,11 @@ Susan Cloud 控制层。
     这一层应该尽可能保持与 Ollama API 的行为和接口兼容。
     对外暴露需显式设置 SUSAN_HOST=0.0.0.0:14343，由用户自行决定。
 
+    勘误（措辞）：
+    「与 Ollama 一致」指的是「仅监听本机 loopback」这一策略一致，
+    端口号本身并不一致（Ollama 为 11434，Susan 为 14343）。
+    代码现状：envconfig/config.go 中 SUSAN_HOST 默认值为 127.0.0.1:14343。
+
 
 05. ollama.com
     ↓
@@ -633,6 +829,8 @@ Susan Cloud 控制层。
 
     说明：
     展示单个模型的详细信息、版本、能力、参数、许可证、使用方式等。
+    Web URL 定稿：susan.com/library/{namespace}/{model}（官方可缺省 namespace）。
+    Hub API 同路径：api.susan.com/library/{namespace}/{model}。与 CLI 全名一对一，见 8.7.5。
 
 
 08. Ollama Search
@@ -643,7 +841,7 @@ Susan Cloud 控制层。
 
     说明：
     用户可以搜索模型。
-    后端对应 /models/search。
+    Web 与 API 同路径：/library/search（主机分别为 susan.com 与 api.susan.com）。
 
 
 09. Ollama Account
@@ -701,6 +899,13 @@ Susan Cloud 控制层。
     Susan Cloud 的 Native API。
     客户端可以通过相同的模型操作逻辑访问 Cloud。
 
+    落地前置（当前代码尚未指向 api.susan.com）：
+    代码中 Cloud 侧地址目前硬编码为 https://ollama.com
+    （server/routes.go 的 WhoamiHandler，源码内有 // todo allow other hosts），
+    远程模型白名单 SUSAN_REMOTES 的默认值同样是 ollama.com。
+    在「Cloud 端点抽象」完成前，本项无法落地，
+    详见第七章 3.5 与第九章 [P0 前置依赖]。
+
 
 14. ollama.com/v1
     ↓
@@ -739,6 +944,9 @@ Susan Cloud 控制层。
     MVP 策略：
     - MVP 阶段 pull 走 registry.ollama.com（只读）
     - 后续 Susan Model Hub 建好后，pull/push 都切到 registry.susan.com
+
+    勘误（Registry 域名）：上述 registry.ollama.com 应为 registry.ollama.ai，
+    详见 8.4 节末的「勘误（Registry 域名）」。
 
 
 17. Ollama Model Push
@@ -877,6 +1085,8 @@ Susan Cloud 控制层。
     独立部署在 admin.susan.com，不在主站 susan.com 路由下。
     安全策略详见第八章。
 
+    勘误（交叉引用）：应为「第十一章 admin.susan.com 安全策略」。
+
 
 25. Ollama Local + Cloud Product Model
     ↓
@@ -974,7 +1184,10 @@ Susan Cloud 控制层。
 
 5. /v1/ 是兼容 OpenAI / Anthropic 等生态的 API 层。
 
-6. /models/ 管理 Model Hub 的元数据，不等于模型文件存储。
+6. /library/ 管理 Model Hub 的元数据，不等于模型文件存储。
+   Web 与 API 同路径：susan.com/library/{namespace}/{model}
+   与 api.susan.com/library/{namespace}/{model}（仅主机不同）。
+   OpenAI 兼容的 /v1/models 是另一套路径，不要与 Hub /library 混淆。
 
 7. 大型模型文件应该逐渐迁移到 Object Storage + CDN。
 
@@ -1002,12 +1215,63 @@ Susan Cloud 控制层。
     - 基于 ~/.susan 的本地轻量存储
     - 零 Payload 侵入（不用 {"cloud": true} 等非标准请求体字段）
 
+12. 仓库边界（决策定稿，两仓起步，拒绝四仓微服务拆分）：
+
+    AlbertLi255/Susan          # 现仓：CLI + Desktop + Local Engine（保持 upstream merge）
+    AlbertLi255/susan_web      # 新仓：官网 + Model Hub 前端 + MVP 薄 BFF
+
+    同一台机 / 同一 Modular Monolith 进程内：
+    Auth / Account / Billing / Model Hub API / Cloud Runtime —— 第一阶段不拆独立仓。
+
+    admin.susan.com：P2 再独立前端；后端可仍挂同一 Susan Server。
+
+    明确边界：
+    - CLI / Desktop 不进入 susan_web 仓。
+    - Web 只调用 api.susan.com（及自身 BFF），不内嵌 Local Engine。
+    - Local 仓通过 Cloud Host 抽象（SUSAN_CLOUD_HOST）连接云端（见 P0-a）。
+    - 拒绝立刻拆 susan-cloud / susan-admin 独立服务仓；拆分时机以用户量与 GPU 数量为准
+      （与本条第 10 款一致）。
+
+13. API 分层（决策定稿，不引入 Native /v2）：
+
+    /api/*   = Susan Native / Ollama-compatible（不是「旧版 API」）
+    /v1/*    = OpenAI / Anthropic / Responses 等生态兼容层
+
+    - 永不引入 /v2 作为「新 Native」；那等于放弃与 Ollama 生态对齐。
+    - 对外文档分栏维护：Native（/api）与 Compatibility（/v1），互不混写示例。
+    - 弃用策略只针对个别 legacy 路径（如 /api/embeddings），不对整个 /api 写弃用时间表。
+
+14. 本地 ↔ 云端数据同步（决策定稿）：
+
+    - 不做「本地已装模型 ↔ 云端订阅」双向同步（二者不是同一对象）。
+    - 不做 MVP 级跨设备偏好同步；本地以 ~/.susan/config.json 为准，云端偏好属 P2+。
+    - Usage / 计费只认 Cloud Runtime 出口的单向计量（见第十五章），无双向冲突可解。
+    - 若未来要做「云端偏好下发」，单独开需求，不塞进当前 MVP。
+
+15. 端口与暴露面（决策定稿）：
+
+    Susan Local API：127.0.0.1:14343（仅本机 loopback，默认不鉴权）
+    Susan Cloud API：https://api.susan.com:443（强制 TLS + 鉴权）
+
+    两者不得在文档或配置示例中混用端口语义。
+
 
 七、认证流程
 ----------------------------------------
 
 Susan 统一采用 OAuth 2.0 Device Authorization Grant（Device Code Flow）
 作为 CLI / Desktop / 终端设备登录主流程，并配合终端直接登录（Terminal Login）作为统一兜底。
+
+勘误（小节编号）：
+本章小节沿用 3.1 / 3.2 / 3.3 / 3.4 / 3.5 编号，属历史遗留（从旧文档迁入时未改）。
+它们均属于「第七章 认证流程」，阅读时按 7.1 / 7.2 / 7.3 / 7.4 / 7.5 理解。
+为避免已有交叉引用失效，此处不改号，后续新章节不再使用 3.x 编号。
+
+重要前置（必读）：
+本章描述的 Device Flow 是「目标方案」。
+仓库当前已经存在一套可用的登录机制（设备 SSH 密钥签名 + 浏览器 signin URL 轮询），
+两者关系必须先定清楚再开工，否则会出现两套并行且互不认识的身份体系。
+详见本章 3.5「与代码现状的对齐」。
 
 3.1 三条登录路径
 
@@ -1129,6 +1393,82 @@ Windows：
 程序创建 auth.json 时利用 Windows API / ACL 显式去除 Everyone 和 Users 组的读取权限，
 仅保留当前用户（Current User）及 SYSTEM 的完全控制权（Full Control）。
 
+3.5 与代码现状的对齐（Device Flow ↔ 现有设备密钥登录）
+
+代码现状（仓库中已经在跑的机制）：
+
+- 设备密钥：auth/auth.go 读取 ~/.susan/id_ed25519，
+  用 SSH 私钥对请求做签名，签名格式为 <pubkey>:<base64 signature>。
+  即 3.4 中列出的 id_ed25519 / id_ed25519.pub 并不是「预留文件」，
+  而是当前登录机制的核心凭证。
+- 身份校验：POST /api/me（server/routes.go 的 WhoamiHandler）。
+  注意端点是 /api/me，不是本文档 /auth/ 一节写的 /auth/me。
+- 未授权响应：{"error": "unauthorized", "signin_url": "..."}，
+  客户端据此打开浏览器完成登录，再轮询确认。
+- CLI / Desktop 侧已有对应的登录 UI 与轮询逻辑（cmd/tui/signin.go 等）。
+- 云端地址目前硬编码为 https://ollama.com（WhoamiHandler 中有 // todo allow other hosts），
+  尚未指向 api.susan.com。
+
+需要先做的决策（三选一，未定之前 Device Flow 不要开工）：
+
+方案一（推荐，增量最小）：Device Flow 包住现有密钥机制。
+- Device Flow 只负责「把用户账号和这台设备绑定」。
+- 授权完成后，服务端记录该设备的公钥（来自 ~/.susan/id_ed25519.pub）。
+- 后续 API 调用仍沿用现有的密钥签名链路，access_token 仅用于 Web / Billing 等 SaaS 接口。
+- 优点：不推翻已完成的 CLI / Desktop 登录体验，改动集中在服务端。
+
+方案二：Device Flow 完全替换密钥签名。
+- CLI / Desktop 改为纯 Bearer Token 调用，id_ed25519 降级为可选的设备指纹。
+- 优点：与 OAuth 生态统一，Token 可吊销、可刷新。
+- 代价：需要同步改造 CLI、Desktop、/api/me、push 鉴权，且与上游 fork 的冲突面变大
+  （详见第十七章 上游同步策略）。
+
+方案三：两者并存。
+- 明确各自适用范围：密钥签名用于 Engine ↔ Registry / Cloud Runtime，
+  Token 用于用户级 SaaS 接口。
+- 代价：两套凭证的生命周期、吊销、审计都要各做一遍，长期维护成本最高，不推荐。
+
+【决策定稿】锁定方案一。
+
+落地节奏：
+- P0：Web Login + 现有 CLI/Desktop signin_url 轮询打通到 api.susan.com
+      （Cloud Host 抽象完成之后）。
+- P0.5：正式 RFC 8628 的 /auth/device + /auth/token 端点可随后补齐；
+        身份模型不变——Device Flow 只做账号↔设备公钥绑定。
+- API Key：Cloud 付费推理上线前必须具备「至少一把可吊销的 Bearer Key」；
+          可延后的是多 Key、scopes、精细权限（原 P1-11 的增强部分），
+          不是整条 API Key 能力延后到商业化末期。
+- 明确拒绝「初期只用 access_token + refresh_token、完全不要 API Key」作为
+  Cloud 开放 API 的唯一形态（与 OpenAI / Ollama 生态用法不一致）。
+
+无论选哪一套，以下三项都必须落实：
+
+1. 端点命名统一：确定对外是 /auth/me 还是 /api/me。
+   若要新增 /auth/me，需保留 /api/me 作为兼容路径，不可直接下线（客户端已在用）。
+2. Cloud 端点抽象：移除 WhoamiHandler 中硬编码的 https://ollama.com，
+   改为可配置（如 SUSAN_CLOUD_HOST），并同步调整 SUSAN_REMOTES 默认白名单
+   （envconfig/config.go 中当前默认值为 ollama.com）。
+   这是 P0 第 9 项「api.susan.com/api」的硬前置，详见第九章 [P0 前置依赖]。
+3. 设备列表打通：/account/devices 展示的设备，其身份来源必须与上面选定的方案一致
+   （是设备公钥，还是 device_code 授权记录）。
+
+3.6 Device Flow 状态机补全（RFC 8628 必需项）
+
+3.1 中只定义了 slow_down 一种错误。完整实现至少还需要以下轮询响应状态，
+均为 HTTP 400 + OAuth 错误体格式：
+
+- authorization_pending：用户尚未完成授权，CLI 按原 interval 继续轮询（最常见状态）。
+- slow_down：轮询过快，CLI 将 interval 增加 5 秒后继续（已在 3.1 定义）。
+- access_denied：用户在浏览器中明确拒绝授权，CLI 立即停止轮询并提示。
+- expired_token：device_code 已超过 expires_in（900 秒），CLI 停止轮询并提示重新发起登录。
+
+另外两项安全要求：
+
+- device_code 一次性消费：成功换取 token 后立即失效，防止重放。
+- user_code 字符集：排除易混字符 0 / O / 1 / I / L，
+  建议使用 23456789ABCDEFGHJKMNPQRSTUVWXYZ 作为取值集合，
+  并保持 3.1 中 SUSA-8821 这类「四位 + 连字符 + 四位」的分组格式便于人工输入。
+
 
 八、模型 Namespace 命名规范
 ----------------------------------------
@@ -1140,80 +1480,275 @@ Windows：
     {namespace}/{model}:{tag}
 
 示例：
-    library/qwen3:latest
+    official/qwen3:latest
+    susanofficial/qwen3:latest   （官方别名，与 official 同义）
     alice/my-finetune:v1.0
+    susancloud/deepseek-r1:latest
 
 8.2 官方模型简写规则
 
-省略 {namespace} 时，系统默认补充为 library。
+【决策定稿】Susan 官方默认 Namespace 主名为 official（全小写）。
+susanofficial / susanOfficial 为官方别名，解析到同一批官方模型；
+对外文档与永久链接推荐写 official；存储与 CLI 一律归一成小写。
+
+省略 {namespace} 时，系统默认补充为 official。
 
 即：
 
     susan run qwen3
     等价于
-    susan run library/qwen3
+    susan run official/qwen3
+    也等价于
+    susan run susanofficial/qwen3
 
 省略 {tag} 时，系统默认补充为 latest。
 
 即：
-    susan run library/qwen3
+    susan run official/qwen3
     等价于
-    susan run library/qwen3:latest
+    susan run official/qwen3:latest
 
-8.3 网页 URL 映射
+与 Ollama / MVP 拉模兼容：
+- 上游 registry.ollama.ai 上官方模型物理路径仍是 library/...。
+- Susan 对外与自有 Registry 使用 official（及别名 susanofficial）。
+- MVP 阶段 pull 走 ollama 时，客户端/网关做映射：
+    official/{model}  ↔  library/{model}（仅拉上游时）
+  自建 registry.susan.com 就绪后，官方模型直接落在 official/ 下，不再依赖 library。
+- library 保留为保留字与兼容别名，不再作为 Susan 对外主推的官方 Namespace 名称。
 
-(1) 官方模型详情页
-    统一为：https://susan.com/library/models/{model}
-    示例：https://susan.com/library/models/qwen3
+8.3 网页 URL 映射（已被 8.7.5 统一公式覆盖）
 
-    兼容形式：https://susan.com/library/library/{model}
-    （与 Ollama 的 /library/{namespace}/{model} 路径保持一致，用于历史链接兼容）
+旧稿（保留备查，不再作为新链接生成规则）：
+(1) 官方：https://susan.com/library/models/{model}
+(2) 用户：https://susan.com/library/{username}/{model}
 
-(2) 用户 / 社区模型详情页
-    统一为：https://susan.com/library/{username}/{model}
-    示例：https://susan.com/library/alice/my-finetune
+正式规则：https://susan.com/library/{namespace}/{model}（见 8.7.5）。
+官方 library 命名空间可缺省为 https://susan.com/library/{model}。
+旧根路径 https://susan.com/{username}/{model} 仅作 301 兼容。
 
 8.4 Pull / Push 命名
 
 - Pull MVP：
     susan pull qwen3
     susan pull library/qwen3:latest
-    实际从 registry.ollama.com 拉取（MVP 阶段）
+    实际从 registry.ollama.ai 拉取（MVP 阶段；域名勘误见下）
 
 - Push（后续启用）：
     susan push alice/my-finetune:v1.0
     推送到 registry.susan.com（自建 Registry 建好后启用）
 
-8.5 云端模型调用路由标记
+- HF 直拉（一体化规范新增，表达层能力）：
+    susan pull hf:owner/repo
+    Web 对应页：susan.com/hf/{owner}/{model}
 
-Ollama 核心哲学：零 Payload 侵入，完全依靠模型名称 / 命名空间（Namespace）控制路由。
+勘误（Registry 域名）：
+本文件早期多处写作 registry.ollama.com，与代码现状不符。
+代码中使用的 Registry 域名是 registry.ollama.ai
+（见 server/model_resolver.go 注释与本地 manifests 目录结构
+ ~/.susan/models/manifests/registry.ollama.ai/library/...）。
 
-不使用 {"cloud": true} 等非标准请求体参数，保持与 OpenAI 及 Ollama 核心 API 完全一致。
+两个域名不是一回事，实现时不可混用：
+- ollama.com        ：网站与 Cloud API 域，也是 SUSAN_REMOTES 的默认白名单值
+                      （envconfig/config.go，默认 "ollama.com"）
+- registry.ollama.ai：模型 Registry 域，pull 时实际解析的目标
 
-路由实现规则：
+凡文档中出现 registry.ollama.com 的位置，一律按 registry.ollama.ai 理解。
+未来切换自建 Registry 时，对应替换目标为 registry.susan.com。
 
-本地模型：qwen2.5:70b 或 llama3:latest
-云端模型：通过命名空间前缀或标签区分，如 cloud/qwen2.5:70b 或 qwen2.5:70b-cloud。
+8.5～8.6（旧稿）已被 8.7 覆盖
 
-路由解析逻辑：
-API Gateway / Local Daemon 收到请求后解析 "model" 字段：
+以下内容为历史勘误与保留字初稿，阅读时以 8.7 为准。
+旧 8.5 正文中的 cloud/ 前缀方案已废止；旧 8.5.1 / 8.6 的正确结论已并入 8.7。
 
-{
-  "model": "cloud/qwen2.5:70b",
-  "messages": [{"role": "user", "content": "Hello"}]
-}
+8.7 Susan Model Hub 命名空间与云端路由一体化设计规范（决策定稿）
 
-若判断前缀带有 cloud/，Gateway 直接转发至云端推理集群，
-并自动附带本机 Auth Header (Authorization: Bearer <token>)；
+================================================================================
+核心设计哲学
+协议层对齐 Docker V2 / Ollama，表达层兼容 Hugging Face，网关层做零侵入路由映射。
+================================================================================
 
-若无 cloud/ 前缀，优先路由至本地 GPU 引擎运行。
+8.7.1 总体分层架构（Three-Layer Architecture）
+
+(1) 表达层（Expression Layer — 用户 / CLI / Web 视角）
+- 采用 Hugging Face / GitHub 的简洁命名空间逻辑，格式为：
+
+      [owner/]model[:tag][:cloud|:local]
+
+- 官方模型简洁表达（如 qwen2.5:70b），UGC 模型显式包含 Owner（如 alice/my-qwen）。
+- 彻底区分路由与命名空间，绝不使用 cloud/ 占据 Owner 位置，保证表达层语法纯净。
+
+(2) 协议层（Protocol Layer — Docker Registry V2 标准）
+- 底座完全对齐 Ollama / Docker Registry V2，确保兼容 Ollama SDK 及生态工具。
+- 协议内部物理路径保持：
+      /v2/library/{model}          （官方）
+      /v2/{owner}/{model}          （UGC）
+
+(3) 网关层（Gateway Layer — 动态路由与 Payload 剥离）
+- 识别 Tag 中的路由标记（:cloud / :local），完成云端 / 本地分流。
+- 在将请求投递给上游 Runtime 之前，自动剥离 :cloud / :local 后缀，还原真实模型名称。
+- 零 Payload 侵入：不使用 {"cloud": true} 等非标准请求体字段。
+
+8.7.2 云端与本地模型路由规范
+
+(1) 路由标记标准语法
+- 本地推理：qwen2.5:70b 或 qwen2.5:70b:local
+- 云端推理：qwen2.5:70b:cloud 或 alice/my-qwen:cloud
+
+与代码对齐（internal/modelref/modelref.go）：
+- :cloud / :local 为后缀解析；同时出现返回 ErrConflictingSourceSuffix。
+- pull 阶段 legacy 名 qwen2.5:70b-cloud 仅作内部兼容转换，不对外文档推荐。
+
+(2) 拒绝 / 排除的旧方案（Decision Log）
+- 拒绝 cloud/ 前缀：避免与 Web / Model Hub 用户名（如 susan.com/cloud）致命碰撞，
+  且会被 ParseName 误解析为 namespace=cloud 的用户模型。
+- 拒绝 @cloud/ 前缀：无需引入额外非标准解析器，保持与标准 modelref 语法兼容。
+- 拒绝 :remote 别名：收敛 API 概念，对外仅保留唯一的 :cloud，消除同义词分裂。
+
+(3) 网关层执行流程
+
+    [客户端请求: qwen2.5:70b:cloud]
+                │
+                ▼
+    [Local API / Gateway 匹配 :cloud] ────► 转发至 https://api.susan.com:443
+                │                              （附带本机 Auth：密钥签名或 Bearer）
+                ▼
+    [Tag 剥离（Tag Stripping）]       ────► 剥离 :cloud，还原为 qwen2.5:70b
+                │
+                ▼
+    [投递 Cloud Runtime]              ────► 推理并以 SSE / NDJSON 返回流
+
+(4) 缺省兜底策略（无 :cloud 也无 :local）
+- 当用户仅指定 qwen2.5:70b 时：
+  优先检查本地 14343 Daemon 是否已下载该权重；
+  若存在则本地运行；
+  若不存在则提示拉取（susan pull …）或改用 :cloud 运行。
+- 显式 :local 时：仅本地；本地无权重则报错，不自动转云。
+
+8.7.3 Model Hub Web 站 URL 与防冲突设计
+
+(1) 列表与品牌（不变）
+
+澄清：对外叫 Model Hub；列表路径继续用 /library，对齐 Ollama。
+不必、也不要把 /library/featured 改成 /models/featured。
+
+- Hub 首页：      susan.com/library
+- 搜索 / 精选 / 最新 / 热门：
+                  susan.com/library/search
+                  susan.com/library/featured
+                  susan.com/library/latest
+                  susan.com/library/trending
+- 可选短链：      susan.com/models  → 301 → /library
+                  （仅首页别名；不迁移 featured 等子路径）
+
+曾出现的误写「/models/featured（原 /library/featured）」已废止，不是定稿。
+
+详情页统一公式见下节 8.7.5（覆盖本节旧版「根路径 /{username}/{model}」写法）。
+
+(2) 路由优先级与保留字
+
+- 静态保留字最高优先级：
+      /docs /download /pricing /library /hf /models /account
+      /signin /signup /device /settings /blog /api（若同域）
+      以及 /library 下的 search / featured / latest / trending
+- /library/{namespace}/{model} 中的 {namespace} 不得等于上述列表段名。
+- 用户注册与 Registry push 强制黑名单（见下表），不能只在前端拦截。
+- 旧根路径 /{username}/{model}：若仍收到请求，301 → /library/{username}/{model}。
+
+(3) 保留字表
+
+    library、models、search、featured、latest、trending、
+    cloud、local、hf、api、admin、account、docs、blog、
+    signin、signup、device、download、system、susan、official、
+    susanofficial、pricing、settings、user、connect、susancloud
 
 说明：
-cloud/ 是路由前缀，不是用户 Namespace。
-官方模型仍可写 library/qwen2.5:70b（见 8.2）；
-cloud/qwen2.5:70b 表示显式走 Susan Cloud Runtime。
-客户端默认仍不必关心 GPU 落在哪台机器上；
-cloud/ 仅作为 Local / Cloud 的显式选择标记。
+- models：防抢注 + 可选短链 /models→/library；不等于 Hub API 用 /models。
+  Hub 元数据 API 定稿为 api.susan.com/library/...（与网页同 path）。
+- official / susanofficial：Susan 官方精选 Namespace（主名 official，别名 susanofficial），禁止用户注册。
+- susancloud：Susan 云端专属收费模型的官方 Namespace（Owner），禁止用户注册同名。
+- cloud / local：路由后缀语义空间，禁止占用为 Username（见 8.7.2 Decision Log）。
+- library：既是站点/Hub API 的路径前缀，也是兼容保留字；
+  MVP 拉上游 ollama 时内部仍可能映射到上游的 library namespace。
+
+8.7.4 综合映射与三方对比总表
+
+场景/维度         Ollama 生态             Hugging Face 生态      Susan 一体化方案
+--------------------------------------------------------------------------------
+官方模型标识     qwen2.5:70b             Qwen/Qwen2.5-70B       qwen2.5:70b
+UGC 模型标识      alice/qwen:8b           alice/qwen             alice/qwen:8b
+云端推理标记     不支持 (仅本地)         不支持 (需 API Key)     qwen2.5:70b:cloud
+Susan 云端专属   无                      无                     susancloud/{model}[:cloud]
+Web 详情 URL     /library/...            /{owner}/{repo}        /library/{namespace}/{model}
+HF 模型直拉      不支持                  hf-cli download        susan pull hf:owner/repo
+API 协议底座     Docker V2 Registry      Git / HTTP API         Docker V2 Registry
+网关路由动作     本地加载                云端 API 交互          识别 :cloud 并剥离后缀
+
+8.7.5 Web URL ↔ CLI 全命名空间一对一映射（决策定稿）
+
+核心公式：
+
+    Web：  https://susan.com/library/{namespace}/{model}
+    CLI：  susan pull|run {namespace}/{model}[:tag][:cloud|:local]
+
+/library/ 后面接的就是模型的全命名空间（Namespace）路径，
+与 CLI 实现 100% 一对一精确映射。无论模型属于谁、是否收费，公式不变。
+
+分类对照表：
+
+分类                         Namespace              Web URL 示例                                      CLI 示例
+--------------------------------------------------------------------------------------------------------------
+Susan 云端专属收费模型       susancloud             susan.com/library/susancloud/deepseek-r1           susan run susancloud/deepseek-r1:cloud
+知名厂商 / 厂商模型          公司名（qwen/meta）   susan.com/library/qwen/qwen2.5-70b                 susan run qwen/qwen2.5-70b
+个人 / 社区开发者            用户名（alice）       susan.com/library/alice/my-finetune                susan run alice/my-finetune
+官方默认精选模型             official（可缺省）    susan.com/library/qwen3                            susan run qwen3
+                                               （完整形：.../library/official/qwen3 ⇔ official/qwen3）
+                                               （别名：susanofficial/qwen3 ⇔ 同上）
+
+官方缺省规则（与 8.2 一致）：
+- CLI 省略 namespace → 默认补 official。
+- Web 允许短链 /library/{model}，等价于 /library/official/{model}。
+- 别名 susanofficial 与 official 同义；永久链接推荐 official。
+- 生成对外永久链接时，官方模型推荐短链；UGC / 厂商 / susancloud 必须带 namespace 段。
+
+与 :cloud 路由的正交关系（避免混用两个「cloud」概念）：
+
+    维度              机制                         例子
+    ------------------------------------------------------------------
+    归属 / 上架身份   Namespace（Owner）           susancloud/deepseek-r1
+    运行在哪          Tag 路由后缀 :cloud|:local    …:cloud → 走 Cloud Runtime
+    已拒绝的写法      cloud/ 前缀占 Owner          cloud/xxx（见 8.7.2）
+
+因此「susancloud 命名空间」≠「cloud/ 路由前缀」。
+前者是真实 Owner；后者是已废止的错误路由方案。
+收费云端模型的典型调用是：susan run susancloud/deepseek-r1:cloud
+（Namespace 标明产品线，:cloud 标明走云端推理）。
+
+HF 通道（不并入上述公式）：
+- susan pull hf:owner/repo 与页面 susan.com/hf/{owner}/{model} 仍保留，
+  作为 Hugging Face 代理 / 导入入口，不属于 Susan Registry 的 {namespace}/{model} 路径。
+- 若某 HF 模型被正式收录进 Susan Hub，应分配真正的 namespace 并生成
+  /library/{namespace}/{model} 主链接；/hf/... 可保留为来源说明页。
+
+8.7.6 与本文旧表述的冲突检查与覆盖结论
+
+冲突点                              旧表述                              定稿（以本节为准）
+------------------------------------------------------------------------------------------------
+UGC Web URL                         susan.com/{username}/{model}        susan.com/library/{username}/{model}
+官方 Web URL                        仅 /library/{model}                 短链保留；完整形 /library/official/{model}
+官方默认 Namespace                  library                             official（主名）；susanofficial 为别名；
+                                                                       MVP 拉 ollama 时 official↔library 映射
+根路径动态路由                      末级匹配 /{user}/{model}           废止为主规范；仅 301 兼容
+susancloud                          未定义                              官方保留 Namespace，禁止用户注册
+cloud/ 前缀                         旧 8.5 曾写、后废止                 继续废止；勿与 susancloud 混淆
+/library/featured → /models/...     曾误写                              继续废止
+列表页路径                          /library/search 等                  不变
+:cloud 后缀路由                     8.7.2                               不变，与 Namespace 正交
+Hub 元数据 API 路径                 /models/{namespace}/{model}         改为 /library/{namespace}/{model}，
+                                                                       与 Web 同 path、仅主机不同
+推理 /api /v1 的 model 字段         任意字符串                          必须与 CLI 全名一致；
+                                                                       susancloud 专属常用 …:cloud
+GET /v1/models/:model 含斜杠        未说明                              须 URL 编码；或改走
+                                                                       GET api.susan.com/library/{ns}/{model}
 
 
 九、当前开发重点
@@ -1237,9 +1772,10 @@ cloud/ 仅作为 Local / Cloud 的显式选择标记。
 5. Download
 6. Docs（docs.susan.com）
 7. Account
-8. Sign In / Sign Up（OAuth 2.0 Device Code Flow + Terminal Login）
+8. Sign In / Sign Up（Web Login + CLI/Desktop 现有 signin；身份锁定方案一，见 7/3.5）
 9. api.susan.com/api
 10. Cloud Model 基础能力（元数据列表 + 展示，不含推理）
+    仓库：susan_web 独立仓；Cloud 后端仍 Modular Monolith（见原则 12）
 
 [P1]
 11. API Keys
@@ -1259,6 +1795,47 @@ cloud/ 仅作为 Local / Cloud 的显式选择标记。
 23. GPU Scheduler
 24. Multi-GPU
 25. GPU Cluster
+
+
+[P0 前置依赖]（补充，需排在上述 P0 各项之前或并行）
+
+P0-a. Cloud 端点抽象
+     移除代码中硬编码的 https://ollama.com，改为可配置的 Cloud Host
+     （建议新增 SUSAN_CLOUD_HOST），并调整 SUSAN_REMOTES 默认白名单。
+     这是 P0 第 9 项「api.susan.com/api」和全部 Cloud 任务的硬前置。
+     涉及：server/routes.go（WhoamiHandler 及各 cloud passthrough）、envconfig/config.go。
+
+P0-b. 身份体系定稿
+     在 Device Flow 与现有设备密钥签名登录之间做出选择（第七章 3.5 三选一）。
+     未定稿前不要开工 P0 第 8 项，否则会产出两套互不认识的凭证体系。
+
+P0-c. Namespace 保留字表上线
+     注册接口与 Registry push 侧同时校验（见 8.6）。
+     该项必须早于开放用户注册，事后无法补救。
+
+P0-d. 数据模型定稿
+     users / api_keys / devices / usage_events 等核心表结构与存储选型（见第十四章）。
+     Account、API Keys、Usage、Billing 全部依赖它。
+
+
+[任务清单勘误]
+
+- P1 第 13 项「Anthropic Compatible（/v1/messages，reserved → 实现）」：
+  该接口在代码中已实现，任务性质应改为「验证 + 补文档 + 补测试」，工作量远小于原估。
+- P0 第 10 项「Cloud Model 基础能力（元数据列表 + 展示，不含推理）」
+  与第十章「第一台 GPU 服务器即 Susan Cloud MVP」的表述存在矛盾：
+  按 P0/P1 划分，Cloud 推理（P1 第 16 项）晚于第一台机器上线。
+  需要明确二选一：
+  (a) 第一台机器上线即含 Cloud 推理 → 把 P1 第 16 项提到 P0；
+  (b) 第一台机器先只承载 Web / API / Model Hub → 第十章改为「Susan Cloud 预备机」。
+- P0 当前包含 10 项（整站 + Account 七个子页 + Model Hub + Cloud 元数据），
+  对小团队偏重。建议再切一层「P0 最小可发布」：
+  官网首页 + /download + docs + 登录 + Model Hub 只读浏览，
+  其余 Account 子页顺延为 P0.5。
+
+[里程碑与验收]
+本文档目前只有优先级清单，没有完成标准（DoD）、排期和依赖关系。
+在开工前，每项至少需要补齐：负责人、依赖项、可验证的完成标准、预计周期。
 
 
 十、第一台 Susan Server 的定位
@@ -1343,6 +1920,18 @@ Ubuntu 24.04 LTS
 
 注意：图中 Cloud 分支下的 Runtime 名称为 Susan Cloud Runtime，
 不要简写为 Susan Engine（Susan Engine 专指 Local Engine）。
+
+性能与扩展（决策定稿，不单独开空话章节）：
+
+P0 / P1 只做：
+- 静态资源与安装包走 CDN（Cloudflare 等免费档即可）
+- API 网关限流（第十三章）
+- Engine 侧 SUSAN_MAX_QUEUE
+- Model Hub 元数据进程内缓存（MVP 不引入 Redis，见第十四章）
+
+明确延后（用户量与多节点出现后再做）：
+- Redis 响应缓存、读写分离、分片、水平扩展多实例
+- 这些属于第六章第 10 款「后期再拆服务」的范畴，不作为当前实施阻塞项
 
 
 十一、admin.susan.com 安全策略
@@ -1466,3 +2055,359 @@ Susan 当前正确的产品路线：
 - Susan Cloud
 
 作为 Susan 自己的商业化层。
+
+
+（以下第十三～十八章为补充章节，覆盖原文档缺失的实施要素。
+  原一～十二章内容全部保留，未做删减。）
+
+
+十三、限流、配额与错误语义
+----------------------------------------
+
+13.1 为什么必须有
+
+Susan Cloud 是付费服务，且单机 MVP 只有一张 24GB GPU。
+没有限流，单个用户的循环脚本就能占满整台机器，
+也无法区分「免费试用」与「付费额度」。
+本章为 Cloud 侧（api.susan.com）规范，Local API（127.0.0.1:14343）不做限流。
+
+13.2 三层限流维度
+
+第一层：IP 级（未认证请求）
+- 适用于 /auth/register、/auth/login、/auth/device、/library/search 等公开接口
+- 目的是防刷注册、防撞库、防爬虫
+- 建议：登录类 10 次 / 分钟 / IP；搜索类 60 次 / 分钟 / IP
+
+第二层：API Key 级
+- 单 Key 的 QPS 与并发上限
+- 便于用户自己定位是哪把 Key 打满了配额
+
+第三层：账户级（跨 Key 汇总）
+- 按 Plan 决定，是计费的实际依据
+- 免费：建议 20 次 / 天、并发 1、仅限指定小模型
+- 付费：按 Plan 给 RPM（每分钟请求数）与并发数
+
+13.3 错误语义（必须与 Device Flow 的 400 区分开）
+
+- 429 Too Many Requests：触发频率限制，必须带 Retry-After 响应头（单位：秒）
+  响应体：{"error": "rate limit exceeded", "retry_after": 30}
+- 402 Payment Required：余额 / Credits 耗尽，需要充值
+- 403 Forbidden：Plan 不包含该模型或该能力（如免费用户调用大模型）
+- 400 + {"error": "slow_down"}：仅用于 Device Flow 轮询（RFC 8628 规定），
+  与 429 是两套语义，不要混用
+
+13.4 流式请求的限流口径
+
+流式请求耗时长，按「请求数」限流会失真，必须同时限并发：
+- 建流时占用一个并发额度，流结束（正常或异常）时释放
+- 超出并发上限时，返回 429 而不是排队等待
+- 服务端需要兜底超时，防止异常断开导致并发额度泄漏
+
+13.5 与已有排队机制的关系
+
+代码中已有 SUSAN_MAX_QUEUE（envconfig/config.go，默认 512）控制 Engine 侧排队深度。
+两者层级不同，不可互相替代：
+- SUSAN_MAX_QUEUE 是 Runtime 层的保护，队列满时拒绝新请求
+- 本章限流是 API 网关层的商业策略，决定「谁能用多少」
+排队深度应显著小于限流阈值，否则用户会感知为「无响应」而不是「被限流」。
+
+
+十四、数据模型与存储选型
+----------------------------------------
+
+14.1 MVP 存储选型
+
+- 主数据库：PostgreSQL 单实例（与第十章单机部署一致）
+- 缓存：MVP 阶段不引入 Redis，用 Go 进程内 LRU 即可
+  第七章 3.2 描述的 Redis 二级缓存与 Pub/Sub 广播，
+  标记为「多 API 节点部署后启用」，属于 P1 而非 P0。
+  单机阶段引入 Redis 会与第六章第 11 条「单文件极简架构」原则冲突。
+- 模型文件：本地磁盘（~/.susan/models），后续迁 Object Storage + CDN（见第 23 项）
+
+14.2 核心表清单
+
+- users               账号主体、邮箱、密码哈希、状态、邮箱验证时间
+- sessions            Web 登录会话
+- device_codes        Device Flow 的 device_code / user_code / 状态 / 过期时间
+- devices             已登录设备，含设备公钥（对应 ~/.susan/id_ed25519.pub）
+- api_keys            API Key（字段见 14.3）
+- usage_events        用量流水（见第十五章）
+- plans               套餐定义
+- subscriptions       用户订阅状态
+- credits             余额与充值记录
+- invoices            账单
+- models_meta         Model Hub 元数据缓存（含 license 字段，见第十六章）
+
+14.3 api_keys 表字段（重要：补齐第七章 3.2 的缺口）
+
+第七章 3.2 规定「严禁存储明文 API Key，统一存 SHA-256 Hash」，方向正确，
+但仅存 hash 无法支撑 /account/keys 页面，必须补两个字段：
+
+    id           主键
+    user_id      所属用户
+    key_id       Key 的公开标识（建议取随机串前 8 位），可索引、可展示、可用于日志
+    key_hash     SHA-256(完整 API Key)，唯一索引，校验用
+    last4        明文末 4 位，仅用于界面展示
+    name         用户自定义名称
+    scopes       权限范围
+    created_at / last_used_at / revoked_at
+
+界面展示形态：sk-susan-8f9a....4b5c（前缀 + key_id + 末 4 位）。
+若不存 key_id 与 last4，用户无法分辨自己的多把 Key，出问题也无法定位，
+日志中也只能记录无意义的 hash。
+
+14.4 撤销语义（必须写入对外文档）
+
+第七章 3.2 的本地内存缓存 TTL 为 10~30 秒，这意味着：
+- 撤销 API Key 后，最长仍有约 30 秒的窗口期可以通过校验（单机无 Pub/Sub 时）
+- 已经建立的流式连接不受撤销影响，会一直持续到该次生成结束
+这两条是设计取舍而非缺陷，但必须在 API 文档中明确写出，
+否则用户会认为「撤销没生效」。
+如需立即失效，应在撤销时主动中断该 Key 名下所有进行中的流（依赖第十五章的 request_id 注册表）。
+
+14.5 其他
+
+- usage_events 只写不改（append-only），按月分区，便于归档与对账
+- 需要选定并固化数据库迁移工具，所有表结构变更走迁移脚本，禁止手改生产库
+- 备份策略见第十八章
+
+
+十五、Usage 计量与计费采集点
+----------------------------------------
+
+15.1 原文档缺什么
+
+第 21 项只列出了要记录的字段（User / Model / Tokens / Duration / Cost 等），
+但没有回答三个决定性问题：在哪一层采集、流式中断如何结算、如何防重复入账。
+这三项不定，Billing 无法开工。
+
+15.2 采集位置：唯一可信来源是 Cloud Runtime 出口
+
+- 计量点设在 Cloud Runtime 返回结果的出口处，不在客户端、不在 CLI
+- 客户端上报的任何用量数据都不可作为计费依据
+- Local Engine 的推理不产生计费事件（第六章第 9 条：Billing 不进 Local Engine）
+- 经由 cloud passthrough 转发的请求（/v1/* 各路径），
+  必须在转发层补齐计量，否则这部分用量会被漏记
+
+15.3 流式请求的结算口径
+
+- prompt_tokens：请求进入 Runtime 时即可确定，先行记录
+- completion_tokens：以最后一帧为准，正常结束时从 done 帧读取
+- 中途失败（OOM、断网、被 abort）：按「已生成的 token 照常计入」，
+  同时在 usage_events 中记录 status = error / aborted 与错误码
+  （这是一个商业决策，此处先定为「照计」；若改为「不计」，
+   需同步修改对账逻辑与用户协议，不可只改代码）
+- 客户端主动断开：Runtime 侧通过 context cancel 感知，按已生成部分结算
+
+15.4 幂等与防重
+
+- 每次推理请求分配唯一 request_id，作为 usage_events 的唯一键
+- 重试、网络抖动、补偿任务重复投递时，靠该唯一键去重
+- 该 request_id 与 /api/abort 所需的 ID 是同一个（见第三章 /api/abort 落地前置条件），
+  两处应共用同一套生成与注册机制，不要各做一套
+
+15.5 落库与对账
+
+- 计量事件异步写入（内存队列 + 批量落库），不阻塞推理响应
+- 写入失败进重试队列，仍失败则落本地文件，人工补录
+- 每日对账任务：比对 Runtime 日志与 usage_events 总量，偏差超阈值告警
+
+15.6 扣减顺序
+
+额度扣减按固定优先级，避免用户余额与订阅额度互相打架：
+
+    免费额度 → 订阅套餐额度 → Credits 余额 → 拒绝（402）
+
+
+十六、模型 License 与合规
+----------------------------------------
+
+16.1 风险点（原文档完全未覆盖，且是商业化的实质风险）
+
+Susan Cloud 是付费服务，把第三方模型接入付费推理属于商业使用。
+而 Model Hub 中相当一部分模型的许可证存在限制，典型包括：
+- 明确禁止商业用途
+- 要求显著署名 / 保留原始模型名称
+- 限制用于训练其他模型
+- 附加使用政策（Acceptable Use Policy），需向终端用户传递
+
+MVP 阶段 pull 走上游 Registry，模型由上游分发，风险相对可控；
+一旦在 Susan Cloud 上部署并**按调用收费**，责任主体就变成 Susan。
+
+16.2 上架审核机制
+
+- models_meta 表增加字段：license（SPDX 或原始名称）、
+  commercial_use（allowed / restricted / prohibited）、attribution_required
+- Cloud 侧可调用的模型采用**白名单制**：
+  只有 commercial_use = allowed 且经人工确认的模型才允许上架 Cloud Runtime
+- 本地可运行的模型不受此限制（用户在自己机器上运行，责任在用户侧）
+
+16.3 前台展示
+
+- Model Detail 页必须展示 License 全文链接与商用限制标识
+- 对 restricted / prohibited 的模型，在 Cloud 调用入口处禁用并说明原因
+- Susan 自有模型与第三方模型在 Model Hub 中分区展示，避免品牌混淆
+
+16.4 用户上传模型（push 启用后）
+
+- 上传时必须声明 License，并接受责任条款
+- 提供侵权举报入口与下架流程（含通知、申诉、恢复）
+- 保留下架操作日志
+
+16.5 数据合规
+
+- 明确用户 prompt / 输出是否落盘、保留多久、是否用于改进模型
+- 在隐私政策中写明，并在 Account Settings 中提供开关
+- 日志中禁止明文记录 prompt 内容（代码中 SUSAN_DEBUG_LOG_REQUESTS 仅限本地排查，
+  生产环境必须关闭）
+
+
+十七、上游 Ollama fork 同步策略
+----------------------------------------
+
+17.1 为什么这是长期最大成本
+
+Susan 是 Ollama 的 fork（第一章定位）。
+上游保持高频迭代，而 Susan 已经做了大量品牌化改名。
+若无同步策略，两条线会逐渐分叉到无法合并，
+最终失去「跟随上游能力演进」这一核心优势——
+而这恰恰与第十二章「不要重新创造一个类似 Ollama 的产品架构」的原则直接相关。
+
+17.2 同步节奏
+
+- 保留 upstream remote，跟随上游 release tag 合并，建议每月一次
+- 每次合并记录上游基线版本号，写入本文件或独立的 UPSTREAM.md
+- 合并后必须跑全量测试（go test ./...）与关键路径手工回归
+
+17.3 冲突高发区（改名带来的）
+
+以下位置每次合并几乎必然冲突，应重点关注：
+- envconfig/config.go：OLLAMA_* → SUSAN_* 全量改名
+- 默认端口：11434 → 14343
+- 数据目录：~/.ollama → ~/.susan（含 auth/auth.go 的密钥路径）
+- Registry 常量：registry.ollama.ai 相关引用
+- 品牌字符串：CLI 帮助文本、"Susan is running" 等响应内容
+- 本文档新增的 Susan 扩展（如 NDJSON 的 done 字段、/api/abort）
+
+17.4 降低冲突面的做法
+
+- 把品牌差异尽可能收敛到少数常量文件，避免散落在业务逻辑中
+- Susan 独有功能优先以新增文件实现，而不是修改上游既有文件
+- 对必须修改上游文件的地方，保持改动最小化，避免顺手重构
+
+17.5 上游实验接口的处理
+
+/api/experimental/* 属于上游随时可能变更或删除的接口。
+每次同步需确认其存在性，Susan 对外文档不承诺其稳定性。
+
+
+十八、可观测性、备份与安全基线
+----------------------------------------
+
+18.1 可观测性
+
+日志：
+- 结构化日志，request_id 贯穿 API 网关 → Runtime → usage_events
+- 生产环境必须关闭 SUSAN_DEBUG_LOG_REQUESTS（会记录请求体，含用户 prompt）
+- 分类：应用日志（业务）、访问日志（API 调用分析）、错误日志（堆栈排查）
+- 单机阶段可用本机文件 + 轮转；后续再集中收集（不必一上来上 ELK）
+
+指标（单机阶段：Prometheus + Grafana 或等价轻量方案即可）：
+- 系统：CPU、内存、磁盘、网络
+- 请求：QPS、延迟 P50 / P95、429 与 5xx 比例
+- 推理：token 吞吐、排队深度、模型加载耗时
+- GPU：利用率、显存占用、温度、推理延迟
+- 业务：活跃用户、Key 调用分布、额度消耗速度
+
+探针：
+- Engine 侧：/api/status（已存在）
+- Web / Cloud 网关侧：/system/health
+- 两者分别接入反向代理与外部监控
+
+告警阈值（MVP 建议起步值，可按实测调整）：
+- 系统：磁盘 > 85%、内存 > 90%、GPU 温度超厂商建议上限
+- 业务：5 分钟窗口 5xx 率 > 5%、P95 延迟持续高于基线 3 倍
+- 安全：同一 IP 登录失败 / 分钟超过第十三章限流阈值、异常大量 401
+- 告警通道：邮件或 IM Webhook 即可，单机阶段不做复杂 On-call 编排
+
+18.2 备份与灾备
+
+- PostgreSQL：每日全量 + WAL 归档，备份文件异地存放
+- ~/.susan 下的密钥与配置：纳入备份范围
+- 模型 blob：不必备份，可从 Registry 重新拉取（节省大量存储成本）
+- MinIO / 对象存储：单机阶段不做跨区域复制；有第二台机器后再谈
+- 恢复演练：每季度至少一次，验证「能从备份拉起库 + 配置」
+- 单机阶段必须接受「机器故障即服务中断」，
+  在 SLA / 用户协议中如实说明，不要承诺高可用
+- 明确拒绝把 RTO 4h / RPO 1h 写进对外 SLA，除非已有热备与演练证据；
+  内部运维目标可自定，但不对用户做无法兑现的承诺
+
+18.3 安全基线
+
+账号安全：
+- 密码哈希使用 argon2id（或 bcrypt），禁止 MD5 / SHA 系列裸哈希
+- 邮箱验证 token、重置密码 token 设置短 TTL（建议 30 分钟）且一次性消费
+- 登录失败次数限制与告警（与第十三章 IP 限流配合）
+
+Web 会话：
+- Session Cookie 设置 HttpOnly、Secure、SameSite=Lax
+- 状态变更接口做 CSRF 防护
+- 跨域策略通过 SUSAN_ORIGINS 控制（envconfig/config.go 已支持），
+  生产环境禁止配置为通配
+
+传输与暴露面：
+- 全站 TLS，由 Nginx / 反向代理终止（见第十章架构图）
+- Local API：127.0.0.1:14343（默认不鉴权）
+- Cloud API：https://api.susan.com:443（强制鉴权）
+- 用户设置 SUSAN_HOST=0.0.0.0:14343 后，本地 API 将不带鉴权暴露到局域网，
+  文档中必须给出明确风险提示（第七章 3.3 已写明 Local API 不强制鉴权）。
+
+密钥管理：
+- 数据库密码、第三方支付密钥等通过环境变量或密钥管理服务注入，禁止入库入仓
+- 制定轮换周期，并记录轮换操作
+
+合规补强（与第十六章配合）：
+- P0 发布前：隐私政策 + 服务条款 + HTTPS + 密码哈希规范
+- P1：账号注销与用户数据导出
+- 定期安全审计 / 漏洞扫描：按发布节奏执行，默认不作为「有客户合规硬需求」之外的上线阻塞项
+- 安全事件响应：保留操作日志，制定「发现 → 遏制 → 通知 → 复盘」最小流程
+
+
+十九、测试策略
+----------------------------------------
+
+19.1 原则
+
+仓内已有大量 *_test.go 与 integration 测试；本策略补的是分层说明与 Cloud / Web 缺口，
+不是从零发明测试文化。合 upstream 必须跑全量（见第十七章）。
+
+19.2 分层
+
+- 单元测试：核心业务逻辑（modelref 路由解析、鉴权校验、计费扣减顺序等）
+- 集成 / 契约测试：Cloud API 关键路径
+    /api/chat、/api/generate、/v1/chat/completions、
+    鉴权 401、限流 429、流式中途 error 帧
+- 端到端：Web 关键路径（signin、Model Hub 详情、download）
+- 性能：单卡并发与 SUSAN_MAX_QUEUE、第十三章限流联调
+- 安全：认证绕过、保留字注册、API Key 撤销窗口语义
+
+19.3 环境（单机务实版）
+
+不必强上「开发 / 测试 / 预发 / 生产」四套完整环境。
+MVP 可采用：
+- 开发：开发者本机
+- 联调 / 预发：同机第二端口 + 独立 PostgreSQL library（或 schema）
+- 生产：正式域名与数据目录
+
+有第二台机器后再拆物理预发环境。
+
+19.4 发布门槛（最低）
+
+- go test ./... 通过（Local 仓）
+- Cloud 契约测试中鉴权与流式路径通过
+- 备份恢复演练在最近一个季度内执行过（上线商业计费前强制）
+
+
+（决策索引：第六章 12～15 款、第七章 3.5 方案一、第八章 8.7、第十章性能旁注、
+ 第十八～十九章。对方 AI 建议中的四仓拆分、Native /v2、双向同步、过早 Redis/分片，
+ 均已明确拒绝或延后。）
