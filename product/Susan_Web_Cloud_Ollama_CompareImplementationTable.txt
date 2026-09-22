@@ -53,11 +53,12 @@ Susan = 基于 Ollama 开源项目进行产品化、品牌化和商业化开发�
 
 当前重点：
 - Susan Web
-- Susan Model Hub（继续使用 ollama registry**（registry.ollama.com），不急于切换 )
+- Susan Model Hub（域名到手即自建；pull 在自建 Registry 分发就绪前仍可读上游 registry.ollama.ai）
 - Susan Account
 - Susan Cloud API（MVP 阶段开始建设，云端付费服务，定价待定）
 - Susan Cloud Runtime（MVP 阶段开始建设，第一台 GPU 服务器即 Susan Cloud MVP）
 - Billing / Usage / Commercial Cloud即Susan Cloud
+- 自建 Registry（registry.susan.com）：与域名申请绑定——DNS/证书就绪后立即开工，不无限延后
 
 Susan Cloud 定位：
 - Susan Cloud 是 Susan 的云端付费服务品牌。
@@ -999,12 +1000,12 @@ model 全名中的 {namespace}/{model} 与 Web / Hub API 的
     说明：
     用户可以通过 Susan CLI / Desktop / API 拉取模型。
 
-    MVP 策略：
-    - MVP 阶段 pull 走 registry.ollama.com（只读）
-    - 后续 Susan Model Hub 建好后，pull/push 都切到 registry.susan.com
+    节奏（决策定稿）：
+    - 域名 + DNS 就绪后立即开工自建 registry.susan.com（见 8.4「节奏」）。
+    - 自建分发未就绪前：pull 仍走 registry.ollama.ai（只读上游）。
+    - 自建就绪后：默认切 registry.susan.com；与 api.susan.com 始终硬拆分。
 
-    勘误（Registry 域名）：上述 registry.ollama.com 应为 registry.ollama.ai，
-    详见 8.4 节末的「勘误（Registry 域名）」。
+    勘误：旧稿 registry.ollama.com → 一律按 registry.ollama.ai（见 8.4）。
 
 
 17. Ollama Model Push
@@ -1509,11 +1510,12 @@ Windows：
       （Cloud Host 抽象完成之后）。
 - P0.5：正式 RFC 8628 的 /auth/device + /auth/token 端点可随后补齐；
         身份模型不变——Device Flow 只做账号↔设备公钥绑定。
-- API Key：Cloud 付费推理上线前必须具备「至少一把可吊销的 Bearer Key」；
-          可延后的是多 Key、scopes、精细权限（原 P1-11 的增强部分），
-          不是整条 API Key 能力延后到商业化末期。
+- API Key：Cloud 付费推理上线前必须具备「至少一把可吊销的 Bearer Key」，
+          且创建时必须写入 scopes（默认 inference:run；见十四章「坑 3」）。
+          可延后的是「多把 Key」、UI 精细勾选；不可延后的是 scopes 列与网关校验。
 - 明确拒绝「初期只用 access_token + refresh_token、完全不要 API Key」作为
   Cloud 开放 API 的唯一形态（与 OpenAI / Ollama 生态用法不一致）。
+- 明确拒绝「无 scopes 的超管 Key 先上线、以后再补权限」——Key 一旦泄露即为账户级事故。
 
 无论选哪一套，以下三项都必须落实：
 
@@ -1628,6 +1630,36 @@ susanofficial / susanOfficial 为官方别名，解析到同一批官方模型�
 
 凡文档中出现 registry.ollama.com 的位置，一律按 registry.ollama.ai 理解。
 未来切换自建 Registry 时，对应替换目标为 registry.susan.com。
+
+【决策定稿 · 节奏】域名到手即开工自建
+- 触发：susan.com 购得 + www/docs/api/registry DNS 与证书就绪。
+- 动作：立即启动自建官网 / Hub / api.susan.com / registry.susan.com / MinIO，
+  不再以「不急于切换」「等 Hub 完全稳定」为由把 Registry 无限延后。
+- 过渡：自建 blob 分发未就绪前，客户端默认 pull 仍指向 registry.ollama.ai；
+  切流只改 Registry Host，绝不把下载指到 api.susan.com（见下「坑 1」）。
+
+【决策定稿 · 坑 1】云端 API 域 ≠ 模型下载域（禁止「全局改端点」）
+
+错误计划：去 Ollama 化时把代码里所有请求端点（含云端 API 与模型 Registry）
+统统改成 api.susan.com → MVP 无海量 blob 存储时，susan pull qwen3 会去 API 服务器找文件，
+整条拉取链路瘫痪。
+
+正确做法：域名职责硬拆分，改 Cloud 时不得顺手改 Registry。
+
+    职责                 域名（MVP）              域名（自建就绪后）
+    ------------------------------------------------------------------
+    云端鉴权 / 推理 API  api.susan.com            api.susan.com（不变）
+    模型 blob / manifest registry.ollama.ai       registry.susan.com
+    官网 / Hub 网页      susan.com                susan.com（不变）
+
+实现约束（B0-1 验收硬条件）：
+- SUSAN_CLOUD_HOST 只影响 Whoami / Device Flow / Cloud 推理 / Hub 元数据，
+  不得改写 model.ParseName 默认 Host、pull/push 的 Registry 目标。
+- 另设 SUSAN_REGISTRY_HOST（或沿用代码 defaultHost=registry.ollama.ai），
+  与 SUSAN_CLOUD_HOST 独立配置、独立切换。
+- 禁止「全局搜索 ollama.com / registry.ollama.ai 一律替换为 api.susan.com」。
+- 自测：设置 SUSAN_CLOUD_HOST=https://api.susan.com 后，
+  susan pull qwen3 仍必须命中 registry.ollama.ai（或配置的 Registry Host），不得 404 到 API。
 
 8.5～8.6（旧稿）已被 8.7 覆盖
 
@@ -1751,12 +1783,12 @@ susanofficial / susanOfficial 为官方别名，解析到同一批官方模型�
 - 用户注册与 Registry push 强制黑名单（见下表），不能只在前端拦截。
 - 旧根路径 /{username}/{model}：若仍收到请求，301 → /library/{username}/{model}。
 
-(3) 保留字表
+(3) 保留字表（精确匹配）
 
     library、models、search、featured、latest、trending、
     cloud、local、hf、api、admin、account、docs、blog、
     signin、signup、device、download、system、susan、official、
-    susanofficial、pricing、settings、user、connect、susancloud、
+    susanofficial、pricing、settings、support、connect、susancloud、
     chat
 
 说明：
@@ -1769,6 +1801,24 @@ susanofficial / susanOfficial 为官方别名，解析到同一批官方模型�
   MVP 拉上游 ollama 时内部仍可能映射到上游的 library namespace。
 - chat：预留给 chat.susan.com / 未来主站入口，禁止用户注册同名。
 
+【决策定稿 · 坑 2】仅精确黑名单不够，必须加前缀正则（B0-3）
+
+错误计划：只硬编码若干固定保留字 → 恶意用户可注册 susanofficial、api、
+cloud、official-ai、susan-ops 等仿官方名，上传后门模型。
+
+正确做法：注册 Username / Registry namespace / Push 目标 Owner 时，三层拦截：
+
+  (A) 精确黑名单：上表全文匹配（大小写不敏感）。
+  (B) 前缀正则（大小写不敏感，必须服务端强制）：
+        ^susan      → 拦截 susan、susanofficial、susan-ops、susancloud2 …
+        ^official   → 拦截 official、official-ai、officialhub …
+  (C) 站点路径段名：不得占用 /library 下 search|featured|latest|trending 等。
+
+补充：
+- 允许的官方 Owner 仅由系统账号持有：official、susanofficial（别名）、susancloud。
+- 普通用户注册与 Push 前置拦截器共用同一套 IsReservedNamespace(name) 函数；
+  前端校验只是体验优化，不能作为唯一防线。
+- 单测必覆盖：susanx / officialx / SuSaN-foo / OFFICIAL_bar → 一律 403。
 8.7.4 综合映射与三方对比总表
 
 场景/维度         Ollama 生态             Hugging Face 生态      Susan 一体化方案
@@ -2264,12 +2314,36 @@ Susan Cloud 是付费服务，且单机 MVP 只有一张 24GB GPU。
     key_hash     SHA-256(完整 API Key)，唯一索引，校验用
     last4        明文末 4 位，仅用于界面展示
     name         用户自定义名称
-    scopes       权限范围
+    scopes       权限范围（text[] 或 JSONB，非空；见下「坑 3」）
     created_at / last_used_at / revoked_at
 
 界面展示形态：sk-susan-8f9a....4b5c（前缀 + key_id + 末 4 位）。
 若不存 key_id 与 last4，用户无法分辨自己的多把 Key，出问题也无法定位，
 日志中也只能记录无意义的 hash。
+
+【决策定稿 · 坑 3】API Key 必须带 Scope，禁止「一把 Key = 超管」
+
+错误计划：api_keys 只存 Key 字符串/Hash，无权限范围 → 泄露后可改资料、管设备、
+甚至管理其他 Key。
+
+正确做法：
+1. 表字段 scopes 必填；创建 Key 时由用户勾选，默认仅 inference:run。
+2. 网关鉴权两步：① Key 真伪（hash 命中且未撤销）② 当前路由所需 scope ⊆ Key.scopes。
+3. 缺 scope 返回 HTTP 403 + {"error":"insufficient_scope","required":"..."}，
+   不得静默放行。
+
+推荐 Scope 枚举（MVP 先落地前 3 个，其余可占位）：
+
+    inference:run     调用 /api/generate、/api/chat、/v1/chat/completions 等推理
+    models:read       读 Hub 元数据 /library/*、/v1/models
+    account:read      读 /api/me、用量只读（可选）
+    account:write     改资料、管设备（默认不授予 API Key；优先用 Web Session）
+    keys:manage       创建/撤销其他 Key（默认永不授予普通 API Key）
+    *                 仅系统/内部用，UI 不提供给普通用户勾选
+
+落地节奏修正（覆盖第七章 3.2「scopes 可延后」旧表述）：
+- Cloud 付费推理对外开放 API Key 的当天，scopes 列 + 网关校验必须已上线。
+- 「多把 Key」可晚于「单把 Key + scopes」；不可上线无 scope 的超管 Key。
 
 14.4 撤销语义（必须写入对外文档）
 
@@ -2561,42 +2635,46 @@ Susan 项目详细工作分解结构 (WBS)
 目标：完成代码库的硬编码清理、数据库结构设计与核心安全规范，不涉及界面展示。
 --------------------------------------------------------------------------------
 0-1 / B0-1 全局路由与端点解耦（代码仓：Susan）
-  - 在 envconfig/config.go 中新增环境变量 SUSAN_CLOUD_HOST，替换原本所有的 ollama.com 硬编码。
-  - Cloud 相关白名单可指向 api.susan.com；Local 默认 Host 仍为 127.0.0.1:14343（不得改成云端）。
-  - 全局搜索并重构 registry 相关下载拉取逻辑，确保兼容新的端点变量。
+  - 在 envconfig/config.go 中新增 SUSAN_CLOUD_HOST，替换 Cloud/Whoami 等 ollama.com 硬编码。
+  - Cloud 白名单可指向 api.susan.com；Local 默认 Host 仍为 127.0.0.1:14343（不得改成云端）。
+  - 【坑 1】Cloud 与 Registry 域名硬拆分：SUSAN_CLOUD_HOST 不得改写 pull/push 目标；
+    Registry 继续默认 registry.ollama.ai（或独立变量 SUSAN_REGISTRY_HOST）。
+  - 禁止「全局搜索替换」把 registry.ollama.ai 改成 api.susan.com。
 
 0-2 / B0-2 数据字典与表结构定型（数据库：PostgreSQL）
   - 创建 users 表：包含 id, email, password_hash, created_at。
   - 创建 devices 表：包含 id, user_id, public_key (Ed25519), device_name, last_active。
-  - 创建 api_keys 表：包含 id, user_id, key_hash, prefix (如 sk-susan-abc...), is_revoked。
+  - 创建 api_keys 表：id, user_id, key_hash, key_id, last4, name, scopes（非空）, revoked_at 等
+    （字段以第一部分 14.3 为准；【坑 3】scopes 必填，默认 ['inference:run']）。
   - 创建 usage_events 表：包含 id, user_id, model_name, prompt_tokens, completion_tokens, duration_ms。
 
 0-3 / B0-3 Registry 命名空间安全策略（代码仓：Susan）
-  - 在 Push/Pull 前置拦截器中，写入保留字硬编码黑名单：
-    library, official, susanofficial, susancloud, admin, system, chat 等（见第一部分 8.7）。
-  - 编写单元测试，确保普通用户尝试向上述命名空间 Push 模型时返回 403 Forbidden。
+  - 实现 IsReservedNamespace：精确黑名单 ∪ 前缀正则 ^susan|^official（大小写不敏感）。
+  - 用户注册 Username、Registry Push 目标 Owner 共用该函数（见第一部分 8.7.3「坑 2」）。
+  - 单元测试：exact 保留字 + susanx / official-ai / SuSaN-foo → 一律 403。
 
 0-4 / B0-4 身份体系方案一（Device Flow）底层代码
   - 在 CLI 端实现 Ed25519 密钥对生成逻辑（仅生成，暂不触发交互），固定路径为 ~/.susan/id_ed25519.pub。
   - 保持并沿用代码库中现有的请求签名（Signature）计算函数。
 
 【实施范围】
-  含：SUSAN_CLOUD_HOST / remotes 可配置；PG 核心表迁移脚本；保留字黑名单；
-      设备密钥生成与签名函数可测；Local 默认 127.0.0.1:14343 不变。
+  含：SUSAN_CLOUD_HOST / remotes 可配置；Cloud≠Registry 拆分；PG 核心表（含 api_keys.scopes）；
+      保留字精确+前缀拦截；设备密钥生成与签名函数可测；Local 默认 127.0.0.1:14343 不变。
   不含：任何 Web UI；susan login 完整交互（→ B2）；真实 Cloud 推理；Redis；
-      开放用户 Push；改默认 Host 为 api.susan.com。
+      开放用户 Push；改默认 Host 为 api.susan.com；自建 registry.susan.com blob 存储。
 
 【测试范围】
-  - 单元：Host()/Cloud Host 解析；保留字拦截（push 到 official/susancloud → 403）
+  - 单元：Host()/Cloud Host 解析；设置 CLOUD_HOST 后 pull 仍指向 Registry（坑 1 回归）
+  - 单元：保留字 exact + 前缀变体拦截（push/注册 → 403）
   - 单元：密钥生成路径 ~/.susan/id_ed25519*；签名输出格式
-  - 迁移：空库执行迁移成功；表字段与第一部分十四章一致
+  - 迁移：空库执行迁移成功；api_keys.scopes 非空约束；字段与第一部分十四章一致
   - 回归：go test 相关包；本地 susan serve 仍监听 14343
 
 【验收标准】
   □ 未设置 SUSAN_CLOUD_HOST 时，本地默认行为与现网一致（127.0.0.1:14343）
-  □ 设置 SUSAN_CLOUD_HOST 后，Cloud 相关请求指向配置值（可用集成测试或日志证明）
-  □ PG 四表可创建、可插入样例行
-  □ 保留字 Push 单测全绿
+  □ 设置 SUSAN_CLOUD_HOST 后，Cloud 请求指向配置值，且 susan pull 仍走 Registry（不得命中 API）
+  □ PG 四表可创建；api_keys 样例行必须带 scopes
+  □ 保留字 exact + 前缀正则 Push/注册单测全绿
   □ 无 Web 页面交付物（本批不验收前端）
 
 

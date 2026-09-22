@@ -12,7 +12,11 @@
 | 运行时环境变量 | `OLLAMA_HOST=http://localhost:11434` → `SUSAN_HOST=http://localhost:14343`（其余 `OLLAMA_*` 同样改为 `SUSAN_*`） |
 | 数据目录 | `%LOCALAPPDATA%\Susan`（直接改名，**不做迁移**） |
 | 域名 | 自行购买 `susan.com`（官网 www / 文档 docs / cloud api / registry） |
-| Model Hub 就绪前 | **继续使用 ollama registry**（registry.ollama.com），不急于切换 |
+| 自建启动时机 | **域名申请下来并完成 DNS（www/docs/api/registry）后，立即开始自建**（官网、Model Hub、`registry.susan.com`、对象存储等）；不等「Hub 完全稳定」再动手 |
+| pull 过渡 | 自建 Registry **写入/分发未就绪前**，pull 仍走 `registry.ollama.ai`；就绪后切 `registry.susan.com`。全程与 `api.susan.com` 硬拆分（见对比表 8.4 坑 1） |
+| Cloud vs Registry | **硬拆分**：鉴权/推理 → `api.susan.com`；blob/pull → Registry 域。禁止全局改端点把下载指到 API |
+| Namespace 防抢注 | 精确黑名单 **+** 前缀正则 `^susan` / `^official`（服务端强制，见对比表 8.7.3 坑 2） |
+| API Key scopes | `api_keys.scopes` 必填；默认 `inference:run`；网关校验真伪 + scope；禁止无 scope 超管 Key |
 | Web 仓库 | 独立新仓库 `susan_web`（private） |
 | 官网定位 | 对标 ollama.com，UI/功能一致，仅品牌替换为 Susan；**自行开发、自托管**，不 fork 也不依赖第三方平台 |
 | 服务器 | **自行购买实体服务器**，不使用云服务，全部自托管 |
@@ -125,10 +129,11 @@
 - **后续阶段**：完全建立自有 registry 后，数据源切换为 Susan 自己的 mirror（susan library）
 - 用户上传/发布功能留待后续
 
-### 12. H3 Registry 后端（延后）
-- 实现 `/v2/...` manifest/blobs 接口
-- **就绪前：pull/push 继续走 `registry.ollama.com`**（不改 E 项代码）
-- 等 Model Hub 后端稳定后，再切到 `registry.susan.com`
+### 12. H3 Registry 后端（域名到手即开工，非无限延后）
+- 触发：`susan.com` 已购 + `registry` 子域 DNS/证书就绪 → **立即开工**自建 Registry（`/v2/...` manifest/blobs + MinIO）
+- 实现 `/v2/...` manifest/blobs 接口，部署到 `registry.susan.com`
+- **切换完成前**：客户端 pull 仍指向 `registry.ollama.ai`（不改 E 项默认 Host；与 `api.susan.com` 硬拆分，见对比表 8.4 坑 1）
+- **自建分发就绪后**：默认 Registry Host 切到 `registry.susan.com`；再开放用户 Push（对齐对比表 B7）
 
 ### 13. H5 文档站部署
 - Mintlify CLI 部署 docs/ 到 `docs.susan.com`
@@ -144,6 +149,7 @@
 - 自行购买 `susan.com`
 - DNS 配置子域名：www / docs / api / registry
 - HTTPS 证书：可用 Let's Encrypt 免费证书（自托管服务器）
+- **域名 + DNS 就绪 = 自建开工信号**：官网、`api`、`registry`、对象存储并行推进，不再以「先镜像展示、Registry 无限延后」为默认节奏
 
 ### 16. 实体服务器（自托管，不使用云）
 - 至少 1 台实体服务器（跑官网 + Model Hub + 文档站 + 对象存储）
