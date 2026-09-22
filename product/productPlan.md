@@ -294,14 +294,25 @@
 - H1、H2、H5、H6
 - H3 Registry 后端延后（先用 ollama registry）
 
-### 批次 7+（后续）：Redis 与多节点增强
+### 批次 7+ / 对齐对比表 B5-2（后续）：Redis 与多节点增强
 触发条件：第二台 API 节点，或需要跨实例计费/限流/Key 撤销广播时。
+（对比表第一部分编号：B5-2；第二部分【批次 5】5-2）
 - Redis 基础设施
-- 流式用量分桶增量上报（对比表 P1-R / 第十五章）
+- 流式用量分桶增量上报（对比表第十五章）
 - API Key 二级缓存 + Pub/Sub 撤销
 - （可选）网关限流跨节点聚合
 
-**MVP / 批次 5～6 明确不做 Redis。**
+**MVP / B0～B4 明确不做 Redis。**
+
+### 批次 8+ / 对齐对比表 B6（后续）：Susan Web Chat（chat.susan.com）
+对标 DeepSeek 式网页云端对话 + 可分享会话链接。
+触发条件：B2 登录 + B4 推理 + B4-3 Usage 可用之后。
+（对比表第一部分编号：B6-1～B6-6；第二部分【批次 6】）
+- 子域 `chat.susan.com`
+- 会话 URL：`/c/{uuid}`；分享：`/s/{shareId}`
+- 调用 `api.susan.com` 流式推理；第一期不与 Desktop 双向同步
+
+**B1 明确不做 Web Chat。**
 
 ---
 

@@ -4,7 +4,39 @@ Susan Web / Cloud v1
 Ollama 对照架构与实施说明
 ========================================
 
-一、定位
+【编号约定】（与第二部分 WBS 一一对应）
+
+  形式：B{批次}-{项}
+  含义：B = Batch（批次）；数字与第二部分【批次 N】及 N-M 完全相同。
+
+  例：
+    B0-1  ≡  第二部分「批次 0」下的「0-1 全局路由与端点解耦」
+    B1-3  ≡  第二部分「批次 1」下的「1-3 Model Hub 镜像展示」
+    B6    ≡  第二部分「批次 6」Susan Web Chat（整批）
+
+  章节标题后的 [Bn] 表示该章内容主要由哪些批次落地；
+  [文档] 表示架构说明，不单独对应某一工作包。
+
+【第一部分 ↔ 第二部分 批次对照索引】
+
+  批次    名称（短）              第二部分位置          第一部分主要章节
+  ------------------------------------------------------------------------
+  B0      基础设施与抽象          【批次 0】            六(原则) 七(认证底座) 八(命名空间)
+                                                       十四(数据模型) 十五(计费口径) P0-a～d
+  B1      Web 壳 + Hub 只读       【批次 1】            二(网站) 三(/library API 只读形态)
+                                                       八(URL 公式) 十(服务器/Web)
+  B2      设备授权 + Account      【批次 2】            二(/account /device) 七(认证全流程)
+  B3      Hub API + 兼容契约      【批次 3】            三(API) 八.7.2(路由边界) 六(原则13)
+  B4      Cloud 推理 MVP          【批次 4】            三(推理入口) 八.7.2(:cloud)
+                                                       十五(Usage MVP) 十三(限流起步)
+  B5      商业化 + 弹性           【批次 5】            十三～十五深化 十四(Redis 阶段)
+                                                       十八 十一(Admin) → 对应 5-1～5-3
+  B6      Susan Web Chat          【批次 6】            二(chat.susan.com 占位) [P2-W]/B6
+
+  已完成（无 B 号，对照表「本地产品」）：CLI / Desktop / Local Engine（见一、定位）
+
+
+一、定位 [文档]
 ----------------------------------------
 Susan 当前定位：
 
@@ -33,7 +65,7 @@ Susan Cloud 定位：
 本文件只保留最终网站结构、最终 API 结构以及 Ollama ↔ Susan 的 25 项对应关系。
 
 
-二、最终网站结构
+二、最终网站结构 [B1 主落地；chat.susan.com → B6]
 ----------------------------------------
 
 susan.com
@@ -73,6 +105,10 @@ susan.com
 └── /blog
 
 （注意：/admin 不在主站 susan.com 路由下，独立部署为 admin.susan.com，见第十一章安全策略）
+
+（后续批次，非当前 MVP）chat.susan.com
+  Web 云端对话产品（对标 DeepSeek Web Chat），与 Desktop 本地 /c/{chatId} 不是同一产品。
+  规划路径见第九章 [B6] / 第二部分【批次 6】；未上线前不占用主站 susan.com 路由。
 
 决策定稿（Web URL ↔ CLI 一对一，见 8.7.5）：
 - 对外品牌名是 Model Hub；列表路径保持 /library/search|featured|latest|trending。
@@ -286,7 +322,7 @@ OAuth Device Flow 用户授权页（verification_uri）。
 详见「认证流程」节。
 
 
-三、最终 API 结构
+三、最终 API 结构 [B3 契约；B4 推理鉴权；/library 元数据 B1～B3]
 ----------------------------------------
 
 api.susan.com
@@ -729,7 +765,7 @@ model 全名中的 {namespace}/{model} 与 Web / Hub API 的
 - Maintenance
 
 
-四、Ollama ↔ Susan 25 项最终对照
+四、Ollama ↔ Susan 25 项最终对照 [文档；落地分散在 B0～B6]
 ----------------------------------------
 | ollama                              | susan                               | 类型                      | 说明                                                                                              |
 | :---------------------------------- | :---------------------------------- | :------------------------ | :------------------------------------------------------------------------------------------------ |
@@ -1134,7 +1170,7 @@ model 全名中的 {namespace}/{model} 与 Web / Hub API 的
     两者使用统一的模型、API、产品逻辑。在CLI和desktop端都有可以使用Cloud产品能力的入口的。
 
 
-五、最终 Susan 产品架构
+五、最终 Susan 产品架构 [文档]
 ----------------------------------------
 
                          Susan
@@ -1189,7 +1225,7 @@ model 全名中的 {namespace}/{model} 与 Web / Hub API 的
     说明：本图仅展示 Web / Cloud 侧。Local 侧见上方第一张图。
 
 
-六、核心设计原则
+六、核心设计原则 [文档；约束 B0～B6 全部批次]
 ----------------------------------------
 
 1. Susan Local Engine 和 Susan Cloud Runtime 是两个 Runtime 层。
@@ -1289,7 +1325,7 @@ model 全名中的 {namespace}/{model} 与 Web / Hub API 的
     - SUSAN_NO_CLOUD=1（代码已支持）：强制关闭远端能力，离线场景可文档推荐。
 
 
-七、认证流程
+七、认证流程 [B0 底座；B2 打通 CLI/Desktop/Web]
 ----------------------------------------
 
 Susan 统一采用 OAuth 2.0 Device Authorization Grant（Device Code Flow）
@@ -1503,7 +1539,7 @@ Windows：
   并保持 3.1 中 SUSA-8821 这类「四位 + 连字符 + 四位」的分组格式便于人工输入。
 
 
-八、模型 Namespace 命名规范
+八、模型 Namespace 命名规范 [B0 黑名单；B1 URL；B3～B4 路由]
 ----------------------------------------
 
 8.1 规范定义
@@ -1715,7 +1751,8 @@ susanofficial / susanOfficial 为官方别名，解析到同一批官方模型�
     library、models、search、featured、latest、trending、
     cloud、local、hf、api、admin、account、docs、blog、
     signin、signup、device、download、system、susan、official、
-    susanofficial、pricing、settings、user、connect、susancloud
+    susanofficial、pricing、settings、user、connect、susancloud、
+    chat
 
 说明：
 - models：防抢注 + 可选短链 /models→/library；不等于 Hub API 用 /models。
@@ -1725,6 +1762,7 @@ susanofficial / susanOfficial 为官方别名，解析到同一批官方模型�
 - cloud / local：路由后缀语义空间，禁止占用为 Username（见 8.7.2 Decision Log）。
 - library：既是站点/Hub API 的路径前缀，也是兼容保留字；
   MVP 拉上游 ollama 时内部仍可能映射到上游的 library namespace。
+- chat：预留给 chat.susan.com / 未来主站入口，禁止用户注册同名。
 
 8.7.4 综合映射与三方对比总表
 
@@ -1813,10 +1851,10 @@ GET /v1/models/:model 含斜杠        未说明                              �
                                                                        GET api.susan.com/library/{ns}/{model}
 
 
-九、当前开发重点
+九、当前开发重点（编号与第二部分 WBS 对齐）
 ----------------------------------------
 
-你目前已经完成：
+你目前已经完成（无 B 号）：
 
 [完成]
 - Susan CLI
@@ -1824,91 +1862,78 @@ GET /v1/models/:model 含斜杠        未说明                              �
 - Susan Local Engine
 - Local Model Runtime
 
-现在应该进入：
+以下按批次推进；工作包编号 B{n}-{m} ≡ 第二部分「n-m」。
 
-[P0]
-1. susan.com
-2. Model Hub
-3. Model Detail
-4. Search
-5. Download
-6. Docs（docs.susan.com）
-7. Account
-8. Sign In / Sign Up（Web Login + CLI/Desktop 现有 signin；身份锁定方案一，见 7/3.5）
-9. api.susan.com/api
-10. Cloud Model 基础能力（元数据列表 + 展示，不含推理）
-    仓库：susan_web 独立仓；Cloud 后端仍 Modular Monolith（见原则 12）
+------------------------------------------------------------------------
+[B0] 基础设施与底层核心抽象  ≡ 第二部分【批次 0】
+------------------------------------------------------------------------
+B0-1  全局路由与端点解耦（SUSAN_CLOUD_HOST；原 P0-a）
+B0-2  数据字典与表结构定型（PostgreSQL；原 P0-d）
+B0-3  Registry 命名空间安全策略 / 保留字（原 P0-c）
+B0-4  身份体系方案一底座（设备密钥；原 P0-b 定稿落地）
 
-[P1]
-11. API Keys
-12. /v1/ OpenAI Compatible（验证与文档；含直连云端时 model 不强制 :cloud）
-13. Anthropic Compatible（/v1/messages：验证 + 补文档 + 补测试，非从零实现）
-14. Model Publishing（push MVP 策略：先占位，等 Model Hub 建好）
-15. Model Storage
-16. Cloud Runtime（Susan Cloud MVP 推理上线）
-17. Usage（MVP：进程内累计 + 断开强制结算 + PG；见第十五章）
+------------------------------------------------------------------------
+[B1] Web 壳与 Model Hub 只读版  ≡ 第二部分【批次 1】
+------------------------------------------------------------------------
+B1-1  官网与下载落地页（susan.com、/download、docs.susan.com）
+B1-2  登录/注册 UI 骨架（/signin /signup；先 Web，CLI 联动在 B2）
+B1-3  Model Hub 镜像展示（/library、search、详情；上游只读）
+B1-4  前端 Pull/Run 指令呈现（official 缺省、:cloud 文案）
 
-[P1-R] 后续批次：引入 Redis（多节点后再做，MVP 不做）
-R1. Redis 基础设施（单机可先旁路验证，生产随第二 API 节点启用）
-R2. 流式用量分桶增量上报（跨实例 checkpoint，防逃单增强）
-R3. API Key 二级缓存 + Pub/Sub 撤销广播（见第七章 3.2；MVP 仅进程内 LRU + DB）
-R4. 网关限流计数跨节点聚合（可选，与第十三章配合）
+------------------------------------------------------------------------
+[B2] 设备授权与 Account 控制台  ≡ 第二部分【批次 2】
+------------------------------------------------------------------------
+B2-1  账户服务端点 API（/auth/device*、/user/*）
+B2-2  Web 端 Account 模块（/account/profile|devices 等）
+B2-3  CLI 与 Desktop 登录交互（susan login、托盘登录）
 
-说明：R1～R4 绑定「多 API 节点」或「高对抗计费」触发，不要为单机 MVP 提前引入。
+------------------------------------------------------------------------
+[B3] Cloud 元数据 API 与兼容层契约  ≡ 第二部分【批次 3】
+------------------------------------------------------------------------
+B3-1  Hub 元数据 API（api.susan.com/library/*，与 Web 同 path）
+B3-2  兼容层契约测试（/v1/chat/completions、/v1/messages）
+B3-3  Cloud 模型状态预热（is_cloud_supported 展示，不含真实推理）
 
-[P2]
-18. Billing
-19. Subscription
-20. Credits
-21. Payment
-22. Admin（admin.susan.com，独立部署 + 安全策略）
-23. GPU Scheduler
-24. Multi-GPU
-25. GPU Cluster
+------------------------------------------------------------------------
+[B4] Cloud 推理 MVP 上线  ≡ 第二部分【批次 4】
+------------------------------------------------------------------------
+B4-1  API Key 系统落地（/account/keys + 网关鉴权）
+B4-2  云端路由与 Tag 剥离（本机 :cloud；直连 api.susan.com 不强制后缀）
+B4-3  Usage 用量采集（进程内累计 + 断开强制结算 + PG；不上 Redis）
 
+------------------------------------------------------------------------
+[B5] 商业化与弹性规模化  ≡ 第二部分【批次 5】
+------------------------------------------------------------------------
+B5-1  计费与订阅闭环（Stripe、/account/billing）
+B5-2  高并发架构（引入 Redis：Key 缓存、限流、用量分桶；原 P1-R）
+B5-3  多 GPU 算力池调度
 
-[P0 前置依赖]（补充，需排在上述 P0 各项之前或并行）
+------------------------------------------------------------------------
+[B6] Susan Web Chat  ≡ 第二部分【批次 6】
+------------------------------------------------------------------------
+前置：B2 登录 + B4 推理 + B4-3 Usage 可用。不进入 B1。
 
-P0-a. Cloud 端点抽象
-     移除代码中硬编码的 https://ollama.com，改为可配置的 Cloud Host
-     （建议新增 SUSAN_CLOUD_HOST），并调整 SUSAN_REMOTES 默认白名单。
-     这是 P0 第 9 项「api.susan.com/api」和全部 Cloud 任务的硬前置。
-     涉及：server/routes.go（WhoamiHandler 及各 cloud passthrough）、envconfig/config.go。
+B6-1  子域 chat.susan.com（独立前端）
+B6-2  云端会话 CRUD（存库，归属登录用户）
+B6-3  会话 URL：chat.susan.com/c/{uuid}（仅本人）
+B6-4  分享链接：chat.susan.com/s/{shareId}（默认公开只读）
+B6-5  浏览器流式对话 UI → api.susan.com（model 不强制 :cloud）
+B6-6  与 Desktop：第一期不做双向同步（原则 14）
 
-P0-b. 身份体系定稿
-     在 Device Flow 与现有设备密钥签名登录之间做出选择（第七章 3.5 三选一）。
-     未定稿前不要开工 P0 第 8 项，否则会产出两套互不认识的凭证体系。
-
-P0-c. Namespace 保留字表上线
-     注册接口与 Registry push 侧同时校验（见 8.6）。
-     该项必须早于开放用户注册，事后无法补救。
-
-P0-d. 数据模型定稿
-     users / api_keys / devices / usage_events 等核心表结构与存储选型（见第十四章）。
-     Account、API Keys、Usage、Billing 全部依赖它。
+说明：对标 DeepSeek Web Chat；Susan 云端增值层，Ollama 无对等产品。
 
 
-[任务清单勘误]
+[旧编号对照]（阅读历史讨论用）
 
-- P1 第 13 项「Anthropic Compatible（/v1/messages，reserved → 实现）」：
-  该接口在代码中已实现，任务性质应改为「验证 + 补文档 + 补测试」，工作量远小于原估。
-- P0 第 10 项「Cloud Model 基础能力（元数据列表 + 展示，不含推理）」
-  与第十章「第一台 GPU 服务器即 Susan Cloud MVP」的表述存在矛盾：
-  按 P0/P1 划分，Cloud 推理（P1 第 16 项）晚于第一台机器上线。
-  需要明确二选一：
-  (a) 第一台机器上线即含 Cloud 推理 → 把 P1 第 16 项提到 P0；
-  (b) 第一台机器先只承载 Web / API / Model Hub → 第十章改为「Susan Cloud 预备机」。
-- P0 当前包含 10 项（整站 + Account 七个子页 + Model Hub + Cloud 元数据），
-  对小团队偏重。建议再切一层「P0 最小可发布」：
-  官网首页 + /download + docs + 登录 + Model Hub 只读浏览，
-  其余 Account 子页顺延为 P0.5。
-
-[里程碑与验收]
-本文档目前只有优先级清单，没有完成标准（DoD）、排期和依赖关系。
-在开工前，每项至少需要补齐：负责人、依赖项、可验证的完成标准、预计周期。
+  旧 P0-a～d     → B0-1～B0-4
+  旧 P0 1～10    → 主要落入 B1～B3
+  旧 P1 11～17   → 主要落入 B3～B4
+  旧 P1-R        → B5-2
+  旧 P2 18～25   → B5-1～B5-3（Admin/调度等）
+  旧 P2-W        → B6
 
 
-十、第一台 Susan Server 的定位
+十、第一台 Susan Server 的定位 [B1 部署 Web；B4 上 GPU]
 ----------------------------------------
 
 3000～4000 元预算的第一台机器：
@@ -2004,7 +2029,7 @@ P0 / P1 只做：
 - 这些属于第六章第 10 款「后期再拆服务」的范畴，不作为当前实施阻塞项
 
 
-十一、admin.susan.com 安全策略
+十一、admin.susan.com 安全策略 [B5]
 ----------------------------------------
 
 核心定位：
@@ -2024,7 +2049,7 @@ P0 / P1 只做：
 管理员账号单独的角色与权限集合，操作日志全量记录，敏感操作二次确认。
 
 
-十二、最终结论
+十二、最终结论 [文档]
 ----------------------------------------
 
 Susan 当前正确的产品路线：
@@ -2131,7 +2156,7 @@ Susan 当前正确的产品路线：
   原一～十二章内容全部保留，未做删减。）
 
 
-十三、限流、配额与错误语义
+十三、限流、配额与错误语义 [B4 起步；跨节点聚合 → B5-2]
 ----------------------------------------
 
 13.1 为什么必须有
@@ -2182,7 +2207,7 @@ Susan Cloud 是付费服务，且单机 MVP 只有一张 24GB GPU。
 排队深度应显著小于限流阈值，否则用户会感知为「无响应」而不是「被限流」。
 
 
-十四、数据模型与存储选型
+十四、数据模型与存储选型 [B0-2 定型；Redis → B5-2]
 ----------------------------------------
 
 14.1 MVP 存储选型
@@ -2242,7 +2267,7 @@ Susan Cloud 是付费服务，且单机 MVP 只有一张 24GB GPU。
 - 备份策略见第十八章
 
 
-十五、Usage 计量与计费采集点
+十五、Usage 计量与计费采集点 [B4-3 MVP；分桶/Redis → B5-2]
 ----------------------------------------
 
 15.1 原文档缺什么
@@ -2306,7 +2331,7 @@ MVP 实现（单机，不引入 Redis）：
     免费额度 → 订阅套餐额度 → Credits 余额 → 拒绝（402）
 
 
-十六、模型 License 与合规
+十六、模型 License 与合规 [B1 展示；B4 云端白名单]
 ----------------------------------------
 
 16.1 风险点（原文档完全未覆盖，且是商业化的实质风险）
@@ -2349,7 +2374,7 @@ MVP 阶段 pull 走上游 Registry，模型由上游分发，风险相对可控�
   生产环境必须关闭）
 
 
-十七、上游 Ollama fork 同步策略
+十七、上游 Ollama fork 同步策略 [文档；贯穿全批次]
 ----------------------------------------
 
 17.1 为什么这是长期最大成本
@@ -2388,7 +2413,7 @@ Susan 是 Ollama 的 fork（第一章定位）。
 每次同步需确认其存在性，Susan 对外文档不承诺其稳定性。
 
 
-十八、可观测性、备份与安全基线
+十八、可观测性、备份与安全基线 [B1 起基础；B5 加强]
 ----------------------------------------
 
 18.1 可观测性
@@ -2460,7 +2485,7 @@ Web 会话：
 - 安全事件响应：保留操作日志，制定「发现 → 遏制 → 通知 → 复盘」最小流程
 
 
-十九、测试策略
+十九、测试策略 [贯穿 B0～B6]
 ----------------------------------------
 
 19.1 原则
@@ -2495,131 +2520,162 @@ MVP 可采用：
 - 备份恢复演练在最近一个季度内执行过（上线商业计费前强制）
 
 
-（决策索引：第六章 12～15 款、第七章 3.5 方案一、第八章 8.7、第十章性能旁注、
- 第十八～十九章。对方 AI 建议中的四仓拆分、Native /v2、双向同步、过早 Redis/分片，
- 均已明确拒绝或延后。）
+（决策索引：第六章 12～16 款、第七章 3.5 方案一、第八章 8.7、第十章性能旁注、
+ 第十八～十九章。批次编号见文首【编号约定】与第九章 B0～B6。
+ 对方 AI 建议中的四仓拆分、Native /v2、双向同步、过早 Redis/分片，
+ 均已明确拒绝或延后至对应批次。）
 
 第二部分
 ================================================================================
 Susan 项目详细工作分解结构 (WBS)
+编号与第一部分一致：Bn-m ≡ 第一部分第九章 Bn-m ≡ 下文「n-m」
 ================================================================================
 
-【批次 0：基础设施与底层核心抽象】
+【批次 0 / B0：基础设施与底层核心抽象】
 周期：1-2 周
 目标：完成代码库的硬编码清理、数据库结构设计与核心安全规范，不涉及界面展示。
 --------------------------------------------------------------------------------
-0-1 全局路由与端点解耦（代码仓：Susan）
+0-1 / B0-1 全局路由与端点解耦（代码仓：Susan）
   - 在 envconfig/config.go 中新增环境变量 SUSAN_CLOUD_HOST，替换原本所有的 ollama.com 硬编码。
-  - 将代码内部的默认注册中心白名单与请求端点修改为 api.susan.com。
-  - 全局搜索并重构 registry.go 中的下载拉取逻辑，确保兼容新的端点变量。
+  - Cloud 相关白名单可指向 api.susan.com；Local 默认 Host 仍为 127.0.0.1:14343（不得改成云端）。
+  - 全局搜索并重构 registry 相关下载拉取逻辑，确保兼容新的端点变量。
 
-0-2 数据字典与表结构定型（数据库：PostgreSQL）
+0-2 / B0-2 数据字典与表结构定型（数据库：PostgreSQL）
   - 创建 users 表：包含 id, email, password_hash, created_at。
   - 创建 devices 表：包含 id, user_id, public_key (Ed25519), device_name, last_active。
   - 创建 api_keys 表：包含 id, user_id, key_hash, prefix (如 sk-susan-abc...), is_revoked。
   - 创建 usage_events 表：包含 id, user_id, model_name, prompt_tokens, completion_tokens, duration_ms。
 
-0-3 Registry 命名空间安全策略（代码仓：Susan）
-  - 在 server/registry.go 的 Push/Pull 前置拦截器中，写入保留字硬编码黑名单：library, official, susancloud, admin, system。
+0-3 / B0-3 Registry 命名空间安全策略（代码仓：Susan）
+  - 在 Push/Pull 前置拦截器中，写入保留字硬编码黑名单：
+    library, official, susanofficial, susancloud, admin, system, chat 等（见第一部分 8.7）。
   - 编写单元测试，确保普通用户尝试向上述命名空间 Push 模型时返回 403 Forbidden。
 
-0-4 身份体系方案一（Device Flow）底层代码
+0-4 / B0-4 身份体系方案一（Device Flow）底层代码
   - 在 CLI 端实现 Ed25519 密钥对生成逻辑（仅生成，暂不触发交互），固定路径为 ~/.susan/id_ed25519.pub。
   - 保持并沿用代码库中现有的请求签名（Signature）计算函数。
 
 
-【批次 1：Web 壳与 Model Hub 只读版】
+【批次 1 / B1：Web 壳与 Model Hub 只读版】
 周期：2-3 周 | 部署：基础云服务器（廉价 VPS），配置 Nginx 与 SSL
 目标：建立用户可访问的官方网站，实现模型库的展示与检索。
 --------------------------------------------------------------------------------
-1-1 官网与下载落地页（代码仓：susan_web）
+1-1 / B1-1 官网与下载落地页（代码仓：susan_web）
   - 开发 susan.com 首页（Hero Section、核心特性介绍）。
   - 开发 /download 页面，提供 Windows (.exe/.msi)、macOS (.zip/.dmg)、Linux 安装脚本的下载链接。
   - 配置 docs.susan.com 子域名，指向静态文档页面或通过 Docusaurus 生成。
 
-1-2 登录/注册 UI 骨架（代码仓：susan_web）
+1-2 / B1-2 登录/注册 UI 骨架（代码仓：susan_web）
   - 开发 /signin 与 /signup 前端页面。
   - 实现基于邮箱密码的 JWT 登录态维持（Session/Cookie），但不涉及 CLI 联动。
 
-1-3 Model Hub 镜像展示（代码仓：susan_web）
+1-3 / B1-3 Model Hub 镜像展示（代码仓：susan_web）
   - 开发模型列表页 /library（包含热门排序、标签分类）。
   - 开发模型搜索页 /library/search。
   - 开发模型详情页 /library/{namespace}/{model}（展示 Readme、参数量、更新时间）。
   - 数据来源：通过定时任务或只读网关，拉取上游（如 Ollama Registry）的开源模型数据并落库。
 
-1-4 前端指令呈现逻辑
+1-4 / B1-4 前端指令呈现逻辑
   - 在详情页实现复制按钮：若 namespace 为 official，前端指令自动隐藏前缀（例如展示为 susan run qwen2.5-70b）；其他则展示为 susan run {namespace}/{model}。
 
 
-【批次 2：设备授权与 Account 控制台】
+【批次 2 / B2：设备授权与 Account 控制台】
 周期：2-3 周 | 代码仓：Susan 与 susan_web 联动
 目标：彻底打通云端账号与本地 CLI/Desktop，实现设备级鉴权信任。
 --------------------------------------------------------------------------------
-2-1 账户服务端点 API（代码仓：Susan Server）
+2-1 / B2-1 账户服务端点 API（代码仓：Susan Server）
   - 实现 /auth/device/code：接收本地发起的登录请求，返回 device_code, user_code, verification_uri。
   - 实现 /auth/device/verify：轮询接口，确认用户是否在 Web 端完成了授权。
   - 实现 /user/profile 与 /user/devices（增删改查）。
 
-2-2 Web 端 Account 模块（代码仓：susan_web）
+2-2 / B2-2 Web 端 Account 模块（代码仓：susan_web）
   - 开发 /account/profile：基本信息修改。
   - 开发 /account/devices：展示已绑定的 CLI 设备列表，提供“移除设备/吊销公钥”按钮。
   - 开发 /auth/device 验证中转页，用于接收并确认 user_code。
 
-2-3 CLI 与 Desktop 登录交互（代码仓：Susan）
+2-3 / B2-3 CLI 与 Desktop 登录交互（代码仓：Susan）
   - 实现 susan login 命令：自动生成公钥 -> 请求 Code -> 终端打印跳转 URL 与验证码 -> 开始循环轮询。
   - 轮询成功后，将服务端返回的授权状态及 Token 写入 ~/.susan/auth.json。
   - 在 Susan Desktop 托盘应用中，加入“登录云端”菜单项，点击后唤起系统默认浏览器执行相同流程，并在托盘图标反馈登录状态。
 
 
-【批次 3：Cloud 元数据 API 与兼容层契约】
+【批次 3 / B3：Cloud 元数据 API 与兼容层契约】
 周期：2 周
 目标：完善 API 路由规范，为真实云端 GPU 推理做契约准备。
 --------------------------------------------------------------------------------
-3-1 Hub 元数据 API 暴露（代码仓：Susan Server）
+3-1 / B3-1 Hub 元数据 API 暴露（代码仓：Susan Server）
   - 实现 api.susan.com/library/* 路由簇，提供与 Web 端路径完全一致的 JSON API（/library/{namespace}/{model}）。
   - 使本地 CLI 在执行 susan run 时，能够通过该 API 准确获取模型的 Manifest 与分片下载地址。
 
-3-2 兼容层测试与对齐（代码仓：Susan Server）
+3-2 / B3-2 兼容层测试与对齐（代码仓：Susan Server）
   - 编写 /v1/chat/completions (OpenAI 格式) 的契约测试集，确保系统现有实现在各种参数（Temperature, Stream 等）下符合标准。
   - 编写 /v1/messages (Anthropic 格式) 的契约测试集，验证已注册路由的可靠性，无需重复造轮子。
 
-3-3 Cloud 模型状态预热
+3-3 / B3-3 Cloud 模型状态预热
   - 在数据库的模型表中新增 is_cloud_supported 字段。
   - 在 Web 端详情页和 CLI 列表查询中，透出支持云端运行的模型，状态暂标记为“排队中”或“即将上线”，不实际分配算力。
 
 
-【批次 4：Cloud 推理 MVP 上线】
+【批次 4 / B4：Cloud 推理 MVP 上线】
 周期：3-4 周 | 部署：采购/租赁首台带 24GB VRAM 的 GPU 服务器
 目标：接入 GPU 算力，实现带有 API Key 鉴权的“云端模型本地化调用”。
 --------------------------------------------------------------------------------
-4-1 核心 API Key 系统落地（前后端联动）
+4-1 / B4-1 核心 API Key 系统落地（前后端联动）
   - Web：开发 /account/keys 页面，允许用户生成、查看（仅一次）、吊销 API Key。
   - Server：实现 Key 的生成算法，生成 sk-susan-xxx 格式的令牌，进行 Hash 落库。
   - 在 Server 的 API 网关层（Middleware）增加 Bearer Token 校验逻辑，拦截非法调用。
 
-4-2 云端路由与 Tag 剥离网关（代码仓：Susan Server）
+4-2 / B4-2 云端路由与 Tag 剥离网关（代码仓：Susan Server）
   - 在 CLI 解析层增加针对 :cloud 后缀的识别逻辑（如 susan run qwen3:cloud）。
-  - 网关转发：检测到请求模型带有 :cloud 标识时，网关自动将请求从“路由至本地 Runtime”切换为“携带 API Key 路由至 Cloud Runtime”。
-  - Tag 剥离：在转发给底层的 vLLM/llama.cpp 引擎前，自动剥离 :cloud 后缀，确保底层引擎能正确识别原始模型名。
+  - 网关转发：本机 Daemon 检测到 :cloud 时，携带凭证转发至 Cloud Runtime。
+  - 直连 api.susan.com 且已鉴权：一律云端推理，不要求 model 带 :cloud；误带则剥离忽略；带 :local 返回 400。
+  - Tag 剥离：转发给底层引擎前剥离 :cloud，确保引擎识别原始模型名。
 
-4-3 Usage 用量异步采集（代码仓：Susan Server）
+4-3 / B4-3 Usage 用量异步采集（代码仓：Susan Server）
   - 在 Server 网关层的 Response Writer 中植入钩子（Hook）。
-  - 当云端推理流（Stream）结束或连接断开时，异步计算本次消耗的 prompt_tokens、completion_tokens 与 duration，并写入 usage_events 表。
+  - 流结束或连接断开时，按已累计 token 强制结算并写入 usage_events（MVP 进程内累计 + PG；不上 Redis）。
 
 
-【批次 5：商业化与弹性规模化】
+【批次 5 / B5：商业化与弹性规模化】
 状态：按需演进
 目标：完成计费闭环，支撑高并发与大流量。
 --------------------------------------------------------------------------------
-5-1 计费与订阅闭环
+5-1 / B5-1 计费与订阅闭环
   - 集成 Stripe 支付网关。
   - 开发 /account/billing 页面，实现信用卡绑定。
   - 实现基于 usage_events 的后付费月结扣款，或基于配额（Quota）的预付费套餐。
 
-5-2 高并发架构重构
+5-2 / B5-2 高并发架构重构（引入 Redis；对应原 P1-R / productPlan 批次 7+）
   - 引入 Redis 缓存层，接管 API Key 鉴权的高频查询与用户级别的 Rate Limiting（限流）。
+  - 流式用量分桶增量上报（跨实例 checkpoint）。
   - 剥离单体架构，将 Web Server、API Gateway 与 Inference Runtime 分离至不同容器。
 
-5-3 多 GPU 算力池调度
+5-3 / B5-3 多 GPU 算力池调度
   - 引入负载均衡器（如 Nginx 或基于 Go 的自研网关）。
   - 实现根据模型请求路由到指定显存/GPU 节点的调度算法（如长文本模型路由至大显存节点）。
+
+
+【批次 6 / B6：Susan Web Chat（云端网页对话）】
+状态：后续 | 前置：B2 登录 + B4 推理 + B4-3 Usage
+目标：浏览器内云端 Chat 产品，对标 DeepSeek Web Chat（chat.deepseek.com 式体验）。
+--------------------------------------------------------------------------------
+6-1 / B6-1 子域与前端壳（代码仓：susan_web 或独立 chat 前端）
+  - 部署 chat.susan.com；不占用 susan.com/library 路径。
+
+6-2 / B6-2 云端会话存库与 CRUD
+  - 会话表：id(uuid)、user_id、title、model、created_at、updated_at。
+  - 消息表：session_id、role、content、tokens、created_at。
+
+6-3 / B6-3 本人会话 URL
+  - chat.susan.com/c/{uuid}：仅登录本人可读写续聊。
+
+6-4 / B6-4 分享链接
+  - chat.susan.com/s/{shareId}：默认公开只读；「公开可续聊」是否开放另定。
+
+6-5 / B6-5 浏览器流式对话 UI
+  - 调用 api.susan.com（/api/chat 或 /v1/chat/completions）；model 不强制 :cloud。
+
+6-6 / B6-6 与 Desktop 边界
+  - Desktop 本地 /c/{chatId} 仍 Local-first；第一期不做 Desktop ↔ Web Chat 双向同步。
+
+**B1 明确不做 Web Chat；B6 为独立后续批次。**
