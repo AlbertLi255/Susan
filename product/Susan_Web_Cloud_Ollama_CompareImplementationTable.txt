@@ -2529,6 +2529,11 @@ MVP 可采用：
 ================================================================================
 Susan 项目详细工作分解结构 (WBS)
 编号与第一部分一致：Bn-m ≡ 第一部分第九章 Bn-m ≡ 下文「n-m」
+
+每批统一三段：
+  【实施范围】做什么 / 明确不做什么
+  【测试范围】测哪些
+  【验收标准】怎样算过关（接受范围）
 ================================================================================
 
 【批次 0 / B0：基础设施与底层核心抽象】
@@ -2555,6 +2560,25 @@ Susan 项目详细工作分解结构 (WBS)
   - 在 CLI 端实现 Ed25519 密钥对生成逻辑（仅生成，暂不触发交互），固定路径为 ~/.susan/id_ed25519.pub。
   - 保持并沿用代码库中现有的请求签名（Signature）计算函数。
 
+【实施范围】
+  含：SUSAN_CLOUD_HOST / remotes 可配置；PG 核心表迁移脚本；保留字黑名单；
+      设备密钥生成与签名函数可测；Local 默认 127.0.0.1:14343 不变。
+  不含：任何 Web UI；susan login 完整交互（→ B2）；真实 Cloud 推理；Redis；
+      开放用户 Push；改默认 Host 为 api.susan.com。
+
+【测试范围】
+  - 单元：Host()/Cloud Host 解析；保留字拦截（push 到 official/susancloud → 403）
+  - 单元：密钥生成路径 ~/.susan/id_ed25519*；签名输出格式
+  - 迁移：空库执行迁移成功；表字段与第一部分十四章一致
+  - 回归：go test 相关包；本地 susan serve 仍监听 14343
+
+【验收标准】
+  □ 未设置 SUSAN_CLOUD_HOST 时，本地默认行为与现网一致（127.0.0.1:14343）
+  □ 设置 SUSAN_CLOUD_HOST 后，Cloud 相关请求指向配置值（可用集成测试或日志证明）
+  □ PG 四表可创建、可插入样例行
+  □ 保留字 Push 单测全绿
+  □ 无 Web 页面交付物（本批不验收前端）
+
 
 【批次 1 / B1：Web 壳与 Model Hub 只读版】
 周期：2-3 周 | 部署：基础云服务器（廉价 VPS），配置 Nginx 与 SSL
@@ -2563,7 +2587,7 @@ Susan 项目详细工作分解结构 (WBS)
 1-1 / B1-1 官网与下载落地页（代码仓：susan_web）
   - 开发 susan.com 首页（Hero Section、核心特性介绍）。
   - 开发 /download 页面，提供 Windows (.exe/.msi)、macOS (.zip/.dmg)、Linux 安装脚本的下载链接。
-  - 配置 docs.susan.com 子域名，指向静态文档页面或通过 Docusaurus 生成。
+  - 配置 docs.susan.com 子域名；主站导航直链 docs；/docs 可 301 兼容。
 
 1-2 / B1-2 登录/注册 UI 骨架（代码仓：susan_web）
   - 开发 /signin 与 /signup 前端页面。
@@ -2573,10 +2597,33 @@ Susan 项目详细工作分解结构 (WBS)
   - 开发模型列表页 /library（包含热门排序、标签分类）。
   - 开发模型搜索页 /library/search。
   - 开发模型详情页 /library/{namespace}/{model}（展示 Readme、参数量、更新时间）。
-  - 数据来源：通过定时任务或只读网关，拉取上游（如 Ollama Registry）的开源模型数据并落库。
+  - 官方缺省短链 /library/{model} 可用。
+  - 数据来源：定时任务或只读网关拉取上游 Registry 并落库（对外 namespace 映射 official）。
 
 1-4 / B1-4 前端指令呈现逻辑
-  - 在详情页实现复制按钮：若 namespace 为 official，前端指令自动隐藏前缀（例如展示为 susan run qwen2.5-70b）；其他则展示为 susan run {namespace}/{model}。
+  - 详情页复制按钮：official 缺省展示 susan run {model}；
+    其他展示 susan run {namespace}/{model}；可选展示 :cloud 示例文案。
+
+【实施范围】
+  含：首页、/download、docs 链接、signin/signup 骨架、/library 列表/搜索/详情、
+      上游只读镜像、Pull/Run 文案。
+  不含：CLI/Desktop 登录打通（→ B2）；api.susan.com/library JSON API（→ B3）；
+      真实云端推理（→ B4）；chat.susan.com（→ B6）；用户 Push；Billing。
+
+【测试范围】
+  - 页面：首页 / download / library / search / 详情 桌面与移动宽度冒烟
+  - 功能：搜索关键字命中；官方短链与 /library/official/{model} 等价或可跳转
+  - 文案：official 模型复制指令不含多余 namespace；厂商/用户模型含 namespace
+  - 数据：镜像任务至少成功同步一批上游模型；失败有日志
+  - 登录：邮箱注册/登录 Cookie 可用（不测 CLI）
+  - SEO/链接：导航「文档」直链 docs.susan.com
+
+【验收标准】
+  □ 公网可打开 susan.com、/download、/library、至少一个真实详情页
+  □ docs.susan.com 可访问（或明确占位页）
+  □ 未登录可浏览 Hub；登录后 Session 保持
+  □ 详情页复制指令符合 official 缺省规则
+  □ 无云端「立即运行」真实推理；无 Web Chat 入口承诺上线
 
 
 【批次 2 / B2：设备授权与 Account 控制台】
@@ -2584,19 +2631,36 @@ Susan 项目详细工作分解结构 (WBS)
 目标：彻底打通云端账号与本地 CLI/Desktop，实现设备级鉴权信任。
 --------------------------------------------------------------------------------
 2-1 / B2-1 账户服务端点 API（代码仓：Susan Server）
-  - 实现 /auth/device/code：接收本地发起的登录请求，返回 device_code, user_code, verification_uri。
-  - 实现 /auth/device/verify：轮询接口，确认用户是否在 Web 端完成了授权。
+  - 实现 Device Flow 相关端点（申请 device_code / 轮询换票；对齐第一部分七章参数）。
   - 实现 /user/profile 与 /user/devices（增删改查）。
 
 2-2 / B2-2 Web 端 Account 模块（代码仓：susan_web）
   - 开发 /account/profile：基本信息修改。
-  - 开发 /account/devices：展示已绑定的 CLI 设备列表，提供“移除设备/吊销公钥”按钮。
-  - 开发 /auth/device 验证中转页，用于接收并确认 user_code。
+  - 开发 /account/devices：已绑定设备列表，「移除设备/吊销公钥」。
+  - 开发 /device（或等价）验证页，确认 user_code。
 
 2-3 / B2-3 CLI 与 Desktop 登录交互（代码仓：Susan）
-  - 实现 susan login 命令：自动生成公钥 -> 请求 Code -> 终端打印跳转 URL 与验证码 -> 开始循环轮询。
-  - 轮询成功后，将服务端返回的授权状态及 Token 写入 ~/.susan/auth.json。
-  - 在 Susan Desktop 托盘应用中，加入“登录云端”菜单项，点击后唤起系统默认浏览器执行相同流程，并在托盘图标反馈登录状态。
+  - susan login：公钥 → Code → 打印 URL/验证码 → 轮询 → 写入 ~/.susan/auth.json。
+  - Desktop 托盘「登录云端」：唤起浏览器同一流程，托盘反馈登录状态。
+
+【实施范围】
+  含：方案一（Device Flow 绑定设备公钥）；Web Account profile/devices；
+      CLI/Desktop 登录闭环；auth.json 权限（0600 / Windows ACL 尽力）。
+  不含：API Key 管理页（→ B4-1）；Billing；完整 RFC 所有边角可后续补，
+      但 authorization_pending / slow_down / expired_token / access_denied 本批应具备。
+
+【测试范围】
+  - API：device 申请 → 浏览器授权 → token 轮询成功；过期/拒绝/过快轮询错误码
+  - CLI：susan login 全流程；auth.json 落盘；登出/吊销设备后请求失败
+  - Desktop：托盘登录状态与 /auth/me（或 /api/me）一致
+  - Web：/account/devices 列表与移除；移除后该设备不可再用
+  - 安全：未授权不能列他人设备
+
+【验收标准】
+  □ 一台新机器 CLI login 后，Web devices 页可见该设备
+  □ 移除设备后，该机旧凭证调用受保护云接口失败
+  □ Desktop 显示已登录，并可触发重新登录
+  □ 无 API Key 云端推理验收项（属 B4）
 
 
 【批次 3 / B3：Cloud 元数据 API 与兼容层契约】
@@ -2604,36 +2668,63 @@ Susan 项目详细工作分解结构 (WBS)
 目标：完善 API 路由规范，为真实云端 GPU 推理做契约准备。
 --------------------------------------------------------------------------------
 3-1 / B3-1 Hub 元数据 API 暴露（代码仓：Susan Server）
-  - 实现 api.susan.com/library/* 路由簇，提供与 Web 端路径完全一致的 JSON API（/library/{namespace}/{model}）。
-  - 使本地 CLI 在执行 susan run 时，能够通过该 API 准确获取模型的 Manifest 与分片下载地址。
+  - 实现 api.susan.com/library/*（与 Web 同 path 的 JSON：search/featured/详情等）。
 
 3-2 / B3-2 兼容层测试与对齐（代码仓：Susan Server）
-  - 编写 /v1/chat/completions (OpenAI 格式) 的契约测试集，确保系统现有实现在各种参数（Temperature, Stream 等）下符合标准。
-  - 编写 /v1/messages (Anthropic 格式) 的契约测试集，验证已注册路由的可靠性，无需重复造轮子。
+  - /v1/chat/completions、/v1/messages 契约测试（已实现路由：验证+补测，非从零）。
 
 3-3 / B3-3 Cloud 模型状态预热
-  - 在数据库的模型表中新增 is_cloud_supported 字段。
-  - 在 Web 端详情页和 CLI 列表查询中，透出支持云端运行的模型，状态暂标记为“排队中”或“即将上线”，不实际分配算力。
+  - 模型表 is_cloud_supported；Web/CLI 透出「即将上线/排队中」，不分配算力。
+
+【实施范围】
+  含：Hub 元数据 JSON API；OpenAI/Anthropic 契约测试加固；云端能力标记展示。
+  不含：真实 GPU 推理；Usage 扣费；强制 model 带 :cloud；Redis。
+
+【测试范围】
+  - 契约：GET api.../library/{ns}/{model} 与 susan.com 同键字段一致（namespace/model/full_name）
+  - 契约：/v1/chat/completions 流式与非流式关键路径（可 mock Runtime）
+  - 契约：/v1/messages 已注册且基本用例通过
+  - 展示：is_cloud_supported=true 的模型在详情页有明确「云端即将可用」态，且不可真跑
+
+【验收标准】
+  □ 前端可用 api.susan.com/library/... 拉详情（或文档给出 curl 示例且现场可复现）
+  □ OpenAI/Anthropic 契约测试集纳入 CI 或可一键跑绿
+  □ 无真实云端 token 计费；无「已上线可跑」误导文案
 
 
 【批次 4 / B4：Cloud 推理 MVP 上线】
-周期：3-4 周 | 部署：采购/租赁首台带 24GB VRAM 的 GPU 服务器
-目标：接入 GPU 算力，实现带有 API Key 鉴权的“云端模型本地化调用”。
+周期：3-4 周 | 部署：首台 24GB VRAM GPU 服务器
+目标：接入 GPU 算力，实现带 API Key 鉴权的云端模型调用。
 --------------------------------------------------------------------------------
 4-1 / B4-1 核心 API Key 系统落地（前后端联动）
-  - Web：开发 /account/keys 页面，允许用户生成、查看（仅一次）、吊销 API Key。
-  - Server：实现 Key 的生成算法，生成 sk-susan-xxx 格式的令牌，进行 Hash 落库。
-  - 在 Server 的 API 网关层（Middleware）增加 Bearer Token 校验逻辑，拦截非法调用。
+  - Web /account/keys：生成（仅一次明文）、列表、吊销。
+  - Server：sk-susan-… 生成、Hash 落库、Bearer 校验中间件。
 
 4-2 / B4-2 云端路由与 Tag 剥离网关（代码仓：Susan Server）
-  - 在 CLI 解析层增加针对 :cloud 后缀的识别逻辑（如 susan run qwen3:cloud）。
-  - 网关转发：本机 Daemon 检测到 :cloud 时，携带凭证转发至 Cloud Runtime。
-  - 直连 api.susan.com 且已鉴权：一律云端推理，不要求 model 带 :cloud；误带则剥离忽略；带 :local 返回 400。
-  - Tag 剥离：转发给底层引擎前剥离 :cloud，确保引擎识别原始模型名。
+  - 本机 Daemon：识别 :cloud 并转发 Cloud Runtime；转发前剥离后缀。
+  - 直连 api.susan.com：已鉴权一律云端；不强制 :cloud；:local → 400。
 
 4-3 / B4-3 Usage 用量异步采集（代码仓：Susan Server）
-  - 在 Server 网关层的 Response Writer 中植入钩子（Hook）。
-  - 流结束或连接断开时，按已累计 token 强制结算并写入 usage_events（MVP 进程内累计 + PG；不上 Redis）。
+  - 流结束或断开：按已累计 token 强制写入 usage_events（进程内累计 + PG；不上 Redis）。
+
+【实施范围】
+  含：API Key；至少 1 个云端可跑模型；本机 :cloud 与直连两种路径；
+      断开强制结算；基础限流可只做账户/Key 级简单版。
+  不含：Stripe/Billing 页面（→ B5-1）；Redis 分桶（→ B5-2）；
+      Web Chat（→ B6）；多 GPU 调度（→ B5-3）。
+
+【测试范围】
+  - 鉴权：无 Key → 401；错 Key → 401；吊销后旧 Key 失效（允许进程内短窗口，需文档说明）
+  - 路由：susan run {model}:cloud 出云端回复；直连 /v1/chat/completions 不带 :cloud 可出回复
+  - 路由：直连带 :local → 400；带 :cloud → 剥离后仍成功
+  - 计费：正常结束有 usage_events；中途断连仍有 aborted/部分 token 记录
+  - 回归：无 :cloud 的本地模型仍走 Local，不误打云
+
+【验收标准】
+  □ 用户可在网页生成 Key，并用 curl/SDK 打通一次云端流式对话
+  □ CLI :cloud 与 SDK 直连两条路径均演示成功
+  □ 同一次请求在 usage_events 可查到，且断连用例有记录
+  □ 本批交付说明写明：不上 Redis、不计费扣款（扣款属 B5）
 
 
 【批次 5 / B5：商业化与弹性规模化】
@@ -2641,41 +2732,70 @@ Susan 项目详细工作分解结构 (WBS)
 目标：完成计费闭环，支撑高并发与大流量。
 --------------------------------------------------------------------------------
 5-1 / B5-1 计费与订阅闭环
-  - 集成 Stripe 支付网关。
-  - 开发 /account/billing 页面，实现信用卡绑定。
-  - 实现基于 usage_events 的后付费月结扣款，或基于配额（Quota）的预付费套餐。
+  - 集成 Stripe（或选定支付网关）。
+  - /account/billing：绑卡、套餐、账单。
+  - 基于 usage_events 后付费或预付配额扣减。
 
-5-2 / B5-2 高并发架构重构（引入 Redis；对应原 P1-R / productPlan 批次 7+）
-  - 引入 Redis 缓存层，接管 API Key 鉴权的高频查询与用户级别的 Rate Limiting（限流）。
-  - 流式用量分桶增量上报（跨实例 checkpoint）。
-  - 剥离单体架构，将 Web Server、API Gateway 与 Inference Runtime 分离至不同容器。
+5-2 / B5-2 高并发架构重构（引入 Redis）
+  - Redis：API Key 缓存、限流计数、用量分桶 checkpoint、可选 Pub/Sub 撤销。
+  - 视需要拆分 Web / API Gateway / Inference 进程或容器。
 
 5-3 / B5-3 多 GPU 算力池调度
-  - 引入负载均衡器（如 Nginx 或基于 Go 的自研网关）。
-  - 实现根据模型请求路由到指定显存/GPU 节点的调度算法（如长文本模型路由至大显存节点）。
+  - 负载均衡；按模型/显存路由到不同 GPU 节点。
+
+【实施范围】
+  含：支付与账单；Redis 增强；多 GPU 调度（可分子阶段交付：先 5-1，再 5-2/5-3）。
+  不含：Web Chat 产品（→ B6）；改变 Local 默认 Host。
+
+【测试范围】
+  - 支付：测试卡订阅成功/失败；webhook 入账；欠费后推理返回 402
+  - Redis：Key 命中缓存；吊销后跨实例尽快失效；断连用量 checkpoint 与终态一致
+  - 限流：超限 429 + Retry-After
+  - 调度：至少两块 GPU（或两实例 mock）上请求可分流且不串模型
+
+【验收标准】
+  □ 付费用户可完成一次「产生用量 → 账单可见」闭环（测试环境可）
+  □ Redis 故障有降级策略说明（不可无 Key 即全站 500 无预案）
+  □ 多 GPU 或明确延期 5-3 并在验收单勾选「本阶段不做」
+  □ B0～B4 单机路径回归仍通过
 
 
 【批次 6 / B6：Susan Web Chat（云端网页对话）】
 状态：后续 | 前置：B2 登录 + B4 推理 + B4-3 Usage
-目标：浏览器内云端 Chat 产品，对标 DeepSeek Web Chat（chat.deepseek.com 式体验）。
+目标：浏览器内云端 Chat，对标 DeepSeek Web Chat。
 --------------------------------------------------------------------------------
-6-1 / B6-1 子域与前端壳（代码仓：susan_web 或独立 chat 前端）
-  - 部署 chat.susan.com；不占用 susan.com/library 路径。
-
+6-1 / B6-1 子域与前端壳：chat.susan.com
 6-2 / B6-2 云端会话存库与 CRUD
-  - 会话表：id(uuid)、user_id、title、model、created_at、updated_at。
-  - 消息表：session_id、role、content、tokens、created_at。
+6-3 / B6-3 本人会话 URL：/c/{uuid}
+6-4 / B6-4 分享链接：/s/{shareId}（默认公开只读）
+6-5 / B6-5 浏览器流式对话 UI → api.susan.com
+6-6 / B6-6 与 Desktop：第一期不做双向同步
 
-6-3 / B6-3 本人会话 URL
-  - chat.susan.com/c/{uuid}：仅登录本人可读写续聊。
+【实施范围】
+  含：网页 Chat UI；云端会话持久化；本人链接；分享只读链接；流式输出；登录态。
+  不含：Desktop 会话同步；主站 /library 下嵌套 Chat；公开可续聊（除非单独立项）；
+      本地模型在浏览器直连 14343（Web Chat 只走云端）。
 
-6-4 / B6-4 分享链接
-  - chat.susan.com/s/{shareId}：默认公开只读；「公开可续聊」是否开放另定。
+【测试范围】
+  - 功能：新建对话、续聊、历史列表、删除
+  - URL：/c/{uuid} 仅本人；他人打开 403/登录引导
+  - 分享：/s/{shareId} 未登录可读；不可代表原作者写入（只读）
+  - 流式：长回复可中断；中断后 Usage 仍记账（依赖 B4-3）
+  - 兼容：移动浏览器基本可用
+  - 回归：不影响 Desktop 本地 /c/{chatId}
 
-6-5 / B6-5 浏览器流式对话 UI
-  - 调用 api.susan.com（/api/chat 或 /v1/chat/completions）；model 不强制 :cloud。
-
-6-6 / B6-6 与 Desktop 边界
-  - Desktop 本地 /c/{chatId} 仍 Local-first；第一期不做 Desktop ↔ Web Chat 双向同步。
+【验收标准】
+  □ 用户登录后可在 chat.susan.com 完成至少一轮云端对话
+  □ 刷新页面会话仍在；分享链接他人可只读打开
+  □ 产品文案不声称与 Desktop 历史已同步
+  □ susan.com Model Hub 无强制依赖 Chat 才能浏览
 
 **B1 明确不做 Web Chat；B6 为独立后续批次。**
+
+================================================================================
+验收总则（所有批次通用）
+================================================================================
+- 每批结束需：可运行的演示路径 + 本批测试清单勾选结果 + 已知问题列表。
+- 「不含」项出现在交付物中视为范围蔓延，须改批次或单独立项。
+- 安全底线：密钥/API Key 不明文入库；生产关闭调试请求体日志。
+================================================================================
