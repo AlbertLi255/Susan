@@ -285,12 +285,23 @@
 - I：`OLLAMA_HOST=http://localhost:11434` → `SUSAN_HOST=http://localhost:14343`。合上游时这里会有冲突。
 
 ### 批次 5：Cloud 后端
-- D1-D3：cloud_proxy.go URL 替换
+- D1-D3：cloud_proxy.go URL 替换（Cloud Host 可配置，见对比表 P0-a）
 - H4：自建云推理代理服务
+- 路由边界：直连 `api.susan.com` 不强制 `model` 带 `:cloud`；`:cloud` 仅用于本机 Daemon 转发（见对比表 8.7.2）
+- Usage MVP：进程内累计 + 断开强制结算 + PostgreSQL；**本批次不引入 Redis**
 
 ### 批次 6：官网 + Model Hub（新仓库 susan_web）
 - H1、H2、H5、H6
 - H3 Registry 后端延后（先用 ollama registry）
+
+### 批次 7+（后续）：Redis 与多节点增强
+触发条件：第二台 API 节点，或需要跨实例计费/限流/Key 撤销广播时。
+- Redis 基础设施
+- 流式用量分桶增量上报（对比表 P1-R / 第十五章）
+- API Key 二级缓存 + Pub/Sub 撤销
+- （可选）网关限流跨节点聚合
+
+**MVP / 批次 5～6 明确不做 Redis。**
 
 ---
 

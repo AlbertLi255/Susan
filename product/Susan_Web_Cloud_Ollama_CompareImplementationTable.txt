@@ -1,3 +1,5 @@
+
+第一部分
 Susan Web / Cloud v1
 Ollama 对照架构与实施说明
 ========================================
@@ -76,11 +78,27 @@ susan.com
 - 对外品牌名是 Model Hub；列表路径保持 /library/search|featured|latest|trending。
 - 所有模型详情统一公式：susan.com/library/{namespace}/{model}
   与 CLI susan pull|run {namespace}/{model} 精确一一对应。
-- 官方 library 命名空间可缺省：susan.com/library/{model} ⇔ susan run {model}。
+- 官方 namespace 主名为 official（可缺省）：susan.com/library/{model} ⇔ susan run {model}
+  （完整形 /library/official/{model}；别名 susanofficial）。
 - 旧稿根路径 /{username}/{model}、以及 /library/models/{model}，改为兼容跳转
   （301 → /library/{username}/{model}），不作新链接主规范。
 - 可选：/models 仅 301 到 /library（首页别名）。
 - 保留字与 susancloud 命名空间见 8.7.5；数据源 MVP 仍走 registry.ollama.ai。
+
+决策补充（路由边界 / 流式计费 / 离线优先，见 8.7.2、第十五章、原则 15～16）：
+
+1. :cloud 仅用于「本机 Daemon → 云端」的显式路由。
+   直连 api.susan.com 且已鉴权的请求一律云端推理，不要求 model 带 :cloud；
+   若携带 :cloud 则剥离后忽略；若携带 :local 则返回 400。
+   OpenAI / LangChain 等 SDK 示例：base_url=https://api.susan.com/v1，
+   model 写 qwen2.5:70b 或 susancloud/deepseek-r1 即可，不要强制 :cloud。
+
+2. 流式计费：以 Cloud Runtime 出口为准；连接断开须立即按已生成 token 入账。
+   MVP：进程内累计 + 断开强制结算 + PostgreSQL 落库；不引入 Redis。
+   Redis 分桶增量上报、跨节点共享累计值：列入后续批次（见第九章 P1-R）。
+
+3. 默认 Local Host 仍为 127.0.0.1:14343，并非 api.susan.com。
+   本地已有模型时，远端探测须短超时失败并降级本地，避免无网卡死。
 
 
 网站结构说明
@@ -1255,6 +1273,21 @@ model 全名中的 {namespace}/{model} 与 Web / Hub API 的
 
     两者不得在文档或配置示例中混用端口语义。
 
+    澄清：默认 Host 不是 api.susan.com。
+    envconfig 默认仍为 127.0.0.1:14343；Cloud 仅在显式 :cloud、
+    显式配置 SUSAN_CLOUD_HOST / 直连 api.susan.com 时进入。
+
+16. 本地优先与离线降级（决策定稿）：
+
+    - susan run qwen3（无 :cloud）：本地优先；已有权重则直接跑，
+      不阻塞等待云端或 Registry。
+    - 可选远端探测（更新检查、registry 元数据、云探活）：
+      短超时快速失败（建议连接/总超时约 1～2 秒量级），
+      失败则降级只读本地 manifest，不得拖成数十秒 DNS/连接卡死。
+    - 显式 :cloud 或 base_url=api.susan.com：允许较长超时；
+      失败应明确报错，不假装本地成功。
+    - SUSAN_NO_CLOUD=1（代码已支持）：强制关闭远端能力，离线场景可文档推荐。
+
 
 七、认证流程
 ----------------------------------------
@@ -1592,7 +1625,7 @@ susanofficial / susanOfficial 为官方别名，解析到同一批官方模型�
 
 (1) 路由标记标准语法
 - 本地推理：qwen2.5:70b 或 qwen2.5:70b:local
-- 云端推理：qwen2.5:70b:cloud 或 alice/my-qwen:cloud
+- 云端推理（经本机 Daemon 转发）：qwen2.5:70b:cloud 或 alice/my-qwen:cloud
 
 与代码对齐（internal/modelref/modelref.go）：
 - :cloud / :local 为后缀解析；同时出现返回 ErrConflictingSourceSuffix。
@@ -1604,9 +1637,28 @@ susanofficial / susanOfficial 为官方别名，解析到同一批官方模型�
 - 拒绝 @cloud/ 前缀：无需引入额外非标准解析器，保持与标准 modelref 语法兼容。
 - 拒绝 :remote 别名：收敛 API 概念，对外仅保留唯一的 :cloud，消除同义词分裂。
 
-(3) 网关层执行流程
+(3) 路由边界按「请求落点」划分（决策定稿，解决 SDK 歧义）
 
-    [客户端请求: qwen2.5:70b:cloud]
+:cloud 是 Local → Cloud 的显式路由标记，不是 Cloud 入口的必填字段。
+
+    请求落点                              如何判云端                    model 是否要 :cloud
+    ------------------------------------------------------------------------------------------------
+    本机 127.0.0.1:14343（CLI/Desktop 默认） 看 :cloud / :local；无后缀本地优先   要云端时需要 :cloud
+    https://api.susan.com（直连 + API Key） 一律云端推理（只校验鉴权）         不要求；误带则剥离忽略
+
+细则：
+- 直连云端时若带 :local：返回 HTTP 400（语义矛盾），不得静默忽略。
+- 直连云端时若带 :cloud：剥离后缀后按真实模型名推理，行为与不带后缀相同。
+- OpenAI SDK / LangChain 示例：
+    base_url = https://api.susan.com/v1
+    model    = "qwen2.5:70b" 或 "susancloud/deepseek-r1"
+  不要教用户在直连云端时强制加 :cloud。
+- 云端 API 上仍用 Namespace 区分产品线（susancloud/... vs qwen/...），
+  与「是否云端」正交（见 8.7.5）。
+
+(4) 经本机 Daemon 转发时的网关执行流程
+
+    [客户端请求: qwen2.5:70b:cloud]   （打到 127.0.0.1:14343）
                 │
                 ▼
     [Local API / Gateway 匹配 :cloud] ────► 转发至 https://api.susan.com:443
@@ -1617,12 +1669,16 @@ susanofficial / susanOfficial 为官方别名，解析到同一批官方模型�
                 ▼
     [投递 Cloud Runtime]              ────► 推理并以 SSE / NDJSON 返回流
 
-(4) 缺省兜底策略（无 :cloud 也无 :local）
+直连 api.susan.com 时：无上述「匹配 :cloud」步骤；鉴权通过后直接投递 Runtime。
+若 model 仍带 :cloud，只做剥离，不做「是否云端」二次判断。
+
+(5) 缺省兜底策略（无 :cloud 也无 :local，且请求落在本机 Daemon）
 - 当用户仅指定 qwen2.5:70b 时：
   优先检查本地 14343 Daemon 是否已下载该权重；
   若存在则本地运行；
   若不存在则提示拉取（susan pull …）或改用 :cloud 运行。
 - 显式 :local 时：仅本地；本地无权重则报错，不自动转云。
+- 远端探测须短超时并降级本地（见原则 16），避免无网卡死。
 
 8.7.3 Model Hub Web 站 URL 与防冲突设计
 
@@ -1681,7 +1737,8 @@ Susan 云端专属   无                      无                     susancloud
 Web 详情 URL     /library/...            /{owner}/{repo}        /library/{namespace}/{model}
 HF 模型直拉      不支持                  hf-cli download        susan pull hf:owner/repo
 API 协议底座     Docker V2 Registry      Git / HTTP API         Docker V2 Registry
-网关路由动作     本地加载                云端 API 交互          识别 :cloud 并剥离后缀
+网关路由动作     本地加载                云端 API 交互          本机靠 :cloud；直连 api.susan.com
+                                                                       不依赖后缀（见 8.7.2）
 
 8.7.5 Web URL ↔ CLI 全命名空间一对一映射（决策定稿）
 
@@ -1742,11 +1799,16 @@ susancloud                          未定义                              官�
 cloud/ 前缀                         旧 8.5 曾写、后废止                 继续废止；勿与 susancloud 混淆
 /library/featured → /models/...     曾误写                              继续废止
 列表页路径                          /library/search 等                  不变
-:cloud 后缀路由                     8.7.2                               不变，与 Namespace 正交
+:cloud 后缀路由                     仅本机 Daemon 分流                 直连 api.susan.com 不强制 :cloud；
+                                                                       误带则剥离；:local 返回 400
+流式计费                            结束时结算偏弱                     断开强制结算；MVP 进程内累计；
+                                                                       Redis 分桶列入 P1-R / 批次 7+
+默认 Host                           易被误读为 api.susan.com           明确仍为 127.0.0.1:14343；
+                                                                       远端探测短超时降级本地（原则 16）
 Hub 元数据 API 路径                 /models/{namespace}/{model}         改为 /library/{namespace}/{model}，
                                                                        与 Web 同 path、仅主机不同
 推理 /api /v1 的 model 字段         任意字符串                          必须与 CLI 全名一致；
-                                                                       susancloud 专属常用 …:cloud
+                                                                       直连云端不强制 …:cloud
 GET /v1/models/:model 含斜杠        未说明                              须 URL 编码；或改走
                                                                        GET api.susan.com/library/{ns}/{model}
 
@@ -1779,12 +1841,20 @@ GET /v1/models/:model 含斜杠        未说明                              �
 
 [P1]
 11. API Keys
-12. /v1/ OpenAI Compatible
-13. Anthropic Compatible（/v1/messages，reserved → 实现）
+12. /v1/ OpenAI Compatible（验证与文档；含直连云端时 model 不强制 :cloud）
+13. Anthropic Compatible（/v1/messages：验证 + 补文档 + 补测试，非从零实现）
 14. Model Publishing（push MVP 策略：先占位，等 Model Hub 建好）
 15. Model Storage
 16. Cloud Runtime（Susan Cloud MVP 推理上线）
-17. Usage
+17. Usage（MVP：进程内累计 + 断开强制结算 + PG；见第十五章）
+
+[P1-R] 后续批次：引入 Redis（多节点后再做，MVP 不做）
+R1. Redis 基础设施（单机可先旁路验证，生产随第二 API 节点启用）
+R2. 流式用量分桶增量上报（跨实例 checkpoint，防逃单增强）
+R3. API Key 二级缓存 + Pub/Sub 撤销广播（见第七章 3.2；MVP 仅进程内 LRU + DB）
+R4. 网关限流计数跨节点聚合（可选，与第十三章配合）
+
+说明：R1～R4 绑定「多 API 节点」或「高对抗计费」触发，不要为单机 MVP 提前引入。
 
 [P2]
 18. Billing
@@ -2189,20 +2259,36 @@ Susan Cloud 是付费服务，且单机 MVP 只有一张 24GB GPU。
 - 经由 cloud passthrough 转发的请求（/v1/* 各路径），
   必须在转发层补齐计量，否则这部分用量会被漏记
 
-15.3 流式请求的结算口径
+15.3 流式请求的结算口径（决策定稿，防逃单）
 
+原则：以 Cloud Runtime 出口为准；不得依赖「等正常 done 帧才记账」。
+
+正常结束：
 - prompt_tokens：请求进入 Runtime 时即可确定，先行记录
-- completion_tokens：以最后一帧为准，正常结束时从 done 帧读取
-- 中途失败（OOM、断网、被 abort）：按「已生成的 token 照常计入」，
-  同时在 usage_events 中记录 status = error / aborted 与错误码
-  （这是一个商业决策，此处先定为「照计」；若改为「不计」，
-   需同步修改对账逻辑与用户协议，不可只改代码）
-- 客户端主动断开：Runtime 侧通过 context cancel 感知，按已生成部分结算
+- completion_tokens：以最后一帧为准，从 done 帧读取后落库
+
+中途失败 / 客户端主动断开（硬要求）：
+- Runtime 在 context.Done / 连接关闭的第一时间，
+  用**已累计的 completion_tokens** 写入 usage_events
+  （status = error / aborted，附错误码）
+- 商业口径：已生成部分照常计入（若改为「不计」须同步改对账与用户协议）
+
+MVP 实现（单机，不引入 Redis）：
+- 进程内累计 completion_tokens（可每 N token 或每 T 秒刷新内存计数）
+- 断开时同步强制结算并入队落 PostgreSQL
+- 异步队列写入失败 → 重试 → 仍失败则落本地文件待补录
+
+后续批次（多节点 / 高对抗，见第九章 P1-R）：
+- Redis 分桶增量上报（如每 50 token 上报一次累计值）
+- 跨 API 实例共享进行中请求的用量 checkpoint
+- 与 API Key 缓存 Pub/Sub 失效等同批引入 Redis，避免为计量单独提前上依赖
 
 15.4 幂等与防重
 
 - 每次推理请求分配唯一 request_id，作为 usage_events 的唯一键
 - 重试、网络抖动、补偿任务重复投递时，靠该唯一键去重
+- 增量累计采用「覆盖最终累计值」或「只增不减的 checkpoint」，
+  最终只产生一条账单，防止重复扣费
 - 该 request_id 与 /api/abort 所需的 ID 是同一个（见第三章 /api/abort 落地前置条件），
   两处应共用同一套生成与注册机制，不要各做一套
 
@@ -2211,6 +2297,7 @@ Susan Cloud 是付费服务，且单机 MVP 只有一张 24GB GPU。
 - 计量事件异步写入（内存队列 + 批量落库），不阻塞推理响应
 - 写入失败进重试队列，仍失败则落本地文件，人工补录
 - 每日对账任务：比对 Runtime 日志与 usage_events 总量，偏差超阈值告警
+- MVP 对账以单机日志 + PG 为准；上 Redis 分桶后增加 checkpoint 与终态一致性校验
 
 15.6 扣减顺序
 
@@ -2411,3 +2498,128 @@ MVP 可采用：
 （决策索引：第六章 12～15 款、第七章 3.5 方案一、第八章 8.7、第十章性能旁注、
  第十八～十九章。对方 AI 建议中的四仓拆分、Native /v2、双向同步、过早 Redis/分片，
  均已明确拒绝或延后。）
+
+第二部分
+================================================================================
+Susan 项目详细工作分解结构 (WBS)
+================================================================================
+
+【批次 0：基础设施与底层核心抽象】
+周期：1-2 周
+目标：完成代码库的硬编码清理、数据库结构设计与核心安全规范，不涉及界面展示。
+--------------------------------------------------------------------------------
+0-1 全局路由与端点解耦（代码仓：Susan）
+  - 在 envconfig/config.go 中新增环境变量 SUSAN_CLOUD_HOST，替换原本所有的 ollama.com 硬编码。
+  - 将代码内部的默认注册中心白名单与请求端点修改为 api.susan.com。
+  - 全局搜索并重构 registry.go 中的下载拉取逻辑，确保兼容新的端点变量。
+
+0-2 数据字典与表结构定型（数据库：PostgreSQL）
+  - 创建 users 表：包含 id, email, password_hash, created_at。
+  - 创建 devices 表：包含 id, user_id, public_key (Ed25519), device_name, last_active。
+  - 创建 api_keys 表：包含 id, user_id, key_hash, prefix (如 sk-susan-abc...), is_revoked。
+  - 创建 usage_events 表：包含 id, user_id, model_name, prompt_tokens, completion_tokens, duration_ms。
+
+0-3 Registry 命名空间安全策略（代码仓：Susan）
+  - 在 server/registry.go 的 Push/Pull 前置拦截器中，写入保留字硬编码黑名单：library, official, susancloud, admin, system。
+  - 编写单元测试，确保普通用户尝试向上述命名空间 Push 模型时返回 403 Forbidden。
+
+0-4 身份体系方案一（Device Flow）底层代码
+  - 在 CLI 端实现 Ed25519 密钥对生成逻辑（仅生成，暂不触发交互），固定路径为 ~/.susan/id_ed25519.pub。
+  - 保持并沿用代码库中现有的请求签名（Signature）计算函数。
+
+
+【批次 1：Web 壳与 Model Hub 只读版】
+周期：2-3 周 | 部署：基础云服务器（廉价 VPS），配置 Nginx 与 SSL
+目标：建立用户可访问的官方网站，实现模型库的展示与检索。
+--------------------------------------------------------------------------------
+1-1 官网与下载落地页（代码仓：susan_web）
+  - 开发 susan.com 首页（Hero Section、核心特性介绍）。
+  - 开发 /download 页面，提供 Windows (.exe/.msi)、macOS (.zip/.dmg)、Linux 安装脚本的下载链接。
+  - 配置 docs.susan.com 子域名，指向静态文档页面或通过 Docusaurus 生成。
+
+1-2 登录/注册 UI 骨架（代码仓：susan_web）
+  - 开发 /signin 与 /signup 前端页面。
+  - 实现基于邮箱密码的 JWT 登录态维持（Session/Cookie），但不涉及 CLI 联动。
+
+1-3 Model Hub 镜像展示（代码仓：susan_web）
+  - 开发模型列表页 /library（包含热门排序、标签分类）。
+  - 开发模型搜索页 /library/search。
+  - 开发模型详情页 /library/{namespace}/{model}（展示 Readme、参数量、更新时间）。
+  - 数据来源：通过定时任务或只读网关，拉取上游（如 Ollama Registry）的开源模型数据并落库。
+
+1-4 前端指令呈现逻辑
+  - 在详情页实现复制按钮：若 namespace 为 official，前端指令自动隐藏前缀（例如展示为 susan run qwen2.5-70b）；其他则展示为 susan run {namespace}/{model}。
+
+
+【批次 2：设备授权与 Account 控制台】
+周期：2-3 周 | 代码仓：Susan 与 susan_web 联动
+目标：彻底打通云端账号与本地 CLI/Desktop，实现设备级鉴权信任。
+--------------------------------------------------------------------------------
+2-1 账户服务端点 API（代码仓：Susan Server）
+  - 实现 /auth/device/code：接收本地发起的登录请求，返回 device_code, user_code, verification_uri。
+  - 实现 /auth/device/verify：轮询接口，确认用户是否在 Web 端完成了授权。
+  - 实现 /user/profile 与 /user/devices（增删改查）。
+
+2-2 Web 端 Account 模块（代码仓：susan_web）
+  - 开发 /account/profile：基本信息修改。
+  - 开发 /account/devices：展示已绑定的 CLI 设备列表，提供“移除设备/吊销公钥”按钮。
+  - 开发 /auth/device 验证中转页，用于接收并确认 user_code。
+
+2-3 CLI 与 Desktop 登录交互（代码仓：Susan）
+  - 实现 susan login 命令：自动生成公钥 -> 请求 Code -> 终端打印跳转 URL 与验证码 -> 开始循环轮询。
+  - 轮询成功后，将服务端返回的授权状态及 Token 写入 ~/.susan/auth.json。
+  - 在 Susan Desktop 托盘应用中，加入“登录云端”菜单项，点击后唤起系统默认浏览器执行相同流程，并在托盘图标反馈登录状态。
+
+
+【批次 3：Cloud 元数据 API 与兼容层契约】
+周期：2 周
+目标：完善 API 路由规范，为真实云端 GPU 推理做契约准备。
+--------------------------------------------------------------------------------
+3-1 Hub 元数据 API 暴露（代码仓：Susan Server）
+  - 实现 api.susan.com/library/* 路由簇，提供与 Web 端路径完全一致的 JSON API（/library/{namespace}/{model}）。
+  - 使本地 CLI 在执行 susan run 时，能够通过该 API 准确获取模型的 Manifest 与分片下载地址。
+
+3-2 兼容层测试与对齐（代码仓：Susan Server）
+  - 编写 /v1/chat/completions (OpenAI 格式) 的契约测试集，确保系统现有实现在各种参数（Temperature, Stream 等）下符合标准。
+  - 编写 /v1/messages (Anthropic 格式) 的契约测试集，验证已注册路由的可靠性，无需重复造轮子。
+
+3-3 Cloud 模型状态预热
+  - 在数据库的模型表中新增 is_cloud_supported 字段。
+  - 在 Web 端详情页和 CLI 列表查询中，透出支持云端运行的模型，状态暂标记为“排队中”或“即将上线”，不实际分配算力。
+
+
+【批次 4：Cloud 推理 MVP 上线】
+周期：3-4 周 | 部署：采购/租赁首台带 24GB VRAM 的 GPU 服务器
+目标：接入 GPU 算力，实现带有 API Key 鉴权的“云端模型本地化调用”。
+--------------------------------------------------------------------------------
+4-1 核心 API Key 系统落地（前后端联动）
+  - Web：开发 /account/keys 页面，允许用户生成、查看（仅一次）、吊销 API Key。
+  - Server：实现 Key 的生成算法，生成 sk-susan-xxx 格式的令牌，进行 Hash 落库。
+  - 在 Server 的 API 网关层（Middleware）增加 Bearer Token 校验逻辑，拦截非法调用。
+
+4-2 云端路由与 Tag 剥离网关（代码仓：Susan Server）
+  - 在 CLI 解析层增加针对 :cloud 后缀的识别逻辑（如 susan run qwen3:cloud）。
+  - 网关转发：检测到请求模型带有 :cloud 标识时，网关自动将请求从“路由至本地 Runtime”切换为“携带 API Key 路由至 Cloud Runtime”。
+  - Tag 剥离：在转发给底层的 vLLM/llama.cpp 引擎前，自动剥离 :cloud 后缀，确保底层引擎能正确识别原始模型名。
+
+4-3 Usage 用量异步采集（代码仓：Susan Server）
+  - 在 Server 网关层的 Response Writer 中植入钩子（Hook）。
+  - 当云端推理流（Stream）结束或连接断开时，异步计算本次消耗的 prompt_tokens、completion_tokens 与 duration，并写入 usage_events 表。
+
+
+【批次 5：商业化与弹性规模化】
+状态：按需演进
+目标：完成计费闭环，支撑高并发与大流量。
+--------------------------------------------------------------------------------
+5-1 计费与订阅闭环
+  - 集成 Stripe 支付网关。
+  - 开发 /account/billing 页面，实现信用卡绑定。
+  - 实现基于 usage_events 的后付费月结扣款，或基于配额（Quota）的预付费套餐。
+
+5-2 高并发架构重构
+  - 引入 Redis 缓存层，接管 API Key 鉴权的高频查询与用户级别的 Rate Limiting（限流）。
+  - 剥离单体架构，将 Web Server、API Gateway 与 Inference Runtime 分离至不同容器。
+
+5-3 多 GPU 算力池调度
+  - 引入负载均衡器（如 Nginx 或基于 Go 的自研网关）。
+  - 实现根据模型请求路由到指定显存/GPU 节点的调度算法（如长文本模型路由至大显存节点）。
