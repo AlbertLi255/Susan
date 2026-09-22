@@ -13,6 +13,7 @@ Ollama 对照架构与实施说明
     B0-1  ≡  第二部分「批次 0」下的「0-1 全局路由与端点解耦」
     B1-3  ≡  第二部分「批次 1」下的「1-3 Model Hub 镜像展示」
     B6    ≡  第二部分「批次 6」Susan Web Chat（整批）
+    B7    ≡  第二部分「批次 7」模型 Push / 发布管理（整批）
 
   章节标题后的 [Bn] 表示该章内容主要由哪些批次落地；
   [文档] 表示架构说明，不单独对应某一工作包。
@@ -22,7 +23,7 @@ Ollama 对照架构与实施说明
   批次    名称（短）              第二部分位置          第一部分主要章节
   ------------------------------------------------------------------------
   B0      基础设施与抽象          【批次 0】            六(原则) 七(认证底座) 八(命名空间)
-                                                       十四(数据模型) 十五(计费口径) P0-a～d
+                                                       十四(数据模型) 十五(计费口径)
   B1      Web 壳 + Hub 只读       【批次 1】            二(网站) 三(/library API 只读形态)
                                                        八(URL 公式) 十(服务器/Web)
   B2      设备授权 + Account      【批次 2】            二(/account /device) 七(认证全流程)
@@ -31,7 +32,9 @@ Ollama 对照架构与实施说明
                                                        十五(Usage MVP) 十三(限流起步)
   B5      商业化 + 弹性           【批次 5】            十三～十五深化 十四(Redis 阶段)
                                                        十八 十一(Admin) → 对应 5-1～5-3
-  B6      Susan Web Chat          【批次 6】            二(chat.susan.com 占位) [P2-W]/B6
+  B6      Susan Web Chat          【批次 6】            二(chat.susan.com 占位)
+  B7      模型 Push / 发布管理    【批次 7】            二(/account/models) 八.4 Push
+                                                       十六.4 用户上传合规 三(/api/push)
 
   已完成（无 B 号，对照表「本地产品」）：CLI / Desktop / Local Engine（见一、定位）
 
@@ -278,6 +281,7 @@ Susan 官方文档。
 
 14. /account/models
 用户拥有、下载、发布或管理的模型。
+B1/B2 阶段可先做「我的列表」占位；完整发布/下架/元数据管理见后续批次 B7。
 
 15. /account/keys
 API Key 管理。
@@ -1017,6 +1021,7 @@ model 全名中的 {namespace}/{model} 与 Web / Hub API 的
     - MVP 阶段 push 先占好位，API 形态保留，但实际写入端暂不开放
     - 等待 Susan Model Hub（自建 Registry）建好后再启用 push
     - 后续 pull/push 都切到 registry.susan.com
+    - 网页管理与开放写入见后续批次 B7（/account/models + CLI push）
 
 
 18. Ollama Model Manifest
@@ -1922,6 +1927,20 @@ B6-6  与 Desktop：第一期不做双向同步（原则 14）
 
 说明：对标 DeepSeek Web Chat；Susan 云端增值层，Ollama 无对等产品。
 
+------------------------------------------------------------------------
+[B7] 模型 Push / 发布管理  ≡ 第二部分【批次 7】
+------------------------------------------------------------------------
+前置：自建 registry.susan.com（或等价写入端）可用 + B2 登录 + 保留字/上游黑名单（B0-3）。
+B0～B6 均不开放真实用户 Push。
+
+B7-1  启用 CLI susan push → registry.susan.com（鉴权 = 方案一设备/账号）
+B7-2  Web /account/models：我发布的模型列表、详情入口、下架/删除、改显示名与简介
+B7-3  发布元数据：License 声明、可见性（公开/私有）、标签；合规见十六.4
+B7-4  Hub 收录：push 成功后 /library/{namespace}/{model} 可发现（或经审核后可见）
+B7-5  （可选，二期）网页辅助上传；一期默认大文件仍走 CLI push（对齐 Ollama）
+
+说明：网页侧重「管理与治理」；大模型文件上传一期以 CLI 为主，避免浏览器直传大 Blob 体验。
+
 
 [旧编号对照]（阅读历史讨论用）
 
@@ -1931,6 +1950,7 @@ B6-6  与 Desktop：第一期不做双向同步（原则 14）
   旧 P1-R        → B5-2
   旧 P2 18～25   → B5-1～B5-3（Admin/调度等）
   旧 P2-W        → B6
+  （新增）模型发布 / Push 网页管理 → B7
 
 
 十、第一台 Susan Server 的定位 [B1 部署 Web；B4 上 GPU]
@@ -2791,6 +2811,52 @@ Susan 项目详细工作分解结构 (WBS)
   □ susan.com Model Hub 无强制依赖 Chat 才能浏览
 
 **B1 明确不做 Web Chat；B6 为独立后续批次。**
+
+
+【批次 7 / B7：模型 Push / 发布管理】
+状态：后续占位 | 前置：registry.susan.com 写入端就绪 + B2 登录 + B0-3 保留字/黑名单
+目标：开放用户/组织向 Model Hub 发布模型；网页管理「我发布的模型」；大文件一期以 CLI push 为主。
+--------------------------------------------------------------------------------
+7-1 / B7-1 启用 CLI Push 写入端
+  - susan push {namespace}/{model}:{tag} → registry.susan.com
+  - 鉴权与设备/账号绑定（方案一）；拒绝向 official/susancloud/保留字 namespace push
+
+7-2 / B7-2 Web /account/models 管理台
+  - 列表：我拥有 / 我发布的模型（名称、tag、更新时间、可见性、状态）
+  - 操作：打开 Hub 详情、下架/删除、编辑显示名与简介（不替代 CLI 传权重）
+  - B1/B2 若已有占位页，本批补齐真实数据与操作
+
+7-3 / B7-3 发布元数据与合规（见第一部分十六.4）
+  - Push/发布时强制 License 声明与责任条款确认
+  - 可见性：公开 / 私有；公开模型进入 Hub 发现（或「待审核」态）
+  - 侵权举报 / 下架入口（可先人工流程）
+
+7-4 / B7-4 Hub 收录联动
+  - push 成功后 /library/{namespace}/{model} 可访问（或审核通过后可见）
+  - api.susan.com/library/{namespace}/{model} 元数据同步更新
+
+7-5 / B7-5 （可选二期）网页辅助上传
+  - 浏览器分片上传 Blob；一期默认不做，文档引导使用 CLI
+
+【实施范围】
+  含：CLI push 开放；/account/models 管理；License/可见性；Hub 收录联动；保留字拦截。
+  不含：B0～B6 内开放 push；任意用户抢注 meta/qwen 等上游名（黑名单仍生效）；
+      一期强制网页传 数 GB 权重；Admin 自动审核引擎（可人工）。
+
+【测试范围】
+  - CLI：登录用户 push 到自己的 namespace 成功；pull 他人可下
+  - 安全：push 到 official/susancloud/library/保留字 → 403
+  - Web：/account/models 列表与下架；下架后 Hub 详情不可见或标记下架
+  - 合规：无 License 确认不可公开发布
+  - API：push 后 GET /library/{ns}/{model} 字段正确
+
+【验收标准】
+  □ 演示账号可 susan push 自有模型并在 Hub 打开详情页
+  □ /account/models 可看到该模型并完成一次下架
+  □ 保留字/官方 namespace 无法被普通用户占用
+  □ 产品说明写清：大文件推荐 CLI；网页以管理为主（除非 7-5 已做）
+
+**B0～B6 明确不做真实用户 Push；B7 为独立后续批次。**
 
 ================================================================================
 验收总则（所有批次通用）
