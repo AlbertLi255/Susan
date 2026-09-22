@@ -12,7 +12,11 @@
 | 运行时环境变量 | `OLLAMA_HOST=http://localhost:11434` → `SUSAN_HOST=http://localhost:14343`（其余 `OLLAMA_*` 同样改为 `SUSAN_*`） |
 | 数据目录 | `%LOCALAPPDATA%\Susan`（直接改名，**不做迁移**） |
 | 域名 | 自行购买 `susan.com`（官网 www / 文档 docs / cloud api / registry） |
-| Model Hub 就绪前 | **继续使用 ollama registry**（registry.ollama.com），不急于切换 |
+| 自建启动时机 | **域名申请下来并完成 DNS（www/docs/api/registry）后，立即开始自建**（官网、Model Hub、`registry.susan.com`、对象存储等）；不等「Hub 完全稳定」再动手 |
+| pull 过渡 | 自建 Registry **写入/分发未就绪前**，pull 仍走 `registry.ollama.ai`；就绪后切 `registry.susan.com`。全程与 `api.susan.com` 硬拆分（见对比表 8.4 坑 1） |
+| Cloud vs Registry | **硬拆分**：鉴权/推理 → `api.susan.com`；blob/pull → Registry 域。禁止全局改端点把下载指到 API |
+| Namespace 防抢注 | 精确黑名单 **+** 前缀正则 `^susan` / `^official`（服务端强制，见对比表 8.7.3 坑 2） |
+| API Key scopes | `api_keys.scopes` 必填；默认 `inference:run`；网关校验真伪 + scope；禁止无 scope 超管 Key |
 | Web 仓库 | 独立新仓库 `susan_web`（private） |
 | 官网定位 | 对标 ollama.com，UI/功能一致，仅品牌替换为 Susan；**自行开发、自托管**，不 fork 也不依赖第三方平台 |
 | 服务器 | **自行购买实体服务器**，不使用云服务，全部自托管 |
@@ -125,10 +129,11 @@
 - **后续阶段**：完全建立自有 registry 后，数据源切换为 Susan 自己的 mirror（susan library）
 - 用户上传/发布功能留待后续
 
-### 12. H3 Registry 后端（延后）
-- 实现 `/v2/...` manifest/blobs 接口
-- **就绪前：pull/push 继续走 `registry.ollama.com`**（不改 E 项代码）
-- 等 Model Hub 后端稳定后，再切到 `registry.susan.com`
+### 12. H3 Registry 后端（域名到手即开工，非无限延后）
+- 触发：`susan.com` 已购 + `registry` 子域 DNS/证书就绪 → **立即开工**自建 Registry（`/v2/...` manifest/blobs + MinIO）
+- 实现 `/v2/...` manifest/blobs 接口，部署到 `registry.susan.com`
+- **切换完成前**：客户端 pull 仍指向 `registry.ollama.ai`（不改 E 项默认 Host；与 `api.susan.com` 硬拆分，见对比表 8.4 坑 1）
+- **自建分发就绪后**：默认 Registry Host 切到 `registry.susan.com`；再开放用户 Push（对齐对比表 B7）
 
 ### 13. H5 文档站部署
 - Mintlify CLI 部署 docs/ 到 `docs.susan.com`
@@ -144,6 +149,7 @@
 - 自行购买 `susan.com`
 - DNS 配置子域名：www / docs / api / registry
 - HTTPS 证书：可用 Let's Encrypt 免费证书（自托管服务器）
+- **域名 + DNS 就绪 = 自建开工信号**：官网、`api`、`registry`、对象存储并行推进，不再以「先镜像展示、Registry 无限延后」为默认节奏
 
 ### 16. 实体服务器（自托管，不使用云）
 - 至少 1 台实体服务器（跑官网 + Model Hub + 文档站 + 对象存储）
@@ -285,12 +291,44 @@
 - I：`OLLAMA_HOST=http://localhost:11434` → `SUSAN_HOST=http://localhost:14343`。合上游时这里会有冲突。
 
 ### 批次 5：Cloud 后端
-- D1-D3：cloud_proxy.go URL 替换
+- D1-D3：cloud_proxy.go URL 替换（Cloud Host 可配置，见对比表 P0-a）
 - H4：自建云推理代理服务
+- 路由边界：直连 `api.susan.com` 不强制 `model` 带 `:cloud`；`:cloud` 仅用于本机 Daemon 转发（见对比表 8.7.2）
+- Usage MVP：进程内累计 + 断开强制结算 + PostgreSQL；**本批次不引入 Redis**
 
 ### 批次 6：官网 + Model Hub（新仓库 susan_web）
 - H1、H2、H5、H6
 - H3 Registry 后端延后（先用 ollama registry）
+
+### 批次 7+ / 对齐对比表 B5-2（后续）：Redis 与多节点增强
+触发条件：第二台 API 节点，或需要跨实例计费/限流/Key 撤销广播时。
+（对比表第一部分编号：B5-2；第二部分【批次 5】5-2）
+- Redis 基础设施
+- 流式用量分桶增量上报（对比表第十五章）
+- API Key 二级缓存 + Pub/Sub 撤销
+- （可选）网关限流跨节点聚合
+
+**MVP / B0～B4 明确不做 Redis。**
+
+### 批次 8+ / 对齐对比表 B6（后续）：Susan Web Chat（chat.susan.com）
+对标 DeepSeek 式网页云端对话 + 可分享会话链接。
+触发条件：B2 登录 + B4 推理 + B4-3 Usage 可用之后。
+（对比表第一部分编号：B6-1～B6-6；第二部分【批次 6】）
+- 子域 `chat.susan.com`
+- 会话 URL：`/c/{uuid}`；分享：`/s/{shareId}`
+- 调用 `api.susan.com` 流式推理；第一期不与 Desktop 双向同步
+
+**B1 明确不做 Web Chat。**
+
+### 批次 9+ / 对齐对比表 B7（后续）：模型 Push / 发布管理
+触发条件：自建 `registry.susan.com` 写入端就绪 + B2 登录可用。
+（对比表第一部分编号：B7-1～B7-5；第二部分【批次 7】）
+- CLI `susan push` 开放写入
+- Web `/account/models`：我发布的模型列表、下架、改元数据
+- License / 可见性 / Hub 收录联动
+- 一期大文件仍以 CLI 为主；网页辅助上传可选二期
+
+**B0～B6 明确不做真实用户 Push。**
 
 ---
 
