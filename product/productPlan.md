@@ -316,7 +316,9 @@
 
 ##### 任务总览（批次 3 · Susan 侧全量待办）
 
-> **禁止再犯的错误**：不得以「最小实现 / 薄切片」为名，砍掉本地 `POST/GET /api/signin/device`、流程管理器、`user_code` 展示、Desktop 正式入口、或平台协议字段对齐。完整交付见各 3.3.x 正文；总览下列「必须包含」为验收底线。
+> **禁止再犯的错误**：不得以「最小实现 / 薄切片」为名，砍掉本地 `POST/GET /api/signin/device`、流程管理器、`user_code` 展示、Desktop 正式入口、或平台协议字段对齐。
+>
+> 本总览含：**任务表（A～D）**、**总 Scope（E）**、**验收标准（F）**、**验收测试用例 G.1 自动化 + G.2 手工 E2E**。细则见各 3.3.x 正文。
 
 ###### A. 责任与文档（Plan）
 
@@ -353,12 +355,12 @@ npm run dev
 | **3.3.6** | CLI `login` / `logout` | B2-3 | `login`/`logout` 为主命令（`signin`/`signout` 别名）；调 **本地** Device Flow API；打印 `user_code`；打开 `verification_uri_complete`；轮询本地 status/`/api/me`；区分拒绝/过期；`--force`；可选 `--revoke` | 3.3.4～5 | 未做 |
 | **3.3.7** | Desktop 登录入口 / 状态 / 托盘 | B2-3 | Sign In 走同一套本地 Device Flow API（代理 `POST/GET /api/signin/device`）；展示验证码或打开完整链接；登录状态与 `/api/me` 一致；去掉硬编码 `ollama.com/connect`；与 Web `/device`、`/account/devices` 同一账号可见设备 | 3.3.4～5 | 未做 |
 
-###### D. 决策项与验收
+###### D. 决策项与批次验收入口
 
 | 编号 | 任务 | 说明 | 状态 |
 |---|---|---|---|
 | 3.3.8 | B2 控制面用 Bearer；设备签名细节 → B4 | 对比表方案一；本批无额外实现工作 | 已决策 |
-| **3.3.9** | 端到端联调验收 | 见下方验收清单；CLI + Desktop + 平台 Web `/device` + `/account/devices` 全绿 | 未做 |
+| **3.3.9** | 端到端联调验收 | **以总览 §F + §G 为准**（G.2 = 手工 E2E 全文）；下文「3.3.9」为同表副本 | 未做 |
 
 ###### 建议顺序（不可跳过 3.3.0 / 不可合并砍掉 3.3.4 本地 API）
 
@@ -427,6 +429,127 @@ Susan daemon  ──POST/GET /api/signin/device──►（内部）──►  s
 - Cloud ≠ Registry；`SUSAN_CLOUD_HOST` 设在 **daemon 进程**环境
 - 3.3.8：B2 控制面 Bearer；设备签名细节 → B4
 - B1（官网 Hub 只读）在平台仓，Susan 无 B1 任务
+
+###### E. 批次 3 总 Scope
+
+**本批包含（Susan 本仓）**
+
+| 范围 | 说明 |
+|---|---|
+| 启动链 | 3.1 `resolvePath`、3.2 `useHealth`（**已完成**） |
+| Plan | P0：与平台对比表第七章 / 平台实现对齐（**已对齐**，可微调不减范围） |
+| 联调前置 | 3.3.0：本机跑起 susan-platform API+Web，并手测一轮平台 Device Flow |
+| Cloud 抽象 | 3.3.1：`SUSAN_CLOUD_HOST` / `CloudHost()`；Cloud 侧接线；Registry **硬拆分不动** |
+| 安全防线 | 3.3.2：`IsReservedNamespace` + Push 403 |
+| 密钥单测 | 3.3.3：`auth` 包生成/签名测试 |
+| Device Flow 完整链路 | 3.3.4～3.3.7：平台客户端 + **本地** `POST/GET /api/signin/device` + Whoami/Signout + CLI + Desktop |
+| 鉴权决策 | 3.3.8：B2 控制面 Bearer（无额外代码，已决策） |
+| 批次验收 | 3.3.9：下列自动化用例 + 手工 E2E 清单全部通过 |
+
+**本批不包含（明确划界）**
+
+| 不包含 | 归属 |
+|---|---|
+| 改 susan-platform 业务代码 / Web 页面 | 平台仓已完成 B0～B2 |
+| 云端推理 `:cloud`、`/v1` 契约、GPU Runtime | 对比表 B3 / B4；本仓后续批次 |
+| `SUSAN_REGISTRY_HOST`、自建 `registry.susan.com`、迁 manifests 目录 | 阶段 3 H3 |
+| 开放用户 Push / `/account/models` 写入 | 对比表 B7 |
+| Web Chat `chat.susan.com` | 对比表 B6 |
+| Redis、多节点 Key 缓存 | 对比表 B5-2 |
+| 设备签名进 `Authorization` / `X-Susan-Signature` 细节 | 延到 B4（见 3.3.8） |
+| `SUSAN_HOME` 重定向 | 已决策：本节不做 |
+
+###### F. 批次 3 验收标准（整批通过条件）
+
+全部满足才算批次 3 验收通过：
+
+1. **Scope 无漏项**：交付清单 #1～#12 全部交付；本地 `POST/GET /api/signin/device` 已实现且被 CLI/Desktop 使用。
+2. **自动化测试全绿**：下方 **G.1** 所列命令与用例通过（Windows 上已知技术债 P1 权限位断言除外，须在测试中 skip 或改断言，不得因此红灯挡验收）。
+3. **手工 E2E 全绿**：下方 **G.2**（= 3.3.9 表）#1～#15 全部勾选通过。
+4. **安全底线**：任意本地 daemon 响应（含 `/api/signin/device`、`/api/me`）的 JSON **均不含** `device_code`、`access_token`、`refresh_token`。
+5. **联通 Web**：`susan login` 成功后，平台 Web `/account/devices` 出现本机设备；网页移除设备后本机 `/api/me` 变 401。
+6. **坑 1**：设置 `SUSAN_CLOUD_HOST` 后 `susan pull` 仍走 `registry.ollama.ai`，不得打到 API 主机。
+
+###### G. 验收测试用例（写进总览 · 实现时按此编写/执行）
+
+##### G.1 自动化测试用例
+
+**命令（验收必跑）**
+
+```bash
+# Go（daemon / CLI / 配置 / 保留字 / Device Flow）
+go test ./envconfig ./auth/... ./types/model ./server ./api ./cmd/...
+
+# Desktop 前端（health + 登录相关）
+cd app/ui/app && npm test -- --run src/hooks/useHealth.test.ts
+# 另含 3.3.7 登录 UI 单测（实现时补齐路径后纳入）
+```
+
+| 用例 ID | 包/文件（建议） | 用例名/内容 | 期望 | 对应 |
+|---|---|---|---|---|
+| **AT-3.1** | （已实现）`app/server` 行为 | Windows 上 `resolvePath("susan")` 能解析到同目录 `susan.exe` | 返回带 `.exe` 的路径；非 Windows 不强制追加 | 3.1 已做 |
+| **AT-3.2** | `useHealth.test.ts`（已有） | `healthRefetchInterval`：`undefined`/`false` → 1000；`true` → 5000 | 与实现一致 | 3.2 已做 |
+| **AT-3.3.1-a** | `envconfig` | `CloudHost()` 未设置 → 默认 `https://ollama.com` | 解析成功 | 3.3.1 |
+| **AT-3.3.1-b** | `envconfig` | `SUSAN_CLOUD_HOST=https://api.susan.com` → 正确；带 path/query → 拒绝 | 校验规则见 3.3.1 正文 | 3.3.1 |
+| **AT-3.3.1-c** | `envconfig` | `http://api.susan.com`（非本机 http）→ 拒绝；`http://localhost:8000` → 允许 | 同上 | 3.3.1 |
+| **AT-3.3.1-d** | `types/model` 或 pull 构造 | 设置 `SUSAN_CLOUD_HOST=https://api.susan.com` 后 `ParseName("qwen3").Host` 仍为 `registry.ollama.ai` | 坑 1 回归 | 3.3.1 |
+| **AT-3.3.1-e** | `server` cloud_proxy | 设置 CloudHost 后代理目标为配置值 | 请求打到 mock CloudHost | 3.3.1 |
+| **AT-3.3.1-f** | `envconfig` | 未设置 CloudHost 时 `Host()` 仍 `127.0.0.1:14343` | 本地默认不变 | 3.3.1 |
+| **AT-3.3.2-a** | `types/model` | 表驱动：28 个精确保留字 ×（原样/全大写/首字母大写）→ reserved | `IsReservedNamespace` true | 3.3.2 |
+| **AT-3.3.2-b** | `types/model` | 前缀：`susanx`、`SuSaN-foo`、`official-ai`、`OFFICIAL_bar` → reserved；`mysusan`、`alice` → 不保留 | 同上 | 3.3.2 |
+| **AT-3.3.2-c** | `server` PushHandler | `susan/x`、`official-ai/x`、`library/x` → HTTP 403；`alice/x` → 非 403（推送可 mock） | 错误文案含 reserved | 3.3.2 |
+| **AT-3.3.3-a** | `auth/auth_test.go` | TempDir 作 home，生成密钥后 `.pub` 以 `ssh-ed25519 ` 开头；`GetPublicKey` 一致 | 文件在 `~/.susan/` | 3.3.3 |
+| **AT-3.3.3-b** | `auth/auth_test.go` | `Sign` 输出两段合法 base64；`ssh.PublicKey.Verify` 通过；改 1 字节后失败 | 签名正确 | 3.3.3 |
+| **AT-3.3.3-c** | `auth/auth_test.go` | POSIX 上私钥 0600；**Windows skip 权限位**（技术债 P1） | 不因 Windows 红灯 | 3.3.3 |
+| **AT-3.3.4-a** | `auth/platform` 或 `server` | httptest 模拟平台：pending 若干次后 success → 写入 `auth.json` | state=`authorized` | 3.3.4 |
+| **AT-3.3.4-b** | 同上 | `slow_down` 后下次间隔变大 | 睡眠 ≥ 返回的 interval | 3.3.4 |
+| **AT-3.3.4-c** | 同上 | `access_denied` / `expired_token` / `invalid_grant` → 对应终态 | 不再轮询 | 3.3.4 |
+| **AT-3.3.4-d** | 同上 | refresh 成功覆盖双令牌；refresh `invalid_grant` 删除令牌 | 文件内容符合 | 3.3.4 |
+| **AT-3.3.4-e** | 同上 | `cloud_host` 与当前 CloudHost 不一致 → 视为未登录 | 不带旧令牌请求 | 3.3.4 |
+| **AT-3.3.4-f** | 同上 | 进行中流程复用；`force:true` 重新申请 | user_code 行为符合 3.3.4 | 3.3.4 |
+| **AT-3.3.4-g** | `server` 本地 API | `POST/GET /api/signin/device` 响应体 **不含** `device_code`/令牌；含 `user_code`/`state`/`verification_uri*` | 安全红线 | 3.3.4 |
+| **AT-3.3.4-h** | `server` | CloudHost 仍为 ollama.com 默认时 `POST /api/signin/device` → 400，提示设置 `SUSAN_CLOUD_HOST` | 见 3.3.4 | 3.3.4 |
+| **AT-3.3.5-a** | `server` Whoami | 无令牌 → 401 + `signin_url`，且 **未**请求平台 profile | httptest 断言零次 profile | 3.3.5 |
+| **AT-3.3.5-b** | 同上 | 有效令牌 → 200，`Name`/`Email`/`ID` 映射正确，`Plan` 默认 `free` | 字段对齐 | 3.3.5 |
+| **AT-3.3.5-c** | 同上 | access 过期 → 自动 refresh 后 200；refresh 失败 → 401 且删令牌 | 3.3.4 Do 联动 | 3.3.5 |
+| **AT-3.3.5-d** | 同上 | 平台 500 → 503 `account unavailable`（不删令牌） | 语义 | 3.3.5 |
+| **AT-3.3.5-e** | 同上 | 连续两次 401 的 `signin_url` 相同（复用进行中流程） | 兼容路径 | 3.3.5 |
+| **AT-3.3.5-f** | Signout | 有令牌 → 200 且文件删除；无令牌 → 401 `you are not currently signed in` | 3.3.5 | 3.3.5 |
+| **AT-3.3.6-a** | `cmd` + fake daemon | 已登录 → 打印用户并 exit 0 | CLI | 3.3.6 |
+| **AT-3.3.6-b** | 同上 | 授权成功 / 拒绝 / 过期 / `--force` | 退出码与文案正确 | 3.3.6 |
+| **AT-3.3.6-c** | 同上 | logout 成功；未登录 logout 提示 | 文案符合 3.3.6 | 3.3.6 |
+| **AT-3.3.7-a** | Desktop UI 单测 | 发起登录后展示验证码（或完整链接） | 组件状态 | 3.3.7 |
+| **AT-3.3.7-b** | Desktop UI 单测 | 登录成功后切换为已登录用户名 | 与 `/api/me` 一致 | 3.3.7 |
+
+##### G.2 手工 E2E 验收用例（= 3.3.9，总览收录全文）
+
+**前置**
+
+1. 3.3.0 验收清单已勾完（平台 API `:8000` + Web `:3000` + 测试账号）。
+2. daemon 环境：`SUSAN_CLOUD_HOST=http://localhost:8000`（Desktop 场景：用户级环境变量 + 完全退出并重启 Desktop）。
+3. 本机 `susan serve` / Desktop 使用的 daemon 为本次构建产物。
+
+| # | 操作步骤 | 期望结果 | 对应 |
+|---|---|---|---|
+| **E2E-01** | 不设置 `SUSAN_CLOUD_HOST`，启动 `susan serve` | 监听 `127.0.0.1:14343`，本地模型可用 | B0-1 / 3.3.1 |
+| **E2E-02** | 设置 `SUSAN_CLOUD_HOST` 后执行 `susan pull qwen3:0.6b`（或等价小模型） | 从 `registry.ollama.ai` 下载成功；请求 host **不是** API 主机 | 坑 1 / 3.3.1 |
+| **E2E-03** | `susan cp <本地模型> susan/test` 再 `susan push susan/test` | daemon 返回 **403**，错误含 `namespace ... is reserved` | B0-3 / 3.3.2 |
+| **E2E-04** | `susan login` | 打印链接 + **验证码** `user_code`；浏览器打开 `/device?user_code=...`；网页登录并点「允许」后 CLI 显示登录成功 | 3.3.4～6 |
+| **E2E-05** | 查看 `~/.susan/auth.json` | 文件存在；Linux/macOS mode 0600；Windows 仅当前用户+SYSTEM 可访问 | 3.3.4 |
+| **E2E-06** | 浏览器打开 `http://localhost:3000/account/devices` | 列表中有本机（设备名≈主机名） | 与 Web 联通 |
+| **E2E-07** | `susan login --force` 再登录一次 | 成功；设备列表 **不**多出重复设备 | 3.3.6 |
+| **E2E-08** | Desktop 设置页 + 托盘 | 显示已登录用户名；与 `curl -X POST http://127.0.0.1:14343/api/me` 一致 | 3.3.7 |
+| **E2E-09** | 未登录时触发需登录的云端能力 | 自动走上 Device Flow（`signin_url` 或正式登录入口）；确认后可继续 | 3.3.5～7 |
+| **E2E-10** | `susan login --force`，网页点「拒绝」 | CLI 提示授权被拒绝，**退出码 ≠ 0** | 3.3.6 |
+| **E2E-11** | 发起登录后 15 分钟内不操作 | CLI 提示验证码已过期（可附「设备可能已绑其他账号」提示） | 3.3.6 |
+| **E2E-12** | 网页「移除设备」后 `POST /api/me` | **401**；Desktop 刷新后未登录 | 平台联通 |
+| **E2E-13** | 移除后再 `susan login` | 可重新绑定；设备列表重新出现 | 3.3.6 |
+| **E2E-14** | `susan logout` | `auth.json` 删除；`/api/me` → 401 | 3.3.5～6 |
+| **E2E-15** | 跑 G.1 命令 `go test ./envconfig ./auth/... ./server ./types/model ./cmd/...` | 全部通过（Windows P1 已妥善 skip） | 回归 |
+| **E2E-16** | 抓包或日志检查：`GET/POST /api/signin/device` 与 `/api/me` 响应 | **无** `device_code` / `access_token` / `refresh_token` 字段 | 安全 |
+| **E2E-17** | （可选）`susan logout --revoke` 若已实现 | 平台设备列表同步消失 | 3.3.6 可选 |
+
+**验收记录建议**：在 MR/Issue 中粘贴上表，逐行勾选 `E2E-01`～`E2E-16`，并附上 `go test` 输出摘要。
 
 ##### 核心设计：登录由 daemon 完成，CLI 和 Desktop 只是入口
 
@@ -923,6 +1046,8 @@ Susan 需要调用的平台接口（其余平台接口只给 Web 页面用，Sus
 ---
 
 ##### 3.3.9 端到端联调验收清单
+
+> **权威副本在任务总览 §F（验收标准）与 §G.2（手工 E2E）**。下表与 G.2 的 E2E-01～E2E-15 对应，便于在本节内跳转阅读；执行验收时以总览勾选为准。
 
 前置：按 3.3.0 跑起平台并注册测试账号；daemon 的环境变量设置 `SUSAN_CLOUD_HOST=http://localhost:8000` 后启动。
 
