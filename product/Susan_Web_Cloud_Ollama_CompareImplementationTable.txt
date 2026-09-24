@@ -1356,35 +1356,50 @@ Susan 统一采用 OAuth 2.0 Device Authorization Grant（Device Code Flow）
 - 网页端用 cookie 持有 Session，后续调用 /user/* 与 /billing/* 等
 
 (2) CLI / Desktop 登录（OAuth 2.0 Device Code Flow）
-- CLI / Desktop 调用 /auth/device 接口，获取 device_code 与 user_code
-- CLI 显示 user_code 与验证 URL（如 susan.com/connect?device_code=xxx）
-- 用户在浏览器打开链接，登录并授权
-- CLI 轮询 /auth/token，拿到 access_token / refresh_token
-- 本地持久化 token（Susan 数据目录 ~/.susan/auth.json）
-- 后续 CLI / Desktop 用 Bearer Token 调用 api.susan.com/* 与本地 Susan Local API
+
+架构（与 Susan 客户端联通定稿）：
+- **平台**提供 RFC 8628 端点：POST /auth/device、POST /auth/token（见下；方案一申请时上送设备公钥）。
+- **Susan 本地 daemon** 调用上述平台端点，并向 CLI / Desktop 暴露本机
+  POST/GET /api/signin/device（不把 device_code / token 返回给本机调用方）。
+- CLI / Desktop **不直连** api.susan.com 的 /auth/device；只打 127.0.0.1:14343。
+- 用户浏览器打开平台返回的 verification_uri（susan.com/device），与 Web 账号、
+  /account/devices 同一体系。
+
+流程：
+- daemon 调 POST /auth/device（带 public_key），获取 device_code 与 user_code
+- CLI / Desktop 经本地 API 显示 user_code，并打开 verification_uri_complete
+- 用户在浏览器登录并点「允许」
+- daemon 按 interval 轮询 POST /auth/token，拿到 access_token / refresh_token
+- 写入 ~/.susan/auth.json（对比表 3.4）
+- 后续 Cloud 控制面用 Bearer；设备身份与 /account/devices 中的公钥绑定一致（方案一）
 
 Device Flow 超时与轮询参数（严格对齐 RFC 8628 与 CLI 交互习惯）：
 
 expires_in：900（15 分钟 / 900 秒）。给用户预留充足的浏览器登录及二步验证时间。
-interval：5（5 秒）。CLI 轮询 /auth/token 的默认间隔，避免对 Auth 服务造成过高 Request 压力。
+interval：5（5 秒）。轮询 /auth/token 的默认间隔，避免对 Auth 服务造成过高 Request 压力。
+
+POST /auth/device 请求要点（方案一，与平台实现一致）：
+- public_key：必填，OpenSSH ed25519 公钥全文（来自 ~/.susan/id_ed25519.pub）
+- device_name / client_name：可选
 
 POST /auth/device 响应 Payload：
 
 {
   "device_code": "dc_susan_9a8b7c6d5e4f",
-  "user_code": "SUSA-8821",
+  "user_code": "K7PX-3MQD",
   "verification_uri": "https://susan.com/device",
+  "verification_uri_complete": "https://susan.com/device?user_code=K7PX-3MQD",
   "expires_in": 900,
   "interval": 5
 }
 
-verification_uri 为 https://susan.com/device。
-CLI 亦可展示带 device_code 的完整链接（如 susan.com/connect?device_code=xxx），
-作为 verification_uri_complete 形态，方便用户一键打开。
+verification_uri 为 https://susan.com/device（本地联调则为 web_base_url/device）。
+verification_uri_complete 内嵌 **user_code**（不是 device_code）。
+旧稿「susan.com/connect?device_code=xxx」已废止——device_code 仅发起方持有，不得进 URL。
 
 频率控制（Rate Limit）：
-若 CLI 轮询间隔低于 interval，后端返回 HTTP 400 Bad Request + {"error": "slow_down"}，
-CLI 捕获后自动将后续轮询间隔增加 5 秒。
+若轮询间隔低于 interval，后端返回 HTTP 400 Bad Request + {"error": "slow_down"}，
+客户端捕获后自动将后续轮询间隔增加 5 秒（以响应 body 的 interval 为准）。
 
 (3) 终端直接登录（Terminal Login，兜底）
 - 当 Device Flow 无法走（无浏览器、纯 SSH、受限网络）时使用

@@ -200,8 +200,14 @@
 
 ### 批次 3：dev 环境启动链路 pre-existing bug 根治 + Susan 客户端对接 Susan 平台
 
-- 3.1、3.2：批次 2 验证期间在 dev 环境启动链路上发现两个 pre-existing bug，都会阻塞用户首次启动体验，集中在本批次修复。两项均为原 ollama 代码遗留问题，批次 2 仅替换品牌字符串，未动相关实现。
-- 3.3：Susan 客户端（CLI、Desktop、本地 daemon）对接 Susan 平台，对应对比表 B0～B2 中 Susan 仓的任务。
+- 3.1、3.2：启动链 pre-existing bug。**两项已落地。**
+- 3.3：Susan 客户端对接已就绪的 susan-platform（B0～B2 Device Flow / 账号设备）。
+- **责任划分（定稿）**：
+  - **susan-platform**：账号、Device Flow（`/auth/device`、`/auth/token`）、Web `/device`、`/account/devices` **已完成**（有自动化测试）。本批次**不改平台仓业务**（仅联调时本地跑起来）。
+  - **Susan 本仓必须完成三块**（缺一不可，禁止再用「最小实现」砍掉下列任一项）：
+    1. **Plan**：与平台对比表第七章对齐并保持同步（可微调）
+    2. **联调前置 3.3.0**：本机把平台 API + Web 跑通
+    3. **实现 3.3.1～3.3.7**：CloudHost、保留字、密钥单测、完整本地 Device Flow API、Whoami/Signout、CLI、Desktop（详见任务总览）
 
 #### 3.1 resolvePath Windows .exe 扩展名缺失
 - **背景**：dev 环境下 `dist/susan-app.exe` 无法自动 spawn `susan.exe serve` 子进程，导致 UI 起来后端口 14343 不绑定、API 不可用
@@ -290,74 +296,159 @@
 
 #### 3.3 Susan 客户端对接 Susan 平台（对比表 B0～B2 中 Susan 仓的任务）
 
-> **这一节给谁看**：负责改 Susan（本仓库，Go + Desktop 前端）的人。读完这一节就能动手，**不需要去读 Susan 平台的代码**。
+> **这一节给谁看**：负责改 Susan（本仓库，Go + Desktop 前端）的人。读完本节 + 下文各 3.3.x 细则就能动手。
 >
-> **Susan 平台是什么**：账号、设备授权、Model Hub 所在的云端后端和官网。代码在另一个仓库 `susan-platform`（对比表里叫 `susan_web`），包含 `backend/`（FastAPI，对外 API）和 `web/`（Next.js，官网页面）。
+> **Susan 平台是什么**：账号、设备授权、Model Hub 所在的云端后端和官网。仓库 `susan-platform`（对比表亦称 `susan_web`）：`backend/`（FastAPI）+ `web/`（Next.js）。
 >
-> **现状（2026-09-23 核对）**：平台侧 B0～B2 已完成并有自动化测试——注册登录、Device Flow 设备授权、`/account/devices` 设备列表与移除、移除后该设备的旧令牌立即失效。**Susan 侧 B0～B2 的改动基本都没做**：CLI 和 Desktop 仍然连 `ollama.com` 登录。
+> **现状**：平台侧 B0～B2（注册登录、Device Flow、`/account/devices`、撤设备令牌失效）**已完成并有测试**。Susan 侧对接 **未做**（仍连 `ollama.com`）。
 >
-> 本节中的接口路径、字段、错误码均以平台当前实现为准；平台若改接口，需同步更新本节。
+> 平台接口以平台对比表第七章 + `auth_device.py` 为准；平台改接口时必须同步更新本节。
 
 ##### 术语约定（先读）
 
-本节里有两个"server"，**不是一回事**：
-
 | 本节用词 | 指什么 | 属于 | 运行在哪 | 代码在哪 |
 |---|---|---|---|---|
-| **本地 daemon** | `susan serve` 进程（Desktop 也会自动拉起它），监听 `127.0.0.1:14343`，负责本地模型推理和本地 API | **客户端**（Susan 软件的一部分） | 用户自己的电脑 | 本仓库 `server/`、`cmd/`、`app/` |
-| **Susan 平台** | 账号、设备授权、Model Hub 的云端后端和官网 | 云端 | 我们自己的服务器（`api.susan.com` / `susan.com`） | `susan-platform` 仓库 |
+| **本地 daemon** | `susan serve`（Desktop 也会拉起），`127.0.0.1:14343` | 客户端 | 用户电脑 | 本仓库 `server/`、`cmd/`、`app/` |
+| **Susan 平台** | 账号 / Device Flow / Hub 的云端后端与官网 | 云端 | 服务器或本机联调 | `susan-platform` |
 
-- 本仓库的 Go 包名叫 `server`（如 `server/routes.go`），但它是**本地 daemon** 的代码，不是 Susan 平台。
-- 本节说"本地接口"指本地 daemon 提供给 CLI / Desktop 的接口（`http://127.0.0.1:14343/api/...`）；说"平台接口"指 Susan 平台的接口（`{SUSAN_CLOUD_HOST}/...`）。
-- CLI 和 Desktop 界面都只和本地 daemon 通信；只有本地 daemon 会去请求 Susan 平台。
+- 本仓库包名 `server` = **本地 daemon**，不是平台。
+- CLI/Desktop 只打本地 daemon；**只有 daemon** 请求 `{SUSAN_CLOUD_HOST}/...`。
 
-##### 任务总览（批次 3 全量）
+##### 任务总览（批次 3 · Susan 侧全量待办）
 
-| 编号 | 任务 | 对比表 | 状态 |
+> **禁止再犯的错误**：不得以「最小实现 / 薄切片」为名，砍掉本地 `POST/GET /api/signin/device`、流程管理器、`user_code` 展示、Desktop 正式入口、或平台协议字段对齐。完整交付见各 3.3.x 正文；总览下列「必须包含」为验收底线。
+
+###### A. 责任与文档（Plan）
+
+| 编号 | 任务 | 必须包含 | 状态 |
 |---|---|---|---|
-| 3.1 | `resolvePath` Windows `.exe` 扩展名缺失（dev 启动链） | — | 未做 |
-| 3.2 | `useHealth` 失败后不轮询导致永久 Loading | — | 未做 |
-| 3.3.0 | 本地跑起 Susan 平台（联调前置） | — | 准备工作 |
-| 3.3.1 | Cloud Host 可配置，Cloud 与 Registry 硬拆分 | B0-1 | 未做 |
-| 3.3.2 | 保留字 namespace 拦截 `IsReservedNamespace` | B0-3 | 未做 |
-| 3.3.3 | 设备密钥与签名函数补单测 | B0-4 | 代码已有，缺测试 |
-| 3.3.4 | daemon 内的平台客户端：Device Flow、令牌文件 `auth.json`、自动刷新 | B2-3 | 未做 |
-| 3.3.5 | `/api/me`、`/api/signout`、`signin_url` 改为对接 Susan 平台 | B2-3 | 未做 |
-| 3.3.6 | `susan login` / `susan logout` 走 Device Flow | B2-3 | 未做 |
-| 3.3.7 | Desktop 登录入口、登录状态、托盘菜单 | B2-3 | 未做 |
-| 3.3.8 | 云端请求鉴权方式：B2 只用 Bearer，设备签名 B4 前再定 | 方案一 | 已决策，B2 无额外工作 |
-| 3.3.9 | 端到端联调验收清单 | B0 / B2 验收 | — |
+| **P0** | Plan 与平台对比表对齐 | ① 平台第七章为 Device Flow **平台协议**权威；② 本文件写清两层 API（平台 vs 本地 daemon）；③ `verification_uri_complete` = `/device?user_code=`（废止 `connect?device_code=`）；④ 方案一：`public_key` 申请时上送；⑤ 与 `product/Susan_Web_Cloud_Ollama_CompareImplementationTable.txt`、平台仓 PRD 保持同步，平台改接口则回写本节 | **已对齐**（可再微调措辞，不减范围） |
 
-建议顺序：3.1、3.2 可与平台对接并行，建议先做（阻塞 dev 启动体验）。平台对接：3.3.0 → 3.3.1 → 3.3.4 → 3.3.5 → 3.3.6 → 3.3.7 → 3.3.9。3.3.2、3.3.3 与其他任务无依赖，可穿插进行。3.3.8 的设备签名细节在 B4（云端推理）开始前再定。
+###### B. 联调前置（必须先绿，再写对接代码）
 
-B1（官网 / Model Hub 只读版）全部在平台仓完成，Susan 没有 B1 任务。
+| 编号 | 任务 | 必须包含（缺一不算完成） | 状态 |
+|---|---|---|---|
+| **3.3.0** | 本地跑起 susan-platform | ① PostgreSQL + `alembic upgrade head`；② API `http://localhost:8000`（Swagger `/docs` 可打开）；③ Web `http://localhost:3000`；④ 能 `/signup` 注册测试号；⑤ 用 Swagger 或 curl 打通一次 `POST /auth/device`（带 `public_key`）→ 浏览器 `/device` 允许 → `POST /auth/token` 拿到令牌；⑥ 记下联调环境变量：daemon 进程设 `SUSAN_CLOUD_HOST=http://localhost:8000`（Desktop 自拉起时用**用户级**环境变量并完全退出重启） | **准备工作 · 未勾验收** |
+
+启动命令摘要（细节见下文「3.3.0」）：
+
+```bash
+# susan-platform/backend
+alembic upgrade head
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+
+# susan-platform/web（另开终端）
+npm run dev
+```
+
+###### C. 实现（3.3.1～3.3.7 · 本仓代码，完整交付）
+
+| 编号 | 任务 | 对比表 | 必须包含（禁止漏项） | 依赖 | 状态 |
+|---|---|---|---|---|---|
+| **3.3.1** | Cloud Host 可配置，Cloud≠Registry | B0-1 | `CloudHost()`；改 cloud_proxy / Remotes / 签名 hostname 等 **Cloud 侧**；**不动** `registry.ollama.ai`；坑 1 回归测试（设 CLOUD_HOST 后 pull 仍走 Registry） | 无 | 未做 |
+| **3.3.2** | 保留字 namespace | B0-3 | `IsReservedNamespace`：精确黑名单 ∪ `^susan`/`^official`；`PushHandler` 403；与平台名单一致 | 无（可并行） | 未做 |
+| **3.3.3** | 设备密钥/签名单测 | B0-4 | `auth/auth_test.go`：生成密钥、Sign 可校验；Windows 跳过 POSIX 权限位断言 | 可与 3.3.4 并行 | 未做 |
+| **3.3.4** | 平台客户端 + **完整本地 Device Flow API** | B2-3 | ① `auth/platform`：`StartDeviceFlow`/`PollToken`/`auth.json`/Bearer `Do`/`GetProfile`/刷新；② 登录流程管理器（单例、状态机、后台按 `interval` 轮询、`force`）；③ 处理全部 RFC 错误：`authorization_pending`/`slow_down`/`access_denied`/`expired_token`/`invalid_grant`；④ **`POST /api/signin/device` + `GET /api/signin/device`**；⑤ `api.Client`：`StartDeviceSignin`/`DeviceSigninStatus`；⑥ 本地响应**永不**含 `device_code`/令牌；⑦ 字段对齐平台七章 + `auth_device.py`（含 `public_key`） | 3.3.0、3.3.1 | 未做 |
+| **3.3.5** | Whoami / Signout / `signin_url` | B2-3 | 重写 `WhoamiHandler`→平台 profile；`SignoutHandler` 删 `auth.json`；`signinURL()` 返回进行中流程的 `verification_uri_complete`；保留路径 `/api/me`；401/503 语义见正文 | 3.3.4 | 未做 |
+| **3.3.6** | CLI `login` / `logout` | B2-3 | `login`/`logout` 为主命令（`signin`/`signout` 别名）；调 **本地** Device Flow API；打印 `user_code`；打开 `verification_uri_complete`；轮询本地 status/`/api/me`；区分拒绝/过期；`--force`；可选 `--revoke` | 3.3.4～5 | 未做 |
+| **3.3.7** | Desktop 登录入口 / 状态 / 托盘 | B2-3 | Sign In 走同一套本地 Device Flow API（代理 `POST/GET /api/signin/device`）；展示验证码或打开完整链接；登录状态与 `/api/me` 一致；去掉硬编码 `ollama.com/connect`；与 Web `/device`、`/account/devices` 同一账号可见设备 | 3.3.4～5 | 未做 |
+
+###### D. 决策项与验收
+
+| 编号 | 任务 | 说明 | 状态 |
+|---|---|---|---|
+| 3.3.8 | B2 控制面用 Bearer；设备签名细节 → B4 | 对比表方案一；本批无额外实现工作 | 已决策 |
+| **3.3.9** | 端到端联调验收 | 见下方验收清单；CLI + Desktop + 平台 Web `/device` + `/account/devices` 全绿 | 未做 |
+
+###### 建议顺序（不可跳过 3.3.0 / 不可合并砍掉 3.3.4 本地 API）
+
+```text
+【已完成】3.1、3.2
+【Plan】P0 已对齐（微调不减范围）
+    → 3.3.0 平台本机跑通并手测一次完整 Device Flow     ← 联调前置，必须先做
+    → 3.3.1 CloudHost（解锁所有平台请求）
+    → 3.3.4 完整：平台客户端 + POST/GET /api/signin/device   ║  3.3.2、3.3.3 可穿插
+    → 3.3.5 Whoami / Signout / signin_url
+    → 3.3.6 CLI login/logout
+    → 3.3.7 Desktop
+    → 3.3.9 三端联调验收
+```
+
+###### 两层 API（和 Web 联通的前提）
+
+| 层 | 谁实现 | 谁调用 | 路径 | 权威 |
+|---|---|---|---|---|
+| 平台 Device Flow | susan-platform **已完成** | **仅 daemon** | `{CLOUD}/auth/device`、`/auth/token` | 平台对比表第七章 + `auth_device.py` |
+| Web 授权页 | susan-platform **已完成** | 用户浏览器 | `{web}/device?user_code=...` | 平台返回的 URI，禁止自拼 |
+| 本地 Device Flow API | **Susan 本仓待做** | CLI / Desktop | `127.0.0.1:14343/api/signin/device` | 本文件 3.3.4 |
+| 本地会话 | **Susan 本仓待做** | CLI / Desktop | `/api/me`、`/api/signout` | 本文件 3.3.5 |
+
+```
+CLI / Desktop
+    │  本机
+    ▼
+Susan daemon  ──POST/GET /api/signin/device──►（内部）──►  susan-platform API
+    │                                                    POST /auth/device
+    │                                                    POST /auth/token
+    │                                                    GET  /api/user/profile
+    └─ ~/.susan/auth.json + id_ed25519*
+
+浏览器 ──► susan-platform Web /device  （与 /account/devices 同一账号）
+```
+
+###### 完整交付清单（对照用 · 实现时逐项打勾）
+
+| # | 交付物 | 归属 |
+|---|---|---|
+| 1 | `SUSAN_CLOUD_HOST` / `CloudHost()` + Cloud 侧接线；Registry 不动 | 3.3.1 |
+| 2 | `IsReservedNamespace` + Push 403 | 3.3.2 |
+| 3 | `auth` 包密钥/签名单测 | 3.3.3 |
+| 4 | `auth/platform` 全套 + `auth.json`（含 `cloud_host`、权限） | 3.3.4 |
+| 5 | 登录流程管理器（状态机 + 后台轮询 + force） | 3.3.4 |
+| 6 | **`POST /api/signin/device`**、**`GET /api/signin/device`** | 3.3.4 · **不可省略** |
+| 7 | `StartDeviceSignin` / `DeviceSigninStatus`（api 包） | 3.3.4 |
+| 8 | 重写 `/api/me`、`/api/signout`；`signin_url`→`verification_uri_complete` | 3.3.5 |
+| 9 | CLI `susan login`/`logout`：展示 `user_code`、打开链接、等结果 | 3.3.6 |
+| 10 | Desktop Sign In / 状态 / 托盘；去 ollama connect 硬编码 | 3.3.7 |
+| 11 | 本地响应永不泄露 `device_code`/令牌 | 全程 |
+| 12 | 3.3.9 验收清单全绿 | 3.3.9 |
+
+###### 明确拒绝（曾导致漏项的做法）
+
+- ❌ 只改 Whoami「内部偷偷 Device Flow」、**不上** `POST/GET /api/signin/device`
+- ❌ CLI 只打开浏览器、不打印 `user_code`、不等待授权结果
+- ❌ Desktop「以后再说」或只改文案不接线
+- ❌ 全局把 `registry.ollama.ai` 改成 `api.susan.com`
+- ❌ CLI/Desktop 直连平台 `/auth/device`（绕过 daemon）
+- ❌ 自拼 `connect?device_code=` 链接
+
+###### 约束（仍有效）
+
+- Cloud ≠ Registry；`SUSAN_CLOUD_HOST` 设在 **daemon 进程**环境
+- 3.3.8：B2 控制面 Bearer；设备签名细节 → B4
+- B1（官网 Hub 只读）在平台仓，Susan 无 B1 任务
 
 ##### 核心设计：登录由 daemon 完成，CLI 和 Desktop 只是入口
 
-沿用 Ollama 的设计：**设备密钥属于本地 daemon（`susan serve` 进程，客户端的一部分，不是 Susan 平台）**。依据：
-- `RunServer`（`cmd/cmd.go:2014`）启动时调用 `initializeKeypair()`，在 daemon 用户的 `~/.susan/` 下生成 `id_ed25519`。
-- 现有的 `susan signin` 不自己签名，而是先问 daemon 的 `/api/me`。
-
-因此本节约定：
-- Device Flow 由 daemon 发起和轮询；令牌文件 `auth.json` 写在 **daemon 用户**的 `~/.susan/` 下，与 `id_ed25519` 同目录。
-- CLI（`susan login`）和 Desktop 只调 daemon 的本地接口，负责展示链接和验证码、等待结果。
-- 好处：Linux 上 daemon 以系统服务用户运行时（CLI 用户与 daemon 用户的 home 不同）也能正常工作；登录逻辑只有一份。
-- 安全红线：daemon 的本地接口**永远不返回** `device_code`、`access_token`、`refresh_token`。用户设置 `SUSAN_HOST=0.0.0.0` 时，局域网内其他机器也能访问 daemon。
+- 对比表第七章 **方案一**：Device Flow = 账号 ↔ 设备公钥绑定；与 Web `/account/devices` 同源。
+- 平台协议对齐平台对比表；**本地完整 API** 由 daemon 提供（见交付清单 #6）。
+- 令牌：`~/.susan/auth.json`（对比表 3.4），与 `id_ed25519` 同目录。
+- 浏览器打开平台返回的 `verification_uri_complete`（`/device?user_code=...`）。
+- 安全：本地接口永不返回 `device_code` / 令牌。
 
 ```
-susan login / Desktop / 运行云端模型时的 401
-        │
-        ▼
-daemon 本地接口 ──► Susan 平台 API（SUSAN_CLOUD_HOST）
-        │             POST /auth/device、POST /auth/token、GET /api/user/profile
-        └─ 写 ~/.susan/auth.json
+susan login / Desktop
+        ├─► POST/GET /api/signin/device  → daemon → 平台 /auth/device|/auth/token → auth.json
+        └─►（兼容）POST /api/me → 401 + signin_url → 浏览器 → 轮询 /api/me
 
-浏览器 ──► Susan 平台 Web 的 /device 页面（用户登录并点「允许」）
+浏览器 ──► 平台 Web /device（与 Account 设备列表联通）
 ```
 
 ---
 
 ##### 3.3.0 本地跑起 Susan 平台（联调前置）
+
+> **在任务总览中的位置**：B 组 · 联调前置。未完成本节验收前，不要宣称 3.3.4～3.3.7「已联调通过」。
 
 | 服务 | 本地地址 | 正式地址（域名就绪后） | 用途 |
 |---|---|---|---|
@@ -380,6 +471,15 @@ npm run dev
 - 打开 `http://localhost:3000/signup` 注册一个测试账号。
 - `http://localhost:8000/docs` 是后端自动生成的接口文档（Swagger），可以直接在页面上试调接口。
 - 联调时给 daemon 设置 `SUSAN_CLOUD_HOST=http://localhost:8000`（3.3.1 实现后生效）。**这个变量必须设置在 daemon 进程的环境里**。Windows 上 Desktop 会自己拉起 daemon，所以要设成用户级环境变量，然后完全退出并重启 Desktop。
+
+**3.3.0 验收清单（全部勾完才算前置完成）**
+
+- [ ] PostgreSQL 可用，`alembic upgrade head` 成功
+- [ ] `http://localhost:8000/docs` 可打开
+- [ ] `http://localhost:3000` 可打开，`/signup` 能注册测试号
+- [ ] 手测一轮平台 Device Flow：`POST /auth/device`（带 `public_key`）→ 浏览器 `/device` 点允许 → `POST /auth/token` 拿到 access/refresh
+- [ ] 浏览器 `/account/devices` 能看到刚绑定的设备
+- [ ] 已明确：后续 Susan daemon 使用 `SUSAN_CLOUD_HOST=http://localhost:8000`（用户级环境变量 + 重启 Desktop）
 
 Susan 需要调用的平台接口（其余平台接口只给 Web 页面用，Susan 不需要调）：
 
@@ -490,6 +590,14 @@ Susan 需要调用的平台接口（其余平台接口只给 Web 页面用，Sus
 
 ##### 3.3.4 daemon 内的平台客户端：Device Flow、`auth.json`、自动刷新（B2-3 基础）
 
+> **交付口径（定稿）**：**完整本地 Device Flow API** + **平台协议对齐**。
+>
+> - 平台请求/响应/错误码：以  
+>   `D:/projects/susanAssist/susanPlatform/susan-platform/document/prd/Susan_Web_Cloud_Ollama_CompareImplementationTable.txt`  
+>   **第七章（3.1 / 3.5 / 3.6）** 为准，并以平台仓 `backend/app/api/auth_device.py`、`backend/app/schemas/device.py` 为实现核对。
+> - 本仓库额外交付：`auth/platform`、登录流程管理器、**`POST/GET /api/signin/device`**、`api/client` 方法。
+> - CLI/Desktop 只打本地 daemon；与 Web 联通靠平台同一账号、同一 `public_key` 绑定（方案一）。
+
 建议新建包 `auth/platform`（名字可调整），只在 daemon 里使用，对外提供：
 - `StartDeviceFlow(ctx, clientName) (*DeviceCode, error)`：申请设备码
 - `PollToken(ctx, dc) (*Token, error)`：阻塞轮询直到出结果，处理全部错误码
@@ -497,9 +605,22 @@ Susan 需要调用的平台接口（其余平台接口只给 Web 页面用，Sus
 - `Do(ctx, req)`：自动带 `Authorization: Bearer`，令牌快过期或收到 401 时自动刷新
 - `GetProfile(ctx) (*Profile, error)`：查当前用户
 
-另外需要一个 daemon 内的"登录流程管理器"（单例 + 互斥锁），负责：同一时间最多一个进行中的 Device Flow；后台 goroutine 轮询；记录当前状态（`idle` / `pending` / `authorized` / `denied` / `expired` / `failed`）；成功后写 `auth.json`。3.3.5 的 `signin_url` 和 3.3.6 的 `susan login` 都复用它。
+另外需要一个 daemon 内的"登录流程管理器"（单例 + 互斥锁），负责：同一时间最多一个进行中的 Device Flow；后台 goroutine 轮询；记录当前状态（`idle` / `pending` / `authorized` / `denied` / `expired` / `failed`）；成功后写 `auth.json`。3.3.5 的 `signin_url`、3.3.6 的 `susan login`、3.3.7 的 Desktop **都复用它**；显式状态查询走 `GET /api/signin/device`。
 
-以下是必须严格遵守的平台接口约定。
+以下是必须严格遵守的**平台**接口约定（与平台对比表第七章 + 平台实现对齐；有出入时以平台仓代码为准并回写对比表）。
+
+###### 0. 与平台对比表的对齐要点（联通 Web 必读）
+
+| 项 | 平台对比表 / 实现 | Susan 客户端怎么做 |
+|---|---|---|
+| 端点 | `POST /auth/device`、`POST /auth/token` | 仅 daemon 调用；base = `SUSAN_CLOUD_HOST` |
+| 方案一 | 申请时上送 `public_key`（`id_ed25519.pub`），授权后绑定到用户 | 必送；与 `/account/devices` 列表同源 |
+| `expires_in` / `interval` | 900 / 5；`slow_down` 时 interval+5 | 严格按响应里的值睡够再轮询 |
+| 授权页 | `verification_uri` = `{web}/device` | **用平台返回值**，禁止自拼 ollama connect 链接 |
+| 一键链接 | `verification_uri_complete` = `/device?user_code=XXXX-XXXX` | 优先打开；**禁止**把 `device_code` 放进 URL（旧稿 `connect?device_code=` 已废止） |
+| 轮询错误 | 400 + 顶层 `error`（`authorization_pending` 等） | 见下表；与 RFC 8628 / 对比表 3.6 一致 |
+| 令牌落盘 | `~/.susan/auth.json`（对比表 3.4） | daemon 用户目录；含 `cloud_host` |
+| 本地 `/api/me` | 对比表勘误：客户端用 `/api/me` 不是 `/auth/me` | 保留路径；内部改调平台 profile |
 
 ###### 1. 申请设备码：`POST {CLOUD}/auth/device`
 
