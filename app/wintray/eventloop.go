@@ -86,6 +86,10 @@ func (t *winTray) wndProc(hWnd windows.Handle, message uint32, wParam, lParam ui
 			t.app.UIRun("/settings")
 		case diagLogsMenuID:
 			t.showLogs()
+		case loginMenuID:
+			t.app.StartSignin()
+		case logoutMenuID:
+			t.app.Signout()
 		default:
 			slog.Debug(fmt.Sprintf("Unexpected menu item id: %d", menuItemId))
 			lResult, _, _ = pDefWindowProc.Call(
@@ -127,6 +131,7 @@ func (t *winTray) wndProc(hWnd windows.Handle, message uint32, wParam, lParam ui
 		case WM_MOUSEMOVE, WM_LBUTTONDOWN:
 			// Ignore these...
 		case WM_RBUTTONUP, WM_LBUTTONUP:
+			t.refreshAuthMenu()
 			err := t.showMenu()
 			if err != nil {
 				slog.Error(fmt.Sprintf("failed to show menu: %s", err))

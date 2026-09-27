@@ -36,11 +36,18 @@ const (
 	maxDecompressedBodySize = 20 << 20
 )
 
+// cloudProxyBaseURL is a test-only override of the proxy target (set by tests
+// to an httptest upstream). Empty in production.
+//
+// cloudProxyBaseURLOverride and cloudProxySigningHostOverride hold the
+// resolved SUSAN_CLOUD_BASE_URL development override. Empty means no override
+// is active and the proxy targets envconfig.CloudHost().
 var (
-	cloudProxyBaseURL     = defaultCloudProxyBaseURL
-	cloudProxySigningHost = defaultCloudProxySigningHost
-	cloudProxySignRequest = signCloudProxyRequest
-	cloudProxySigninURL   = signinURL
+	cloudProxyBaseURL             string
+	cloudProxyBaseURLOverride     string
+	cloudProxySigningHostOverride string
+	cloudProxySignRequest         = signCloudProxyRequest
+	cloudProxySigninURL           = signinURL
 )
 
 var hopByHopHeaders = map[string]struct{}{
@@ -63,12 +70,58 @@ func init() {
 		return
 	}
 
-	cloudProxyBaseURL = baseURL
-	cloudProxySigningHost = signingHost
-
-	if overridden {
-		slog.Info("cloud base URL override enabled", "env", cloudProxyBaseURLEnv, "url", cloudProxyBaseURL, "mode", mode)
+	if !overridden {
+		return
 	}
+
+	cloudProxyBaseURLOverride = baseURL
+	cloudProxySigningHostOverride = signingHost
+	slog.Info("cloud base URL override enabled", "env", cloudProxyBaseURLEnv, "url", baseURL, "mode", mode)
+}
+
+// cloudTarget returns the base URL the cloud proxy forwards to. Precedence:
+// the test-only cloudProxyBaseURL override, the SUSAN_CLOUD_BASE_URL
+// development override, then the configured envconfig.CloudHost().
+func cloudTarget() *url.URL {
+	if cloudProxyBaseURL != "" {
+		if u, err := url.Parse(cloudProxyBaseURL); err == nil {
+			return u
+		}
+	}
+
+	if cloudProxyBaseURLOverride != "" {
+		if u, err := url.Parse(cloudProxyBaseURLOverride); err == nil {
+			return u
+		}
+	}
+
+	return envconfig.CloudHost()
+}
+
+// cloudSigningHost returns the hostname whose requests are signed. The
+// development override takes precedence; otherwise the CloudHost hostname is
+// used.
+func cloudSigningHost() string {
+	if cloudProxySigningHostOverride != "" {
+		return cloudProxySigningHostOverride
+	}
+
+	return envconfig.CloudHost().Hostname()
+}
+
+// cloudTargetURL returns the cloud target as an absolute URL with an explicit
+// port, matching the historical "https://ollama.com:443" representation stored
+// in cloud-sourced model manifests.
+func cloudTargetURL() string {
+	u := cloudTarget()
+	if u.Port() == "" {
+		port := "443"
+		if strings.EqualFold(u.Scheme, "http") {
+			port = "80"
+		}
+		u.Host = net.JoinHostPort(u.Hostname(), port)
+	}
+	return u.String()
 }
 
 func cloudPassthroughMiddleware(disabledOperation string) gin.HandlerFunc {
@@ -183,11 +236,7 @@ func proxyCloudRequestWithPath(c *gin.Context, body []byte, path string, disable
 		return
 	}
 
-	baseURL, err := url.Parse(cloudProxyBaseURL)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	baseURL := cloudTarget()
 
 	targetURL := baseURL.ResolveReference(&url.URL{
 		Path:     path,
@@ -370,7 +419,7 @@ func writeCloudUnauthorized(c *gin.Context) {
 }
 
 func signCloudProxyRequest(ctx context.Context, req *http.Request) error {
-	if !strings.EqualFold(req.URL.Hostname(), cloudProxySigningHost) {
+	if !strings.EqualFold(req.URL.Hostname(), cloudSigningHost()) {
 		return nil
 	}
 

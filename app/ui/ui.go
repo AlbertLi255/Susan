@@ -307,6 +307,8 @@ func (s *Server) Handler() http.Handler {
 	mux.Handle("HEAD /api/version", ollamaProxy)
 	mux.Handle("POST /api/me", ollamaProxy)
 	mux.Handle("POST /api/signout", ollamaProxy)
+	mux.Handle("POST /api/signin/device", ollamaProxy)
+	mux.Handle("GET /api/signin/device", ollamaProxy)
 	mux.Handle("GET /api/experimental/model-recommendations", ollamaProxy)
 
 	// React app - catch all non-API routes and serve the React app
@@ -434,7 +436,7 @@ func userAgentHTTPClient(timeout time.Duration) *http.Client {
 	}
 }
 
-// doSelfSigned sends a self-signed request to the ollama.com API
+// doSelfSigned sends a self-signed request to the Susan cloud API
 func (s *Server) doSelfSigned(ctx context.Context, method, path string) (*http.Response, error) {
 	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
 	// Form the string to sign: METHOD,PATH?ts=TIMESTAMP
@@ -444,7 +446,7 @@ func (s *Server) doSelfSigned(ctx context.Context, method, path string) (*http.R
 		return nil, fmt.Errorf("failed to sign request: %w", err)
 	}
 
-	endpoint := fmt.Sprintf("%s%s?ts=%s", OllamaDotCom, path, timestamp)
+	endpoint := fmt.Sprintf("%s%s?ts=%s", envconfig.CloudHost().String(), path, timestamp)
 	req, err := http.NewRequestWithContext(ctx, method, endpoint, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -454,24 +456,23 @@ func (s *Server) doSelfSigned(ctx context.Context, method, path string) (*http.R
 	return s.httpClient().Do(req)
 }
 
-// UserData fetches user data from ollama.com API for the current ollama key
+// UserData fetches the signed-in user from the local daemon's /api/me
+// endpoint. The daemon holds the platform credentials, so the Desktop never
+// talks to the platform directly.
 func (s *Server) UserData(ctx context.Context) (*api.UserResponse, error) {
-	resp, err := s.doSelfSigned(ctx, http.MethodPost, "/api/me")
+	client, err := api.ClientFromEnvironment()
 	if err != nil {
-		return nil, fmt.Errorf("failed to call ollama.com/api/me: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return nil, fmt.Errorf("failed to create susan client: %w", err)
 	}
 
-	var user api.UserResponse
-	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
-		return nil, fmt.Errorf("failed to parse user response: %w", err)
+	user, err := client.Whoami(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to call /api/me: %w", err)
 	}
 
-	user.AvatarURL = fmt.Sprintf("%s/%s", OllamaDotCom, user.AvatarURL)
+	if user.AvatarURL != "" {
+		user.AvatarURL = fmt.Sprintf("%s/%s", OllamaDotCom, user.AvatarURL)
+	}
 
 	storeUser := store.User{
 		Name:  user.Name,
@@ -482,7 +483,7 @@ func (s *Server) UserData(ctx context.Context) (*api.UserResponse, error) {
 		s.log().Warn("failed to cache user data", "error", err)
 	}
 
-	return &user, nil
+	return user, nil
 }
 
 // WaitForServer waits for the Ollama server to be ready
@@ -548,7 +549,10 @@ func (s *Server) checkModelUpstream(ctx context.Context, modelName string, timeo
 		name = "library/" + name
 	}
 
-	// Check the model in the Ollama registry using HEAD request
+	// This is a model registry request, not a cloud API request: it must not
+	// use envconfig.CloudHost(). ollama.com serves the registry at /v2 today;
+	// a dedicated SUSAN_REGISTRY_HOST is deferred until the Susan registry
+	// (registry.susan.com) is ready.
 	url := OllamaDotCom + "/v2/" + name + "/manifests/" + tag
 	req, err := http.NewRequestWithContext(checkCtx, "HEAD", url, nil)
 	if err != nil {

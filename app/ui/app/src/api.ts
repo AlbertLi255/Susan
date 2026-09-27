@@ -121,6 +121,52 @@ export async function disconnectUser(): Promise<void> {
   }
 }
 
+export type DeviceSigninState =
+  | "idle"
+  | "pending"
+  | "authorized"
+  | "denied"
+  | "expired"
+  | "failed";
+
+export interface DeviceSigninStatus {
+  state: DeviceSigninState;
+  user_code?: string;
+  verification_uri?: string;
+  verification_uri_complete?: string;
+  expires_in?: number;
+  error?: string;
+}
+
+// startDeviceSignin asks the local daemon to start (or reuse) a device flow.
+export async function startDeviceSignin(
+  force = false,
+): Promise<DeviceSigninStatus> {
+  const response = await fetch(`${API_BASE}/api/signin/device`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ client_name: "Susan Desktop", force }),
+  });
+
+  if (!response.ok) {
+    const data = await response.text();
+    throw new Error(data || `Failed to start sign-in: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+// getDeviceSigninStatus polls the local daemon's device flow status.
+export async function getDeviceSigninStatus(): Promise<DeviceSigninStatus> {
+  const response = await fetch(`${API_BASE}/api/signin/device`);
+  if (!response.ok) {
+    throw new Error(`Failed to get sign-in status: ${response.status}`);
+  }
+  return response.json();
+}
+
 export async function getChats(): Promise<ChatsResponse> {
   const response = await fetch(`${API_BASE}/api/v1/chats`);
   const data = await response.json();

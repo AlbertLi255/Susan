@@ -52,6 +52,9 @@ type AppCallbacks interface {
 	UIOnboarding() bool
 	Quit()
 	DoUpdate()
+	AuthState() (name string, signedIn bool)
+	StartSignin()
+	Signout()
 }
 
 type URLSchemeHandler interface {

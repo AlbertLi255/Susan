@@ -1,5 +1,6 @@
 import { clsx } from "clsx";
 import { XMarkIcon } from "@heroicons/react/20/solid";
+import type { ReactNode } from "react";
 
 const colors = {
   red: "bg-red-50/80 dark:bg-red-950/50",
@@ -46,6 +47,7 @@ interface DisplayProps {
   onDismiss?: () => void;
   action?: DisplayAction;
   className?: string;
+  children?: ReactNode;
 }
 
 export const Display = ({
@@ -54,6 +56,7 @@ export const Display = ({
   onDismiss,
   action,
   className,
+  children,
 }: DisplayProps) => {
   const ActionButton = ({ action }: { action: DisplayAction }) => {
     const buttonClass =
@@ -88,33 +91,36 @@ export const Display = ({
   };
 
   return (
-    <div
-      className={clsx(
-        "mx-auto flex w-full max-w-[730px] items-center justify-between rounded-2xl px-4 py-3 text-sm transition-all duration-200 backdrop-blur-sm",
-        colors[variant],
-        className,
-      )}
-    >
-      <div className="flex items-center space-x-3 select-text">
-        <span className={clsx("leading-relaxed", textColors[variant])}>
-          {message}
-        </span>
-      </div>
-
-      <div className="flex items-center space-x-3">
-        {action && <ActionButton action={action} />}
-        {onDismiss && (
-          <button
-            onClick={onDismiss}
-            className={clsx(
-              "rounded-full p-1.5 cursor-pointer",
-              dismissButtonColors[variant],
-            )}
-          >
-            <XMarkIcon className="h-3.5 w-3.5" />
-          </button>
+    <div className="flex flex-col">
+      <div
+        className={clsx(
+          "mx-auto flex w-full max-w-[730px] items-center justify-between rounded-2xl px-4 py-3 text-sm transition-all duration-200 backdrop-blur-sm",
+          colors[variant],
+          className,
         )}
+      >
+        <div className="flex items-center space-x-3 select-text">
+          <span className={clsx("leading-relaxed", textColors[variant])}>
+            {message}
+          </span>
+        </div>
+
+        <div className="flex items-center space-x-3">
+          {action && <ActionButton action={action} />}
+          {onDismiss && (
+            <button
+              onClick={onDismiss}
+              className={clsx(
+                "rounded-full p-1.5 cursor-pointer",
+                dismissButtonColors[variant],
+              )}
+            >
+              <XMarkIcon className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
       </div>
+      {children}
     </div>
   );
 };

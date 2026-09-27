@@ -31,7 +31,6 @@ import (
 	"github.com/containerd/console"
 	"github.com/mattn/go-runewidth"
 	"github.com/olekukonko/tablewriter"
-	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/sync/errgroup"
@@ -930,60 +929,6 @@ func RunHandler(cmd *cobra.Command, args []string) error {
 		}
 		return err
 	}
-	return nil
-}
-
-func SigninHandler(cmd *cobra.Command, args []string) error {
-	client, err := api.ClientFromEnvironment()
-	if err != nil {
-		return err
-	}
-
-	user, err := client.Whoami(cmd.Context())
-	if err != nil {
-		var aErr api.AuthorizationError
-		if errors.As(err, &aErr) && aErr.StatusCode == http.StatusUnauthorized {
-			fmt.Println("You need to be signed in to Susan to run Cloud models.")
-			fmt.Println()
-
-			if aErr.SigninURL != "" {
-				_ = browser.OpenURL(aErr.SigninURL)
-				fmt.Printf(ConnectInstructions, aErr.SigninURL)
-			}
-			return nil
-		}
-		return err
-	}
-
-	if user != nil && user.Name != "" {
-		fmt.Printf("You are already signed in as user '%s'\n", user.Name)
-		fmt.Println()
-		return nil
-	}
-
-	return nil
-}
-
-func SignoutHandler(cmd *cobra.Command, args []string) error {
-	client, err := api.ClientFromEnvironment()
-	if err != nil {
-		return err
-	}
-
-	err = client.Signout(cmd.Context())
-	if err != nil {
-		var aErr api.AuthorizationError
-		if errors.As(err, &aErr) && aErr.StatusCode == http.StatusUnauthorized {
-			fmt.Println("You are not signed in to susan.com")
-			fmt.Println()
-			return nil
-		} else {
-			return err
-		}
-	}
-
-	fmt.Println("You have signed out of susan.com")
-	fmt.Println()
 	return nil
 }
 
@@ -2395,39 +2340,25 @@ func NewCLI() *cobra.Command {
 
 	pushCmd.Flags().Bool("insecure", false, "Use an insecure registry")
 
-	signinCmd := &cobra.Command{
-		Use:     "signin",
-		Short:   "Sign in to susan.com",
-		Args:    cobra.ExactArgs(0),
-		PreRunE: checkServerHeartbeat,
-		RunE:    SigninHandler,
-	}
-
 	loginCmd := &cobra.Command{
 		Use:     "login",
-		Short:   "Sign in to susan.com",
-		Hidden:  true,
+		Aliases: []string{"signin"},
+		Short:   "Sign in to Susan",
 		Args:    cobra.ExactArgs(0),
 		PreRunE: checkServerHeartbeat,
-		RunE:    SigninHandler,
+		RunE:    LoginHandler,
 	}
-
-	signoutCmd := &cobra.Command{
-		Use:     "signout",
-		Short:   "Sign out from susan.com",
-		Args:    cobra.ExactArgs(0),
-		PreRunE: checkServerHeartbeat,
-		RunE:    SignoutHandler,
-	}
+	loginCmd.Flags().Bool("force", false, "Start a new sign-in even if already signed in")
 
 	logoutCmd := &cobra.Command{
 		Use:     "logout",
-		Short:   "Sign out from susan.com",
-		Hidden:  true,
+		Aliases: []string{"signout"},
+		Short:   "Sign out of Susan",
 		Args:    cobra.ExactArgs(0),
 		PreRunE: checkServerHeartbeat,
-		RunE:    SignoutHandler,
+		RunE:    LogoutHandler,
 	}
+	logoutCmd.Flags().Bool("revoke", false, "Also remove this device from your account on the Susan platform")
 
 	listCmd := &cobra.Command{
 		Use:     "list",
@@ -2538,9 +2469,7 @@ func NewCLI() *cobra.Command {
 		stopCmd,
 		pullCmd,
 		pushCmd,
-		signinCmd,
 		loginCmd,
-		signoutCmd,
 		logoutCmd,
 		listCmd,
 		psCmd,
