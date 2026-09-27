@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -143,6 +144,32 @@ func (app *appCallbacks) DoUpdate() {
 // HandleURLScheme implements the URLSchemeHandler interface
 func (app *appCallbacks) HandleURLScheme(urlScheme string) {
 	handleURLSchemeRequest(urlScheme)
+}
+
+func (*appCallbacks) AuthState() (string, bool) {
+	return checkUserLoggedIn(uiServerPort)
+}
+
+func (*appCallbacks) StartSignin() {
+	handleConnectURLScheme()
+}
+
+func (*appCallbacks) Signout() {
+	if uiServerPort == 0 {
+		slog.Error("UI server not ready, cannot sign out")
+		return
+	}
+
+	resp, err := http.Post(fmt.Sprintf("http://127.0.0.1:%d/api/signout", uiServerPort), "application/json", nil)
+	if err != nil {
+		slog.Error("failed to call signout endpoint", "error", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		slog.Error("signout failed", "status", resp.StatusCode)
+	}
 }
 
 // handleURLSchemeRequest processes URL scheme requests from other instances

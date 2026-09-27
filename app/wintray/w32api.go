@@ -16,6 +16,7 @@ var (
 	pCreatePopupMenu       = u32.NewProc("CreatePopupMenu")
 	pCreateWindowEx        = u32.NewProc("CreateWindowExW")
 	pDefWindowProc         = u32.NewProc("DefWindowProcW")
+	pDeleteMenu            = u32.NewProc("DeleteMenu")
 	pDestroyWindow         = u32.NewProc("DestroyWindow")
 	pDispatchMessage       = u32.NewProc("DispatchMessageW")
 	pFindWindow            = u32.NewProc("FindWindowW")
@@ -52,6 +53,8 @@ const (
 	LR_DEFAULTSIZE      = 0x00000040 // Loads default-size icon for windows(SM_CXICON x SM_CYICON) if cx, cy are set to zero
 	LR_LOADFROMFILE     = 0x00000010 // Loads the stand-alone image from the file
 	MFS_DISABLED        = 0x00000003
+	MFS_ENABLED         = 0x00000000
+	MF_BYCOMMAND        = 0x00000000
 	MFT_SEPARATOR       = 0x00000800
 	MFT_STRING          = 0x00000000
 	MIIM_BITMAP         = 0x00000080

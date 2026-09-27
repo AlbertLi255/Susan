@@ -446,8 +446,61 @@ func TestNoCloud(t *testing.T) {
 			}
 
 			if got := NoCloudSource(); got != tt.wantSource {
-				t.Errorf("NoCloudSource() = %q, want %q", got, tt.wantSource)
+			t.Errorf("NoCloudSource() = %q, want %q", got, tt.wantSource)
+		}
+	})
+	}
+}
+
+func TestCloudHost(t *testing.T) {
+	cases := map[string]struct {
+		value  string
+		expect string
+	}{
+		"unset":                        {"", "https://ollama.com"},
+		"https url":                    {"https://api.susan.com", "https://api.susan.com"},
+		"https url with port":          {"https://api.susan.com:8443", "https://api.susan.com:8443"},
+		"localhost http":               {"http://localhost:8000", "http://localhost:8000"},
+		"loopback ipv4 http":           {"http://127.0.0.1:8000", "http://127.0.0.1:8000"},
+		"loopback ipv6 http":           {"http://[::1]:8000", "http://[::1]:8000"},
+		"root path normalized":         {"https://api.susan.com/", "https://api.susan.com"},
+		"non-loopback http rejected":   {"http://api.susan.com", "https://ollama.com"},
+		"lan http rejected":            {"http://192.168.1.10:8000", "https://ollama.com"},
+		"path rejected":                {"https://api.susan.com/foo", "https://ollama.com"},
+		"query rejected":               {"https://api.susan.com?x=1", "https://ollama.com"},
+		"fragment rejected":            {"https://api.susan.com#frag", "https://ollama.com"},
+		"userinfo rejected":            {"https://user:pass@api.susan.com", "https://ollama.com"},
+		"missing scheme rejected":      {"api.susan.com", "https://ollama.com"},
+		"unsupported scheme rejected":  {"ftp://api.susan.com", "https://ollama.com"},
+		"spaces and quotes trimmed":    {"  https://api.susan.com  ", "https://api.susan.com"},
+	}
+
+	for name, tt := range cases {
+		t.Run(name, func(t *testing.T) {
+			t.Setenv("SUSAN_CLOUD_HOST", tt.value)
+			if got := CloudHost().String(); got != tt.expect {
+				t.Errorf("CloudHost() = %q, want %q", got, tt.expect)
 			}
 		})
+	}
+}
+
+func TestCloudHostDoesNotAffectLocalHost(t *testing.T) {
+	t.Setenv("SUSAN_CLOUD_HOST", "https://api.susan.com")
+	if got := Host().String(); got != "http://127.0.0.1:14343" {
+		t.Fatalf("local Host() changed by SUSAN_CLOUD_HOST: got %q", got)
+	}
+}
+
+func TestRemotesDefaultsToCloudHost(t *testing.T) {
+	t.Setenv("SUSAN_CLOUD_HOST", "https://api.susan.com")
+	t.Setenv("SUSAN_REMOTES", "")
+	if got := Remotes(); len(got) != 1 || got[0] != "api.susan.com" {
+		t.Fatalf("Remotes() = %v, want [api.susan.com]", got)
+	}
+
+	t.Setenv("SUSAN_REMOTES", "example.com,localhost")
+	if got := Remotes(); len(got) != 2 || got[0] != "example.com" || got[1] != "localhost" {
+		t.Fatalf("explicit SUSAN_REMOTES not respected: %v", got)
 	}
 }

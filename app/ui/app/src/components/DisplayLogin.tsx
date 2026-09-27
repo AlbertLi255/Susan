@@ -1,7 +1,8 @@
 import type { ErrorEvent } from "@/gotypes";
 import { Display, type DisplayAction } from "@/components/ui/display";
 import { useUser } from "@/hooks/useUser";
-import { useEffect, useState } from "react";
+import { useDeviceSignin } from "@/hooks/useDeviceSignin";
+import { useEffect } from "react";
 
 interface DisplayLoginProps {
   error: ErrorEvent | null;
@@ -16,45 +17,24 @@ export const DisplayLogin = ({
   onDismiss,
   message,
 }: DisplayLoginProps) => {
-  const { fetchConnectUrl, refetchUser, isAuthenticated } = useUser();
-  const [isAwaitingAuth, setIsAwaitingAuth] = useState(false);
+  const { isAuthenticated } = useUser();
+  const deviceSignin = useDeviceSignin();
 
   useEffect(() => {
-    const handleFocus = () => {
-      if (isAwaitingAuth) {
-        setIsAwaitingAuth(false);
-        refetchUser();
-      }
-    };
-
-    window.addEventListener("focus", handleFocus);
-
-    return () => {
-      window.removeEventListener("focus", handleFocus);
-    };
-  }, [isAwaitingAuth, refetchUser]);
-
-  useEffect(() => {
-    if (isAuthenticated && isAwaitingAuth) {
-      setIsAwaitingAuth(false);
+    if (isAuthenticated && deviceSignin.isPending) {
       if (onDismiss) {
         onDismiss();
       }
     }
-  }, [isAuthenticated, isAwaitingAuth, onDismiss]);
+  }, [deviceSignin.isPending, isAuthenticated, onDismiss]);
 
   if (!error || error.code !== "cloud_unauthorized" || isAuthenticated)
     return null;
 
   const handleSignIn = async () => {
-    try {
-      const { data: connectUrl } = await fetchConnectUrl();
-      if (connectUrl) {
-        window.open(connectUrl, "_blank");
-        setIsAwaitingAuth(true);
-      }
-    } catch (error) {
-      console.error("Error getting connect URL:", error);
+    const initial = await deviceSignin.begin();
+    if (initial?.verification_uri_complete) {
+      window.open(initial.verification_uri_complete, "_blank");
     }
   };
 
@@ -63,12 +43,34 @@ export const DisplayLogin = ({
     onClick: handleSignIn,
   };
 
+  const state = deviceSignin.status?.state;
+
   return (
     <Display
       message={message || "Cloud models require a Susan account"}
       action={action}
       className={className}
       onDismiss={onDismiss}
-    />
+    >
+      {deviceSignin.isPending && (
+        <p role="status" aria-live="polite" className="mt-2 text-sm">
+          Confirm verification code{" "}
+          <span className="font-mono font-medium">
+            {deviceSignin.status?.user_code}
+          </span>{" "}
+          in your browser.
+        </p>
+      )}
+      {state === "denied" && (
+        <p role="alert" className="mt-2 text-sm text-red-600">
+          Authorization was denied. Please try again.
+        </p>
+      )}
+      {state === "expired" && (
+        <p role="alert" className="mt-2 text-sm text-red-600">
+          The verification code has expired. Please try again.
+        </p>
+      )}
+    </Display>
   );
 };

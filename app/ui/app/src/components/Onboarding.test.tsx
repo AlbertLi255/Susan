@@ -1,6 +1,8 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
+import { DisplayLogin } from "./DisplayLogin";
 import {
   ClaudeConnectedIntro,
   FIRST_MODEL_COMMAND,
@@ -18,11 +20,7 @@ import {
   scheduleClaudeInstallTimeout,
 } from "@/lib/claudeDesktop";
 import { isWindowsPlatform } from "@/lib/platform";
-import {
-  authenticationTimeoutAction,
-  nextOnboardingStep,
-  onboardingConnectUrl,
-} from "@/lib/onboarding";
+import { nextOnboardingStep } from "@/lib/onboarding";
 import type { IntegrationStatuses } from "@/api";
 
 describe("Onboarding", () => {
@@ -113,12 +111,6 @@ describe("Onboarding", () => {
     expect(nextOnboardingStep("welcome", "authenticated", true)).toBe("apps");
     expect(nextOnboardingStep("apps", "continue", true)).toBe("apps");
     expect(nextOnboardingStep("welcome", "local", false)).toBe("run");
-  });
-
-  it("lets an in-flight authentication check finish before timing out", () => {
-    expect(authenticationTimeoutAction(false, true)).toBe("defer");
-    expect(authenticationTimeoutAction(false, false)).toBe("fail");
-    expect(authenticationTimeoutAction(true, true)).toBe("ignore");
   });
 
   it("detects when the menu bar already reached the requested Claude state", () => {
@@ -446,23 +438,6 @@ describe("Onboarding", () => {
 
     expect(html).toContain(">Continue</button>");
     expect(html).not.toContain('aria-label="Close"');
-  });
-
-  it("opens the device connection flow without relaunching the app", () => {
-    expect(
-      onboardingConnectUrl(
-        "https://susan.com/connect?name=MacBook&key=public-key&launch=true",
-        "signin",
-      ),
-    ).toBe("https://susan.com/connect?name=MacBook&key=public-key");
-    expect(
-      onboardingConnectUrl(
-        "https://susan.com/connect?name=MacBook&key=public-key",
-        "signup",
-      ),
-    ).toBe(
-      "https://susan.com/connect?name=MacBook&key=public-key&signup=true",
-    );
   });
 
   it("preserves the intro for a device that is already connected", () => {
@@ -948,5 +923,129 @@ describe("Onboarding", () => {
     expect(html).toContain("Unable to save setup. Please try again.");
     expect(html).toContain('role="alert"');
     expect(html).toContain("Try again");
+  });
+
+  it("shows the verification code while the device flow is pending", () => {
+    const html = renderToStaticMarkup(
+      <WelcomeScreen
+        isAuthenticated={false}
+        isSigningIn
+        signInError={null}
+        signInCode="K7PX-3MQD"
+        onSignIn={vi.fn()}
+        onSignUp={vi.fn()}
+        onLocal={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain("K7PX-3MQD");
+    expect(html).toContain("Confirm verification code");
+  });
+
+  it("switches to signed-in state after the device flow is authorized", async () => {
+    vi.useFakeTimers();
+
+    let authorized = false;
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith("/api/me")) {
+        if (authorized) {
+          return new Response(
+            JSON.stringify({
+              id: "6d0c7421-0b16-4d97-be73-1bc643aab1cf",
+              email: "tester@example.com",
+              name: "tester01",
+              plan: "free",
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          );
+        }
+        return new Response(
+          JSON.stringify({
+            error: "you are not signed in",
+            signin_url: "http://localhost:3000/device?user_code=K7PX-3MQD",
+          }),
+          { status: 401, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (url.includes("/api/signin/device")) {
+        if (authorized) {
+          return new Response(JSON.stringify({ state: "authorized" }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+        return new Response(
+          JSON.stringify({
+            state: "pending",
+            user_code: "K7PX-3MQD",
+            verification_uri_complete:
+              "http://localhost:3000/device?user_code=K7PX-3MQD",
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return new Response("not found", { status: 404 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("window", {
+      open: vi.fn(),
+      setInterval: globalThis.setInterval,
+      clearInterval: globalThis.clearInterval,
+    });
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    let renderer: ReactTestRenderer | undefined;
+    try {
+      await act(async () => {
+        renderer = create(
+          <QueryClientProvider client={queryClient}>
+            <DisplayLogin error={{ code: "cloud_unauthorized" } as any} />
+          </QueryClientProvider>,
+        );
+        await Promise.resolve();
+      });
+
+      expect(renderer!.root.findByType(DisplayLogin)).toBeDefined();
+
+      const signInButton = () =>
+        renderer!.root.findAllByType("button" as any).find((node) =>
+          node.children.some(
+            (child: any) =>
+              typeof child === "object" &&
+              child?.children?.join("") === "Sign In",
+          ),
+        )!;
+
+      await act(async () => {
+        signInButton().props.onClick();
+        await Promise.resolve();
+      });
+
+      // The verification code should be shown while pending.
+      expect(
+        JSON.stringify(renderer!.toJSON()),
+      ).toContain("K7PX-3MQD");
+
+      authorized = true;
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(2000);
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      // Once authenticated, DisplayLogin renders null.
+      expect(renderer!.toJSON()).toBeNull();
+    } finally {
+      if (renderer) {
+        act(() => renderer?.unmount());
+      }
+      vi.useRealTimers();
+      vi.unstubAllGlobals();
+    }
   });
 });

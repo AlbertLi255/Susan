@@ -136,7 +136,7 @@ func (s *Server) CreateHandler(c *gin.Context) {
 			fromName := fromRef.Name
 			remoteHost := r.RemoteHost
 			if fromRef.Source == modelSourceCloud && remoteHost == "" {
-				remoteHost = cloudProxyBaseURL
+				remoteHost = cloudTargetURL()
 			}
 
 			if remoteHost != "" {

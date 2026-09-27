@@ -79,6 +79,7 @@ function getClaudeConnectionSummary() {
 interface ScreenProps {
   isSigningIn: boolean;
   signInError: string | null;
+  signInCode?: string | null;
   onSignIn: () => void;
 }
 
@@ -259,6 +260,7 @@ export function WelcomeScreen({
   isAuthenticated,
   isSigningIn,
   signInError,
+  signInCode,
   completionError = null,
   onSignIn,
   onSignUp,
@@ -297,6 +299,13 @@ export function WelcomeScreen({
           >
             No thanks, I&apos;ll use Susan locally
           </button>
+          {isSigningIn && signInCode && (
+            <p role="status" aria-live="polite" className="mt-3 text-sm text-neutral-700">
+              Confirm verification code{" "}
+              <span className="font-mono font-medium">{signInCode}</span> in
+              your browser.
+            </p>
+          )}
           <InlineError message={signInError ?? completionError} />
           {completionError && onRetryCompletion && (
             <button

@@ -2,13 +2,10 @@ import Onboarding from "@/components/Onboarding";
 import { getSettings } from "@/api";
 import { useSettings } from "@/hooks/useSettings";
 import { useUser } from "@/hooks/useUser";
+import { useDeviceSignin } from "@/hooks/useDeviceSignin";
 import {
-  AUTHENTICATION_TIMEOUT_MS,
-  authenticationTimeoutAction,
   CURRENT_ONBOARDING_VERSION,
   homeChatId,
-  onboardingConnectUrl,
-  type OnboardingAuthMode,
 } from "@/lib/onboarding";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -43,9 +40,11 @@ export const Route = createFileRoute("/onboarding")({
 function OnboardingRoute() {
   const navigate = useNavigate();
   const { settingsData, setSettings } = useSettings();
-  const { fetchConnectUrl, refetchUser, isAuthenticated } = useUser();
+  const { isAuthenticated } = useUser();
+  const deviceSignin = useDeviceSignin();
   const [isAwaitingAuth, setIsAwaitingAuth] = useState(false);
   const [signInError, setSignInError] = useState<string | null>(null);
+  const [signInCode, setSignInCode] = useState<string | null>(null);
   const [completionError, setCompletionError] = useState<string | null>(null);
   const authAttemptRef = useRef(0);
 
@@ -82,105 +81,67 @@ function OnboardingRoute() {
     void completeOnboarding();
   }, [completeOnboarding]);
 
-  const authenticate = useCallback(
-    async (mode: OnboardingAuthMode) => {
-      setSignInError(null);
+  const authenticate = useCallback(async () => {
+    setSignInError(null);
+    setSignInCode(null);
 
-      if (isAuthenticated) {
-        return;
-      }
+    if (isAuthenticated) {
+      return;
+    }
 
-      const authAttempt = ++authAttemptRef.current;
-      setIsAwaitingAuth(true);
+    const authAttempt = ++authAttemptRef.current;
+    setIsAwaitingAuth(true);
 
-      try {
-        const result = await fetchConnectUrl();
-        if (authAttempt !== authAttemptRef.current) return;
-        if (!result.data) {
-          throw new Error("No sign-in URL was returned");
-        }
+    const initial = await deviceSignin.begin();
+    if (authAttempt !== authAttemptRef.current) return;
 
-        window.open(onboardingConnectUrl(result.data, mode), "_blank");
-      } catch (error) {
-        if (authAttempt !== authAttemptRef.current) return;
-        console.error("Failed to start sign in:", error);
-        setIsAwaitingAuth(false);
-        setSignInError("Unable to start sign in. Please try again.");
-      }
-    },
-    [fetchConnectUrl, isAuthenticated],
-  );
+    if (!initial) {
+      setIsAwaitingAuth(false);
+      setSignInError("Unable to start sign in. Please try again.");
+      return;
+    }
 
-  const signIn = useCallback(() => authenticate("signin"), [authenticate]);
-  const signUp = useCallback(() => authenticate("signup"), [authenticate]);
+    setSignInCode(initial.user_code ?? null);
+    if (initial.verification_uri_complete) {
+      window.open(initial.verification_uri_complete, "_blank");
+    }
+  }, [deviceSignin, isAuthenticated]);
+
+  const signIn = useCallback(() => authenticate(), [authenticate]);
+  const signUp = useCallback(() => authenticate(), [authenticate]);
 
   const useLocal = useCallback(() => {
     authAttemptRef.current += 1;
+    deviceSignin.reset();
     setIsAwaitingAuth(false);
     setSignInError(null);
+    setSignInCode(null);
     finishSetup();
-  }, [finishSetup]);
+  }, [deviceSignin, finishSetup]);
+
+  // Map the device flow's terminal states to UI messages. "authorized" is
+  // handled by the user query invalidation inside the hook.
+  useEffect(() => {
+    const state = deviceSignin.status?.state;
+    if (!state || state === "pending") return;
+
+    if (state === "denied") {
+      setIsAwaitingAuth(false);
+      setSignInError("Authorization was denied. Please try again.");
+    } else if (state === "expired") {
+      setIsAwaitingAuth(false);
+      setSignInError("The verification code has expired. Please try again.");
+    } else if (state === "failed") {
+      setIsAwaitingAuth(false);
+      setSignInError("Sign in failed. Please try again.");
+    }
+  }, [deviceSignin.status]);
 
   useEffect(() => {
-    if (!isAwaitingAuth) return;
-
-    let checking = false;
-    let settled = false;
-    let timeoutPending = false;
-    const authAttempt = authAttemptRef.current;
-
-    const failConnection = () => {
-      if (settled || authAttempt !== authAttemptRef.current) return;
-      settled = true;
+    if (isAuthenticated && isAwaitingAuth) {
       setIsAwaitingAuth(false);
-      setSignInError(
-        "Connection is taking longer than expected. Please try again.",
-      );
-    };
-
-    const checkConnection = async () => {
-      if (checking || settled || authAttempt !== authAttemptRef.current) return;
-      checking = true;
-
-      try {
-        const result = await refetchUser();
-        if (
-          !settled &&
-          authAttempt === authAttemptRef.current &&
-          result.data?.name
-        ) {
-          settled = true;
-          setIsAwaitingAuth(false);
-          window.activateOllama?.();
-        }
-      } catch (error) {
-        console.error("Failed to check sign-in status:", error);
-      } finally {
-        checking = false;
-        if (timeoutPending) failConnection();
-      }
-    };
-
-    void checkConnection();
-    const pollingInterval = window.setInterval(checkConnection, 1000);
-    const timeout = window.setTimeout(() => {
-      const action = authenticationTimeoutAction(settled, checking);
-      if (action === "ignore") return;
-      if (action === "defer") {
-        timeoutPending = true;
-        return;
-      }
-      failConnection();
-    }, AUTHENTICATION_TIMEOUT_MS);
-
-    window.addEventListener("focus", checkConnection);
-    return () => {
-      settled = true;
-      window.clearInterval(pollingInterval);
-      window.clearTimeout(timeout);
-      window.removeEventListener("focus", checkConnection);
-    };
-  }, [isAwaitingAuth, refetchUser]);
+    }
+  }, [isAuthenticated, isAwaitingAuth]);
 
   return (
     <Onboarding
@@ -188,6 +149,7 @@ function OnboardingRoute() {
       isAuthenticated={isAuthenticated}
       isSigningIn={isAwaitingAuth}
       signInError={signInError}
+      signInCode={signInCode}
       onOpenApps={openApps}
       onSignIn={signIn}
       onSignUp={signUp}

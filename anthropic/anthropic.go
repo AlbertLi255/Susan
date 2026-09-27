@@ -18,6 +18,7 @@ import (
 
 	"github.com/ollama/ollama/api"
 	"github.com/ollama/ollama/auth"
+	"github.com/ollama/ollama/envconfig"
 	internalcloud "github.com/ollama/ollama/internal/cloud"
 	"github.com/ollama/ollama/logutil"
 )
@@ -1214,7 +1215,10 @@ type OllamaWebSearchResponse struct {
 	Results []OllamaWebSearchResult `json:"results"`
 }
 
-var WebSearchEndpoint = "https://ollama.com/api/web_search"
+// WebSearchEndpoint is the cloud web search endpoint. It defaults to the
+// configured SUSAN_CLOUD_HOST ("/api/web_search") and may be overridden in
+// tests. The Susan platform does not provide this endpoint yet.
+var WebSearchEndpoint = envconfig.CloudHost().JoinPath("/api/web_search").String()
 
 func WebSearch(ctx context.Context, query string, maxResults int) (*OllamaWebSearchResponse, error) {
 	if internalcloud.Disabled() {
@@ -1254,7 +1258,7 @@ func WebSearch(ctx context.Context, query string, maxResults int) (*OllamaWebSea
 	searchURL.RawQuery = q.Encode()
 
 	signature := ""
-	if strings.EqualFold(searchURL.Hostname(), "ollama.com") {
+	if strings.EqualFold(searchURL.Hostname(), envconfig.CloudHost().Hostname()) {
 		challenge := fmt.Sprintf("%s,%s", http.MethodPost, searchURL.RequestURI())
 		signature, err = auth.Sign(ctx, []byte(challenge))
 		if err != nil {

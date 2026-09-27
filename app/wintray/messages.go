@@ -14,4 +14,7 @@ const (
 	diagLogsMenuTitle        = "View logs"
 	openAppsMenuTitle        = "Open Susan"
 	settingsUIMenuTitle      = "Settings"
+	loginMenuTitle           = "Sign in to Susan Cloud…"
+	loggedInMenuTitle        = "Signed in: %s"
+	logoutMenuTitle          = "Sign out"
 )

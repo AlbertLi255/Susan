@@ -769,6 +769,36 @@ func TestManifestCaseSensitivity(t *testing.T) {
 	}
 }
 
+func TestPushHandlerReservedNamespace(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	reserved := []string{
+		"susan/x",
+		"official-ai/x",
+		"mymodel", // unqualified names default to the "library" namespace
+	}
+
+	var s Server
+	for _, modelName := range reserved {
+		t.Run(modelName, func(t *testing.T) {
+			rr := createRequest(t, s.PushHandler, api.PushRequest{Model: modelName})
+			if rr.Code != http.StatusForbidden {
+				t.Fatalf("status = %d, want 403; body: %s", rr.Code, rr.Body.String())
+			}
+			if !strings.Contains(rr.Body.String(), "reserved") {
+				t.Errorf("body = %q, want it to mention reserved namespace", rr.Body.String())
+			}
+		})
+	}
+
+	t.Run("alice/x is not forbidden", func(t *testing.T) {
+		rr := createRequest(t, s.PushHandler, api.PushRequest{Model: "alice/x"})
+		if rr.Code == http.StatusForbidden {
+			t.Fatalf("status = 403, want non-403; body: %s", rr.Body.String())
+		}
+	})
+}
+
 func TestShow(t *testing.T) {
 	t.Setenv("SUSAN_MODELS", t.TempDir())
 

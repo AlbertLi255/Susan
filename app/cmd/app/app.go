@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/ollama/ollama/app/auth"
 	"github.com/ollama/ollama/app/logrotate"
 	"github.com/ollama/ollama/app/server"
 	"github.com/ollama/ollama/app/store"
@@ -425,23 +424,23 @@ func startHiddenTasks() {
 	}
 }
 
-func checkUserLoggedIn(uiServerPort int) bool {
+func checkUserLoggedIn(uiServerPort int) (string, bool) {
 	if uiServerPort == 0 {
 		slog.Debug("UI server not ready yet, skipping auth check")
-		return false
+		return "", false
 	}
 
 	resp, err := http.Post(fmt.Sprintf("http://127.0.0.1:%d/api/me", uiServerPort), "application/json", nil)
 	if err != nil {
 		slog.Debug("failed to call local auth endpoint", "error", err)
-		return false
+		return "", false
 	}
 	defer resp.Body.Close()
 
 	// Check if the response is successful
 	if resp.StatusCode != http.StatusOK {
 		slog.Debug("auth endpoint returned non-OK status", "status", resp.StatusCode)
-		return false
+		return "", false
 	}
 
 	var user struct {
@@ -451,35 +450,61 @@ func checkUserLoggedIn(uiServerPort int) bool {
 
 	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
 		slog.Debug("failed to parse user response", "error", err)
-		return false
+		return "", false
 	}
 
 	// Verify we have a valid user with an ID and name
 	if user.ID == "" || user.Name == "" {
 		slog.Debug("user response missing required fields", "id", user.ID, "name", user.Name)
-		return false
+		return "", false
 	}
 
 	slog.Debug("user is logged in", "user_id", user.ID, "user_name", user.Name)
-	return true
+	return user.Name, true
 }
 
-// handleConnectURLScheme fetches the connect URL and opens it in the browser
+// fetchSigninURL returns the signin_url field from /api/me's 401 response.
+func fetchSigninURL() string {
+	if uiServerPort == 0 {
+		return ""
+	}
+
+	resp, err := http.Post(fmt.Sprintf("http://127.0.0.1:%d/api/me", uiServerPort), "application/json", nil)
+	if err != nil {
+		slog.Error("failed to call local auth endpoint", "error", err)
+		return ""
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusUnauthorized {
+		return ""
+	}
+
+	var body struct {
+		SigninURL string `json:"signin_url"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		slog.Error("failed to parse auth response", "error", err)
+		return ""
+	}
+	return body.SigninURL
+}
+
+// handleConnectURLScheme opens the device flow sign-in URL in the browser
 func handleConnectURLScheme() {
-	if checkUserLoggedIn(uiServerPort) {
-		slog.Info("user is already logged in, opening app instead")
+	if name, loggedIn := checkUserLoggedIn(uiServerPort); loggedIn {
+		slog.Info("user is already logged in, opening app instead", "user", name)
 		openUI("/")
 		return
 	}
 
-	connectURL, err := auth.BuildConnectURL("https://ollama.com")
-	if err != nil {
-		slog.Error("failed to build connect URL", "error", err)
-		openInBrowser("https://ollama.com/connect")
+	signinURL := fetchSigninURL()
+	if signinURL == "" {
+		slog.Error("no sign-in URL available; set SUSAN_CLOUD_HOST and ensure the daemon is running")
 		return
 	}
 
-	openInBrowser(connectURL)
+	openInBrowser(signinURL)
 }
 
 // openInBrowser opens the specified URL in the default browser

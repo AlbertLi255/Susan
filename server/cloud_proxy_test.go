@@ -79,6 +79,36 @@ func TestResolveCloudProxyBaseURL_Default(t *testing.T) {
 	}
 }
 
+func TestCloudTargetFollowsCloudHost(t *testing.T) {
+	// No override is expected at the start of this test; guard anyway.
+	if cloudProxyBaseURL != "" || cloudProxyBaseURLOverride != "" {
+		t.Skip("a cloud proxy override is active; skipping dynamic CloudHost test")
+	}
+
+	if got := cloudTarget().String(); got != "https://ollama.com" {
+		t.Fatalf("default cloudTarget = %q, want https://ollama.com", got)
+	}
+	if got := cloudSigningHost(); got != "ollama.com" {
+		t.Fatalf("default cloudSigningHost = %q, want ollama.com", got)
+	}
+
+	t.Setenv("SUSAN_CLOUD_HOST", "http://localhost:8000")
+	if got := cloudTarget().String(); got != "http://localhost:8000" {
+		t.Fatalf("cloudTarget = %q, want http://localhost:8000", got)
+	}
+	if got := cloudSigningHost(); got != "localhost" {
+		t.Fatalf("cloudSigningHost = %q, want localhost", got)
+	}
+
+	t.Setenv("SUSAN_CLOUD_HOST", "https://api.susan.com")
+	if got := cloudTarget().String(); got != "https://api.susan.com" {
+		t.Fatalf("cloudTarget = %q, want https://api.susan.com", got)
+	}
+	if got := cloudSigningHost(); got != "api.susan.com" {
+		t.Fatalf("cloudSigningHost = %q, want api.susan.com", got)
+	}
+}
+
 func TestResolveCloudProxyBaseURL_ReleaseAllowsLoopback(t *testing.T) {
 	baseURL, signingHost, overridden, err := resolveCloudProxyBaseURL("http://localhost:8080", gin.ReleaseMode)
 	if err != nil {

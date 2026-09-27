@@ -29,6 +29,7 @@ import { Settings as SettingsType } from "@/gotypes";
 import { isWindowsPlatform } from "@/lib/platform";
 import { settingsMutationScope } from "@/lib/settingsMutationScope";
 import { useUser } from "@/hooks/useUser";
+import { useDeviceSignin } from "@/hooks/useDeviceSignin";
 import { useCloudStatus } from "@/hooks/useCloudStatus";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useBlocker } from "@tanstack/react-router";
@@ -161,16 +162,11 @@ export default function Settings() {
   const {
     user,
     isAuthenticated,
-    refreshUser,
-    isRefreshing,
-    refetchUser,
-    fetchConnectUrl,
     isLoading,
     disconnectUser,
   } = useUser();
-  const [isAwaitingConnection, setIsAwaitingConnection] = useState(false);
+  const deviceSignin = useDeviceSignin();
   const [connectionError, setConnectionError] = useState<string | null>(null);
-  const [pollingInterval, setPollingInterval] = useState<number | null>(null);
   const {
     cloudDisabled,
     cloudStatus,
@@ -278,10 +274,6 @@ export default function Settings() {
   };
 
   useEffect(() => {
-    refetchUser();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
     window
       .getShowAppsInMenu?.()
       .then(setShowAppsInMenuState)
@@ -289,47 +281,6 @@ export default function Settings() {
         console.error("Failed to load menu app visibility:", error),
       );
   }, []);
-
-  useEffect(() => {
-    const handleFocus = () => {
-      if (isAwaitingConnection && pollingInterval) {
-        // Stop polling when window gets focus
-        clearInterval(pollingInterval);
-        setPollingInterval(null);
-        // Reset awaiting connection state
-        setIsAwaitingConnection(false);
-        // Make one last refresh request
-        refreshUser();
-      }
-    };
-
-    window.addEventListener("focus", handleFocus);
-
-    return () => {
-      window.removeEventListener("focus", handleFocus);
-    };
-  }, [isAwaitingConnection, refreshUser, pollingInterval]);
-
-  // Check if user is authenticated after refresh
-  useEffect(() => {
-    if (isAwaitingConnection && isAuthenticated) {
-      setIsAwaitingConnection(false);
-      setConnectionError(null);
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-        setPollingInterval(null);
-      }
-    }
-  }, [isAuthenticated, isAwaitingConnection, pollingInterval]);
-
-  // Cleanup interval on unmount
-  useEffect(() => {
-    return () => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-      }
-    };
-  }, [pollingInterval]);
 
   const handleChange = useCallback(
     (field: keyof SettingsType, value: boolean | string | number) => {
@@ -431,37 +382,31 @@ export default function Settings() {
   const handleConnectOllamaAccount = async () => {
     setConnectionError(null);
 
-    // If user is already authenticated, no need to connect
     if (isAuthenticated) {
       return;
     }
 
-    try {
-      // If we don't have a user or user has no name, get connect URL
-      if (!user || !user?.name) {
-        const { data: connectUrl } = await fetchConnectUrl();
-        if (connectUrl) {
-          window.open(connectUrl, "_blank");
-          setIsAwaitingConnection(true);
-          // Start polling every 5 seconds
-          const interval = setInterval(() => {
-            refreshUser();
-          }, 5000);
-          setPollingInterval(interval);
-        } else {
-          setConnectionError("Failed to get connect URL");
-        }
-      }
-    } catch (error) {
-      console.error("Error connecting to Susan account:", error);
-      setConnectionError(
-        error instanceof Error
-          ? error.message
-          : "Failed to connect to Susan account",
-      );
-      setIsAwaitingConnection(false);
+    const initial = await deviceSignin.begin();
+    if (!initial) {
+      setConnectionError(deviceSignin.error ?? "Failed to start sign in");
+      return;
+    }
+    if (initial.verification_uri_complete) {
+      window.open(initial.verification_uri_complete, "_blank");
     }
   };
+
+  // Surface terminal device-flow states in the account section.
+  useEffect(() => {
+    const state = deviceSignin.status?.state;
+    if (state === "denied") {
+      setConnectionError("Authorization was denied. Please try again.");
+    } else if (state === "expired") {
+      setConnectionError("The verification code has expired. Please try again.");
+    } else if (state === "failed") {
+      setConnectionError("Sign in failed. Please try again.");
+    }
+  }, [deviceSignin.status]);
 
   const handleDisconnectOllamaAccount = async () => {
     setConnectionError(null);
@@ -572,23 +517,34 @@ export default function Settings() {
                     )}
                   </div>
                 ) : (
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Susan account</Label>
-                      <Description>Not connected</Description>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>Susan account</Label>
+                        <Description>Not connected</Description>
+                      </div>
+                      <Button
+                        type="button"
+                        color="white"
+                        onClick={handleConnectOllamaAccount}
+                        disabled={deviceSignin.isPending}
+                      >
+                        {deviceSignin.isPending ? (
+                          <AnimatedDots />
+                        ) : (
+                          "Sign In"
+                        )}
+                      </Button>
                     </div>
-                    <Button
-                      type="button"
-                      color="white"
-                      onClick={handleConnectOllamaAccount}
-                      disabled={isRefreshing || isAwaitingConnection}
-                    >
-                      {isRefreshing || isAwaitingConnection ? (
-                        <AnimatedDots />
-                      ) : (
-                        "Sign In"
-                      )}
-                    </Button>
+                    {deviceSignin.isPending && (
+                      <p role="status" aria-live="polite" className="text-sm">
+                        Confirm verification code{" "}
+                        <span className="font-mono font-medium">
+                          {deviceSignin.status?.user_code}
+                        </span>{" "}
+                        in your browser.
+                      </p>
+                    )}
                   </div>
                 )}
               </Field>

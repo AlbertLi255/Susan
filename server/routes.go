@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"cmp"
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -32,7 +31,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/ollama/ollama/api"
-	"github.com/ollama/ollama/auth"
+	"github.com/ollama/ollama/auth/platform"
 	"github.com/ollama/ollama/discover"
 	"github.com/ollama/ollama/envconfig"
 	"github.com/ollama/ollama/format"
@@ -53,8 +52,6 @@ import (
 	"github.com/ollama/ollama/version"
 	xserver "github.com/ollama/ollama/x/server"
 )
-
-const signinURLStr = "https://ollama.com/connect?name=%s&key=%s"
 
 const (
 	cloudErrRemoteInferenceUnavailable    = "remote model is unavailable"
@@ -236,14 +233,13 @@ func (s *Server) scheduleRunner(ctx context.Context, model *Model, caps []model.
 }
 
 func signinURL() (string, error) {
-	pubKey, err := auth.GetPublicKey()
+	// Reuse an in-progress device flow if one exists, otherwise start a new
+	// one, and return the platform's verification_uri_complete link.
+	status, err := platform.DefaultManager().Start(context.Background(), "", false)
 	if err != nil {
 		return "", err
 	}
-
-	encKey := base64.RawURLEncoding.EncodeToString([]byte(pubKey))
-	h, _ := os.Hostname()
-	return fmt.Sprintf(signinURLStr, url.PathEscape(h), encKey), nil
+	return status.VerificationURIComplete, nil
 }
 
 func (s *Server) GenerateHandler(c *gin.Context) {
@@ -1187,6 +1183,15 @@ func (s *Server) PushHandler(c *gin.Context) {
 		return
 	}
 
+	// Reject pushes into a reserved namespace (e.g. susan/x, official-ai/x,
+	// or an unqualified model which defaults to the "library" namespace)
+	// before starting the push goroutine.
+	parsedName := model.ParseName(mname)
+	if ns := parsedName.Namespace; model.IsReservedNamespace(ns) {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": fmt.Sprintf("namespace %q is reserved", ns)})
+		return
+	}
+
 	ch := make(chan any)
 	go func() {
 		defer close(ch)
@@ -1907,6 +1912,10 @@ func (s *Server) GenerateRoutes() (http.Handler, error) {
 	// deprecated
 	r.DELETE("/api/user/keys/:encodedKey", s.SignoutHandler)
 
+	// Local Device Flow (handled by the daemon against the Susan platform)
+	r.POST("/api/signin/device", s.StartSigninDeviceHandler)
+	r.GET("/api/signin/device", s.SigninDeviceStatusHandler)
+
 	// Create
 	r.POST("/api/create", s.CreateHandler)
 	r.POST("/api/blobs/:digest", s.CreateBlobHandler)
@@ -2193,93 +2202,6 @@ func (s *Server) webExperimentalProxyHandler(c *gin.Context, proxyPath, disabled
 	}
 
 	proxyCloudRequestWithPath(c, body, proxyPath, disabledOperation)
-}
-
-func (s *Server) WhoamiHandler(c *gin.Context) {
-	// todo allow other hosts
-	u, err := url.Parse("https://ollama.com")
-	if err != nil {
-		slog.Error(err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "URL parse error"})
-		return
-	}
-
-	client := api.NewClient(u, http.DefaultClient)
-	user, err := client.Whoami(c)
-	if err != nil {
-		var authErr api.AuthorizationError
-		if errors.As(err, &authErr) && authErr.StatusCode == http.StatusUnauthorized {
-			// Preserve an actionable sign-in response for launch; other failures
-			// below mean account or plan verification is temporarily unavailable.
-			sURL := authErr.SigninURL
-			if sURL == "" {
-				var sErr error
-				sURL, sErr = signinURL()
-				if sErr != nil {
-					slog.Error(sErr.Error())
-					c.JSON(http.StatusInternalServerError, gin.H{"error": "error getting authorization details"})
-					return
-				}
-			}
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized", "signin_url": sURL})
-			return
-		}
-
-		slog.Error(err.Error())
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "account unavailable"})
-		return
-	}
-
-	if user == nil || user.Name == "" {
-		sURL, sErr := signinURL()
-		if sErr != nil {
-			slog.Error(sErr.Error())
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "error getting authorization details"})
-			return
-		}
-
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized", "signin_url": sURL})
-		return
-	}
-
-	if strings.TrimSpace(user.Plan) == "" {
-		slog.Warn("account plan was not set; defaulting to free")
-		user.Plan = "free"
-	}
-	c.JSON(http.StatusOK, user)
-}
-
-func (s *Server) SignoutHandler(c *gin.Context) {
-	pubKey, err := auth.GetPublicKey()
-	if err != nil {
-		slog.Error("couldn't get public key", "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "there was an error signing out"})
-		return
-	}
-
-	encKey := base64.RawURLEncoding.EncodeToString([]byte(pubKey))
-
-	// todo allow other hosts
-	u, err := url.Parse("https://ollama.com")
-	if err != nil {
-		slog.Error(err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "URL parse error"})
-		return
-	}
-
-	client := api.NewClient(u, http.DefaultClient)
-	err = client.Disconnect(c, encKey)
-	if err != nil {
-		var authError api.AuthorizationError
-		if errors.As(err, &authError) {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "you are not currently signed in"})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "there was an error signing out"})
-		return
-	}
-
-	c.JSON(http.StatusOK, nil)
 }
 
 func (s *Server) PsHandler(c *gin.Context) {

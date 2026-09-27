@@ -445,10 +445,7 @@ func (c *modelShowCache) doCloudJSON(ctx context.Context, method, path string, p
 	reqCtx, cancel := context.WithTimeout(ctx, modelShowCloudFetchTimeout)
 	defer cancel()
 
-	baseURL, err := url.Parse(cloudProxyBaseURL)
-	if err != nil {
-		return err
-	}
+	baseURL := cloudTarget()
 	targetURL := baseURL.ResolveReference(&url.URL{Path: path})
 
 	var body io.Reader

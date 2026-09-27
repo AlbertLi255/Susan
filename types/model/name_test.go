@@ -357,3 +357,33 @@ func TestIsValidNamespace(t *testing.T) {
 		})
 	}
 }
+
+// TestCloudHostDoesNotRedirectRegistry is the regression test for the
+// Cloud-vs-Registry split ("pitfall 1"): configuring SUSAN_CLOUD_HOST must not
+// redirect model pulls to the cloud API host.
+func TestCloudHostDoesNotRedirectRegistry(t *testing.T) {
+	t.Setenv("SUSAN_CLOUD_HOST", "https://api.susan.com")
+
+	n := ParseName("qwen3")
+	if n.Host != "registry.ollama.ai" {
+		t.Fatalf("ParseName host = %q, want registry.ollama.ai", n.Host)
+	}
+	if n.ProtocolScheme != "https" {
+		t.Fatalf("ParseName scheme = %q, want https", n.ProtocolScheme)
+	}
+
+	base := n.BaseURL()
+	if base.Host != "registry.ollama.ai" {
+		t.Fatalf("registry BaseURL host = %q, want registry.ollama.ai", base.Host)
+	}
+	if base.Scheme != "https" {
+		t.Fatalf("registry BaseURL scheme = %q, want https", base.Scheme)
+	}
+
+	// An explicit namespaced model still resolves against the given host,
+	// never silently rewritten to the cloud host.
+	n2 := ParseName("library/qwen3:0.6b")
+	if n2.Host != "registry.ollama.ai" {
+		t.Fatalf("qualified ParseName host = %q, want registry.ollama.ai", n2.Host)
+	}
+}

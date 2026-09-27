@@ -82,6 +82,98 @@ func ConnectableHost() *url.URL {
 	return u
 }
 
+// defaultCloudHost is the base URL for cloud API requests (accounts, device
+// sign-in, cloud metadata) when SUSAN_CLOUD_HOST is not configured. It stays
+// on ollama.com until the Susan platform domain is live, preserving the
+// current network behavior.
+const defaultCloudHost = "https://ollama.com"
+
+// CloudHost returns the base URL for Susan cloud API requests (accounts,
+// device flow, cloud metadata). It can be configured via the SUSAN_CLOUD_HOST
+// environment variable, which must include the scheme (e.g.
+// "https://api.susan.com" or "http://localhost:8000").
+//
+// Non-loopback hosts must use https so tokens are never sent in clear text;
+// localhost, 127.0.0.1 and ::1 may use http for local development. Paths,
+// query strings, fragments and userinfo are not allowed.
+//
+// Model pulls/pushes use the separate model registry and are unaffected by
+// this setting. An invalid SUSAN_CLOUD_HOST value is rejected with a warning
+// and the default is used instead.
+func CloudHost() *url.URL {
+	raw := strings.TrimSpace(Var("SUSAN_CLOUD_HOST"))
+	if raw == "" {
+		u, _ := url.Parse(defaultCloudHost)
+		return u
+	}
+
+	u, err := parseCloudHost(raw)
+	if err != nil {
+		slog.Warn("ignoring invalid cloud host", "env", "SUSAN_CLOUD_HOST", "value", raw, "error", err)
+		u, _ := url.Parse(defaultCloudHost)
+		return u
+	}
+
+	return u
+}
+
+// CloudHostConfigured reports whether SUSAN_CLOUD_HOST has been explicitly set
+// to a non-empty value. Local Device Flow endpoints use this to tell the user
+// to configure a Susan platform instead of silently talking to the default
+// ollama.com host.
+func CloudHostConfigured() bool {
+	v, ok := os.LookupEnv("SUSAN_CLOUD_HOST")
+	return ok && strings.TrimSpace(v) != ""
+}
+
+func parseCloudHost(raw string) (*url.URL, error) {
+	u, err := url.Parse(raw)
+	if err != nil {
+		return nil, fmt.Errorf("invalid URL: %w", err)
+	}
+
+	if u.Scheme == "" || u.Host == "" {
+		return nil, errors.New("scheme and host are required")
+	}
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return nil, fmt.Errorf("unsupported scheme %q", u.Scheme)
+	}
+	if u.User != nil {
+		return nil, errors.New("userinfo is not allowed")
+	}
+	if u.Path != "" && u.Path != "/" {
+		return nil, errors.New("path is not allowed")
+	}
+	if u.RawQuery != "" || u.Fragment != "" {
+		return nil, errors.New("query and fragment are not allowed")
+	}
+
+	host := u.Hostname()
+	if host == "" {
+		return nil, errors.New("host is required")
+	}
+	if !isCloudLoopbackHost(host) && !strings.EqualFold(u.Scheme, "https") {
+		return nil, errors.New("non-loopback cloud host must use https")
+	}
+
+	// Normalize: strip any allowed root path, query and fragment.
+	u.Path = ""
+	u.RawPath = ""
+	u.RawQuery = ""
+	u.Fragment = ""
+
+	return u, nil
+}
+
+func isCloudLoopbackHost(host string) bool {
+	if strings.EqualFold(host, "localhost") {
+		return true
+	}
+
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
+}
+
 // AllowedOrigins returns a list of allowed origins. AllowedOrigins can be configured via the SUSAN_ORIGINS environment variable.
 func AllowedOrigins() (origins []string) {
 	if s := Var("SUSAN_ORIGINS"); s != "" {
@@ -167,7 +259,7 @@ func Remotes() []string {
 	var r []string
 	raw := strings.TrimSpace(Var("SUSAN_REMOTES"))
 	if raw == "" {
-		r = []string{"ollama.com"}
+		r = []string{CloudHost().Hostname()}
 	} else {
 		r = strings.Split(raw, ",")
 	}
@@ -317,8 +409,8 @@ func AsMap() map[string]EnvVar {
 		"SUSAN_KV_CACHE_TYPE":        {"SUSAN_KV_CACHE_TYPE", KvCacheType(), "Quantization type for the K/V cache (default: f16)"},
 		"SUSAN_GPU_OVERHEAD":         {"SUSAN_GPU_OVERHEAD", GpuOverhead(), "Reserve a portion of VRAM per GPU (bytes)"},
 		"SUSAN_IGPU_ENABLE":          {"SUSAN_IGPU_ENABLE", String("SUSAN_IGPU_ENABLE")(), "Enable integrated GPUs"},
-		"LLAMA_ARG_FIT":               {"LLAMA_ARG_FIT", String("LLAMA_ARG_FIT")(), "Enable llama.cpp automatic fit of unset memory options (default \"on\")"},
-		"LLAMA_ARG_FIT_TARGET":        {"LLAMA_ARG_FIT_TARGET", String("LLAMA_ARG_FIT_TARGET")(), "Target free VRAM margin per device for llama.cpp fit (MiB)"},
+		"LLAMA_ARG_FIT":              {"LLAMA_ARG_FIT", String("LLAMA_ARG_FIT")(), "Enable llama.cpp automatic fit of unset memory options (default \"on\")"},
+		"LLAMA_ARG_FIT_TARGET":       {"LLAMA_ARG_FIT_TARGET", String("LLAMA_ARG_FIT_TARGET")(), "Target free VRAM margin per device for llama.cpp fit (MiB)"},
 		"SUSAN_HOST":                 {"SUSAN_HOST", Host(), "IP Address for the susan server (default 127.0.0.1:14343)"},
 		"SUSAN_KEEP_ALIVE":           {"SUSAN_KEEP_ALIVE", KeepAlive(), "The duration that models stay loaded in memory (default \"5m\")"},
 		"SUSAN_LLM_LIBRARY":          {"SUSAN_LLM_LIBRARY", LLMLibrary(), "Set LLM library to bypass autodetection"},
@@ -335,7 +427,8 @@ func AsMap() map[string]EnvVar {
 		"SUSAN_SCHED_SPREAD":         {"SUSAN_SCHED_SPREAD", SchedSpread(), "Always schedule model across all GPUs"},
 		"SUSAN_CONTEXT_LENGTH":       {"SUSAN_CONTEXT_LENGTH", ContextLength(), "Context length to use unless otherwise specified (default: 4k/32k/256k based on VRAM)"},
 		"SUSAN_EDITOR":               {"SUSAN_EDITOR", Editor(), "Path to editor for interactive prompt editing (Ctrl+G)"},
-		"SUSAN_REMOTES":              {"SUSAN_REMOTES", Remotes(), "Allowed hosts for remote models (default \"ollama.com\")"},
+		"SUSAN_REMOTES":              {"SUSAN_REMOTES", Remotes(), "Allowed hosts for remote models (defaults to the SUSAN_CLOUD_HOST hostname)"},
+		"SUSAN_CLOUD_HOST":           {"SUSAN_CLOUD_HOST", CloudHost(), "Base URL for the Susan cloud API: accounts, device sign-in and cloud metadata (default https://ollama.com); model registry is separate"},
 
 		// Informational
 		"HTTP_PROXY":  {"HTTP_PROXY", String("HTTP_PROXY")(), "HTTP proxy"},
