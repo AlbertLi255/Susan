@@ -392,7 +392,9 @@ export default function Settings() {
       return;
     }
     if (initial.verification_uri_complete) {
-      window.open(initial.verification_uri_complete, "_blank");
+      const url = initial.verification_uri_complete;
+      if (window.openURL) void window.openURL(url);
+      else window.open(url, "_blank");
     }
   };
 
@@ -470,12 +472,11 @@ export default function Settings() {
                             type="button"
                             color="dark"
                             className="px-3 py-2 text-sm font-medium bg-black/90 backdrop-blur-sm text-white rounded-lg border border-white/10 shadow-2xl transition-all duration-300 ease-out relative overflow-hidden group"
-                            onClick={() =>
-                              window.open(
-                                "https://susan.com/upgrade",
-                                "_blank",
-                              )
-                            }
+                            onClick={() => {
+                              const url = "https://susan.com/upgrade";
+                              if (window.openURL) void window.openURL(url);
+                              else window.open(url, "_blank");
+                            }}
                           >
                             <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-green-500/20 opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out"></div>
@@ -488,9 +489,11 @@ export default function Settings() {
                           type="button"
                           color="white"
                           className="px-3 py-2 text-sm"
-                          onClick={() =>
-                            window.open("https://susan.com/settings", "_blank")
-                          }
+                          onClick={() => {
+                            const url = "https://susan.com/settings";
+                            if (window.openURL) void window.openURL(url);
+                            else window.open(url, "_blank");
+                          }}
                         >
                           Manage
                         </Button>

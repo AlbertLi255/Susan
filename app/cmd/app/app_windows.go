@@ -22,6 +22,7 @@ import (
 	"github.com/ollama/ollama/app/version"
 	"github.com/ollama/ollama/app/wintray"
 	"golang.org/x/sys/windows"
+	"golang.org/x/sys/windows/registry"
 )
 
 var (
@@ -188,6 +189,7 @@ func UpdateAvailable(ver string) error {
 func osRun(shutdown func(), hasCompletedFirstRun, startHidden, showOnboarding bool, urlSchemeRequest string) {
 	var err error
 	app.shutdown = shutdown
+	registerSusanURLScheme()
 	app.t, err = wintray.NewTray(app)
 	if err != nil {
 		log.Fatalf("Failed to start: %s", err)
@@ -302,6 +304,43 @@ func LaunchNewApp() {
 
 func logStartup() {
 	slog.Info("starting Susan", "app", appPath, "version", version.Version, "OS", updater.UserAgentOS)
+}
+
+// registerSusanURLScheme registers susan:// under HKCU so the browser can
+// hand control back to Desktop after device authorization (same pattern as
+// ollama:// → Ollama Desktop).
+func registerSusanURLScheme() {
+	exe, err := os.Executable()
+	if err != nil {
+		slog.Warn("unable to resolve executable for susan:// registration", "error", err)
+		return
+	}
+	exe, err = filepath.Abs(exe)
+	if err != nil {
+		slog.Warn("unable to resolve absolute path for susan:// registration", "error", err)
+		return
+	}
+
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, `Software\Classes\susan`, registry.SET_VALUE)
+	if err != nil {
+		slog.Warn("unable to create susan:// registry key", "error", err)
+		return
+	}
+	defer key.Close()
+	_ = key.SetStringValue("", "URL:Susan Protocol")
+	_ = key.SetStringValue("URL Protocol", "")
+
+	cmdKey, _, err := registry.CreateKey(registry.CURRENT_USER, `Software\Classes\susan\shell\open\command`, registry.SET_VALUE)
+	if err != nil {
+		slog.Warn("unable to create susan:// command registry key", "error", err)
+		return
+	}
+	defer cmdKey.Close()
+	if err := cmdKey.SetStringValue("", fmt.Sprintf(`"%s" "%%1"`, exe)); err != nil {
+		slog.Warn("unable to write susan:// command", "error", err)
+		return
+	}
+	slog.Info("registered susan:// URL scheme", "exe", exe)
 }
 
 const (

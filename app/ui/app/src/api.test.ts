@@ -8,6 +8,7 @@ import {
   fetchConnectUrl,
   getClaudeDesktopAvailableModels,
   getIntegrationStatuses,
+  withLaunchParam,
 } from "./api";
 
 describe("fetchConnectUrl", () => {
@@ -32,6 +33,18 @@ describe("fetchConnectUrl", () => {
     await expect(fetchConnectUrl()).resolves.toBe(
       "https://susan.com/connect?name=MacBook&key=public-key&launch=true",
     );
+  });
+});
+
+describe("withLaunchParam", () => {
+  it("tags a device link as Desktop-originated", () => {
+    expect(
+      withLaunchParam("http://localhost:3000/device?user_code=K7PX-3MQD"),
+    ).toBe("http://localhost:3000/device?user_code=K7PX-3MQD&launch=true");
+  });
+
+  it("leaves non-URL input untouched", () => {
+    expect(withLaunchParam("not a url")).toBe("not a url");
   });
 });
 

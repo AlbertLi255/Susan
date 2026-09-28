@@ -129,6 +129,8 @@ declare global {
     drag?: () => void;
     doubleClick?: () => void;
     activateOllama?: () => void;
+    /** Open an http(s) URL in the OS default browser. */
+    openURL?: (url: string) => void | Promise<void>;
     getClaudeDesktopStatus?: () => Promise<ClaudeDesktopStatus>;
     getClaudeDesktopConnectionSummary?: () => Promise<ClaudeDesktopStatus>;
     getClaudeDesktopRequestCount?: () => Promise<number>;

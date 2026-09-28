@@ -34,7 +34,9 @@ export const DisplayLogin = ({
   const handleSignIn = async () => {
     const initial = await deviceSignin.begin();
     if (initial?.verification_uri_complete) {
-      window.open(initial.verification_uri_complete, "_blank");
+      const url = initial.verification_uri_complete;
+      if (window.openURL) void window.openURL(url);
+      else window.open(url, "_blank");
     }
   };
 

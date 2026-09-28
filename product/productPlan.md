@@ -330,7 +330,7 @@
 
 | 编号 | 任务 | 必须包含（缺一不算完成） | 状态 |
 |---|---|---|---|
-| **3.3.0** | 本地跑起 susan-platform | ① PostgreSQL + `alembic upgrade head`；② API `http://localhost:8000`（Swagger `/docs` 可打开）；③ Web `http://localhost:3000`；④ 能 `/signup` 注册测试号；⑤ 用 Swagger 或 curl 打通一次 `POST /auth/device`（带 `public_key`）→ 浏览器 `/device` 允许 → `POST /auth/token` 拿到令牌；⑥ 记下联调环境变量：daemon 进程设 `SUSAN_CLOUD_HOST=http://localhost:8000`（Desktop 自拉起时用**用户级**环境变量并完全退出重启） | **准备工作 · 未勾验收** |
+| **3.3.0** | 本地跑起 susan-platform | ① PostgreSQL + `alembic upgrade head`；② API `http://localhost:8000`（Swagger `/docs` 可打开）；③ Web `http://localhost:3000`；④ 能 `/signup` 注册测试号（本地联调测试账号：`susan_test@example.com` / `Test1234!`）；⑤ 用 Swagger 或 curl 打通一次 `POST /auth/device`（带 `public_key`）→ 浏览器 `/device` 允许 → `POST /auth/token` 拿到令牌；⑥ 记下联调环境变量：daemon 进程设 `SUSAN_CLOUD_HOST=http://localhost:8000`（Desktop 自拉起时用**用户级**环境变量并完全退出重启） | **联调环境已就绪**（2026-09-27 抽检：`:8000`/`:3000`/daemon `:14343` 均 200；完整浏览器授权轮次待勾） |
 
 启动命令摘要（细节见下文「3.3.0」）：
 
@@ -347,20 +347,20 @@ npm run dev
 
 | 编号 | 任务 | 对比表 | 必须包含（禁止漏项） | 依赖 | 状态 |
 |---|---|---|---|---|---|
-| **3.3.1** | Cloud Host 可配置，Cloud≠Registry | B0-1 | `CloudHost()`；改 cloud_proxy / Remotes / 签名 hostname 等 **Cloud 侧**；**不动** `registry.ollama.ai`；坑 1 回归测试（设 CLOUD_HOST 后 pull 仍走 Registry） | 无 | 未做 |
-| **3.3.2** | 保留字 namespace | B0-3 | `IsReservedNamespace`：精确黑名单 ∪ `^susan`/`^official`；`PushHandler` 403；与平台名单一致 | 无（可并行） | 未做 |
-| **3.3.3** | 设备密钥/签名单测 | B0-4 | `auth/auth_test.go`：生成密钥、Sign 可校验；Windows 跳过 POSIX 权限位断言 | 可与 3.3.4 并行 | 未做 |
-| **3.3.4** | 平台客户端 + **完整本地 Device Flow API** | B2-3 | ① `auth/platform`：`StartDeviceFlow`/`PollToken`/`auth.json`/Bearer `Do`/`GetProfile`/刷新；② 登录流程管理器（单例、状态机、后台按 `interval` 轮询、`force`）；③ 处理全部 RFC 错误：`authorization_pending`/`slow_down`/`access_denied`/`expired_token`/`invalid_grant`；④ **`POST /api/signin/device` + `GET /api/signin/device`**；⑤ `api.Client`：`StartDeviceSignin`/`DeviceSigninStatus`；⑥ 本地响应**永不**含 `device_code`/令牌；⑦ 字段对齐平台七章 + `auth_device.py`（含 `public_key`） | 3.3.0、3.3.1 | 未做 |
-| **3.3.5** | Whoami / Signout / `signin_url` | B2-3 | 重写 `WhoamiHandler`→平台 profile；`SignoutHandler` 删 `auth.json`；`signinURL()` 返回进行中流程的 `verification_uri_complete`；保留路径 `/api/me`；401/503 语义见正文 | 3.3.4 | 未做 |
-| **3.3.6** | CLI `login` / `logout` | B2-3 | `login`/`logout` 为主命令（`signin`/`signout` 别名）；调 **本地** Device Flow API；打印 `user_code`；打开 `verification_uri_complete`；轮询本地 status/`/api/me`；区分拒绝/过期；`--force`；可选 `--revoke` | 3.3.4～5 | 未做 |
-| **3.3.7** | Desktop 登录入口 / 状态 / 托盘 | B2-3 | Sign In 走同一套本地 Device Flow API（代理 `POST/GET /api/signin/device`）；展示验证码或打开完整链接；登录状态与 `/api/me` 一致；去掉硬编码 `ollama.com/connect`；与 Web `/device`、`/account/devices` 同一账号可见设备 | 3.3.4～5 | 未做 |
+| **3.3.1** | Cloud Host 可配置，Cloud≠Registry | B0-1 | `CloudHost()`；改 cloud_proxy / Remotes / 签名 hostname 等 **Cloud 侧**；**不动** `registry.ollama.ai`；坑 1 回归测试（设 CLOUD_HOST 后 pull 仍走 Registry） | 无 | **已做 · 自动化验收通过**（2026-09-27） |
+| **3.3.2** | 保留字 namespace | B0-3 | `IsReservedNamespace`：精确黑名单 ∪ `^susan`/`^official`；`PushHandler` 403；与平台名单一致 | 无（可并行） | **已做 · 自动化+HTTP 403 抽检通过** |
+| **3.3.3** | 设备密钥/签名单测 | B0-4 | `auth/auth_test.go`：生成密钥、Sign 可校验；Windows 跳过 POSIX 权限位断言 | 可与 3.3.4 并行 | **已做 · `go test ./auth` 通过** |
+| **3.3.4** | 平台客户端 + **完整本地 Device Flow API** | B2-3 | ① `auth/platform`：`StartDeviceFlow`/`PollToken`/`auth.json`/Bearer `Do`/`GetProfile`/刷新；② 登录流程管理器（单例、状态机、后台按 `interval` 轮询、`force`）；③ 处理全部 RFC 错误：`authorization_pending`/`slow_down`/`access_denied`/`expired_token`/`invalid_grant`；④ **`POST /api/signin/device` + `GET /api/signin/device`**；⑤ `api.Client`：`StartDeviceSignin`/`DeviceSigninStatus`；⑥ 本地响应**永不**含 `device_code`/令牌；⑦ 字段对齐平台七章 + `auth_device.py`（含 `public_key`） | 3.3.0、3.3.1 | **已做 · 自动化+实机 API 抽检通过** |
+| **3.3.5** | Whoami / Signout / `signin_url` | B2-3 | 重写 `WhoamiHandler`→平台 profile；`SignoutHandler` 删 `auth.json`；`signinURL()` 返回进行中流程的 `verification_uri_complete`；保留路径 `/api/me`；401/503 语义见正文 | 3.3.4 | **已做 · 401+signin_url 抽检通过** |
+| **3.3.6** | CLI `login` / `logout` | B2-3 | `login`/`logout` 为主命令（`signin`/`signout` 别名）；调 **本地** Device Flow API；打印 `user_code`；打开 `verification_uri_complete`；轮询本地 status/`/api/me`；区分拒绝/过期；`--force`；可选 `--revoke` | 3.3.4～5 | **已做 · `susan login --force` 烟雾通过**（完整允许/拒绝/过期待手工） |
+| **3.3.7** | Desktop 登录入口 / 状态 / 托盘 | B2-3 | Sign In 走同一套本地 Device Flow API（代理 `POST/GET /api/signin/device`）；展示验证码或打开完整链接；登录状态与 `/api/me` 一致；去掉硬编码 `ollama.com/connect`；与 Web `/device`、`/account/devices` 同一账号可见设备 | 3.3.4～5 | **已做 · 代码+Onboarding 单测存在**（Desktop UI 手工待勾） |
 
 ###### D. 决策项与批次验收入口
 
 | 编号 | 任务 | 说明 | 状态 |
 |---|---|---|---|
 | 3.3.8 | B2 控制面用 Bearer；设备签名细节 → B4 | 对比表方案一；本批无额外实现工作 | 已决策 |
-| **3.3.9** | 端到端联调验收 | **以总览 §F + §G 为准**（G.2 = 手工 E2E 全文）；下文「3.3.9」为同表副本 | 未做 |
+| **3.3.9** | 端到端联调验收 | **以总览 §F + §G 为准**（G.2 = 手工 E2E 全文）；下文「3.3.9」为同表副本 | **E2E 通过（2026-09-27）**：允许/拒绝/过期/logout/devices；G.1 全绿；Desktop 已肉眼打开（旧 susan-app 包） |
 
 ###### 建议顺序（不可跳过 3.3.0 / 不可合并砍掉 3.3.4 本地 API）
 
@@ -591,7 +591,7 @@ cd web
 npm run dev
 ```
 
-- 打开 `http://localhost:3000/signup` 注册一个测试账号。
+- 打开 `http://localhost:3000/signup` 注册一个测试账号。已注册的本地联调测试账号：`susan_test@example.com` / 密码 `Test1234!`（仅本地开发库使用）。
 - `http://localhost:8000/docs` 是后端自动生成的接口文档（Swagger），可以直接在页面上试调接口。
 - 联调时给 daemon 设置 `SUSAN_CLOUD_HOST=http://localhost:8000`（3.3.1 实现后生效）。**这个变量必须设置在 daemon 进程的环境里**。Windows 上 Desktop 会自己拉起 daemon，所以要设成用户级环境变量，然后完全退出并重启 Desktop。
 
@@ -1049,7 +1049,7 @@ Susan 需要调用的平台接口（其余平台接口只给 Web 页面用，Sus
 
 > **权威副本在任务总览 §F（验收标准）与 §G.2（手工 E2E）**。下表与 G.2 的 E2E-01～E2E-15 对应，便于在本节内跳转阅读；执行验收时以总览勾选为准。
 
-前置：按 3.3.0 跑起平台并注册测试账号；daemon 的环境变量设置 `SUSAN_CLOUD_HOST=http://localhost:8000` 后启动。
+前置：按 3.3.0 跑起平台并注册测试账号（测试账号：`susan_test@example.com` / `Test1234!`）；daemon 的环境变量设置 `SUSAN_CLOUD_HOST=http://localhost:8000` 后启动。
 
 | # | 操作 | 期望结果 | 对应 |
 |---|---|---|---|
