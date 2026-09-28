@@ -31,12 +31,13 @@ const (
 	codexAppIntegrationName        = "codex-app"
 	codexAppProfileName            = "ollama-launch-codex-app"
 	codexAppBundleID               = "com.openai.codex"
+	codexAppLaunchURL              = "codex://threads/new?mode=codex"
 	codexAppModelCatalogFilename   = proxy.CodexDesktopModelCatalogFilename
 	codexAppRoutingCatalogFilename = proxy.CodexDesktopRoutingCatalogFilename
 	codexAppAutoReviewModelEnv     = "SUSAN_CODEX_AUTO_REVIEW_MODEL"
-	codexAppOllamaProfileDirName   = "chatgpt-susan"
-	codexAppOllamaUserDataName     = "electron-data"
-	codexAppOllamaPIDFilename      = "chatgpt.pid"
+	codexAppSusanProfileDirName   = "chatgpt-ollama"
+	codexAppSusanUserDataName     = "electron-data"
+	codexAppSusanPIDFilename      = "chatgpt.pid"
 	codexAppSingletonLockName      = "SingletonLock"
 	codexAppSingletonSocketName    = "SingletonSocket"
 	codexAppSingletonCookieName    = "SingletonCookie"
@@ -65,16 +66,16 @@ var (
 	codexAppRunDebugModels  = defaultCodexAppRunDebugModels
 	codexAppRouterHealth    = defaultCodexAppRouterHealth
 
-	codexAppProfileApplication = defaultCodexAppOllamaProfileApplication
-	codexAppProfileExecutable  = defaultCodexAppOllamaProfileExecutable
-	codexAppStopProfile        = defaultCodexAppStopOllamaProfile
-	codexAppProfileIsRunning   = defaultCodexAppOllamaProfileIsRunning
+	codexAppProfileApplication = defaultCodexAppSusanProfileApplication
+	codexAppProfileExecutable  = defaultCodexAppSusanProfileExecutable
+	codexAppStopProfile        = defaultCodexAppStopSusanProfile
+	codexAppProfileIsRunning   = defaultCodexAppSusanProfileIsRunning
 	codexAppProcessCommand     = defaultCodexAppProcessCommand
 
 	codexAppExitTimeout = 5 * time.Second
 )
 
-// CodexApp adds Ollama models to ChatGPT's native catalog using a loopback router.
+// CodexApp adds Susan models to ChatGPT's native catalog using a loopback router.
 type CodexApp struct{}
 
 // ErrCodexAppRestartConfirmationRequired reports that changing the regular
@@ -134,7 +135,7 @@ func (c *CodexApp) ConfigureWithModels(primary string, models []LaunchModel) err
 	if err != nil {
 		return err
 	}
-	if err := writeCodexAppConfig(configPath, primary, catalogPath); err != nil {
+	if err := writeCodexAppConfig(configPath, primary, catalogPath, models); err != nil {
 		if createdAuth {
 			if removeErr := removeCodexAppManagedAuth(configPath); removeErr != nil {
 				return errors.Join(err, fmt.Errorf("remove ChatGPT local auth after failed configuration: %w", removeErr))
@@ -159,7 +160,9 @@ func (c *CodexApp) CurrentModel() string {
 	if err != nil {
 		return ""
 	}
-	if codexAppRootUsesProxy(parsed) && codexAppCatalogHealthy(parsed, "") {
+	if codexAppRootUsesProxy(parsed) &&
+		codexNormalizeURL(parsed.RootString(codexRootOpenAIBaseURLKey)) == codexNormalizeURL(codexAppProxyBaseURL()) &&
+		codexAppCatalogHealthy(parsed, "") {
 		model := strings.TrimSpace(parsed.RootString(codexRootModelKey))
 		if codexAppCatalogContainsModel(model) {
 			return model
@@ -293,7 +296,7 @@ func codexAppRoutingModels() ([]string, error) {
 		}
 	}
 	if len(models) == 0 {
-		return nil, errors.New("ChatGPT Ollama routing catalog is empty")
+		return nil, errors.New("ChatGPT Susan routing catalog is empty")
 	}
 	return models, nil
 }
@@ -306,7 +309,7 @@ func codexAppFirstRoutingModel() string {
 	return models[0]
 }
 
-func writeCodexAppConfig(configPath, model, modelCatalogPath string) error {
+func writeCodexAppConfig(configPath, model, modelCatalogPath string, models []LaunchModel) error {
 	baseURL := codexAppProxyBaseURL()
 
 	content, readErr := os.ReadFile(configPath)
@@ -327,7 +330,15 @@ func writeCodexAppConfig(configPath, model, modelCatalogPath string) error {
 	text = codexRemoveRootValue(text, codexRootModelProviderKey)
 	text = codexSetRootStringValue(text, codexRootModelCatalogJSONKey, modelCatalogPath)
 	text = codexSetRootStringValue(text, codexRootOpenAIBaseURLKey, baseURL)
-	text = codexAppSetReasoningEfforts(text, codexAppReasoningEffortsForConfig(text))
+	efforts := codexAppReasoningEffortsForConfig(text)
+	for _, selected := range models {
+		for _, level := range codexAppThinkingContractForModel(selected).levels {
+			if !slices.Contains(efforts, level) {
+				efforts = append(efforts, level)
+			}
+		}
+	}
+	text = codexAppSetReasoningEfforts(text, efforts)
 
 	parsed, err := codexParseConfig(text)
 	if err != nil {
@@ -592,7 +603,7 @@ func ensureCodexAppManagedAuth(configPath string) (bool, error) {
 	return true, nil
 }
 
-// Remove only Ollama's exact sentinel, never a user login or API key.
+// Remove only Susan's exact sentinel, never a user login or API key.
 func removeCodexAppManagedAuth(configPath string) error {
 	authPath := filepath.Join(filepath.Dir(configPath), "auth.json")
 	data, err := os.ReadFile(authPath)
@@ -654,9 +665,9 @@ func (c *CodexApp) Installed() bool {
 	return codexAppInstalled()
 }
 
-// OllamaConfigured reports whether the regular ChatGPT profile has the
-// additive Ollama catalog and loopback router enabled.
-func (c *CodexApp) OllamaConfigured() bool {
+// SusanConfigured reports whether the regular ChatGPT profile has the
+// additive Susan catalog and loopback router enabled.
+func (c *CodexApp) SusanConfigured() bool {
 	configPath, err := codexConfigPath()
 	if err == nil {
 		if data, readErr := os.ReadFile(configPath); readErr == nil {
@@ -674,19 +685,19 @@ func (c *CodexApp) Running() bool {
 	return codexAppIsRunning()
 }
 
-// UseOllamaFromDesktop adds Ollama models to the regular ChatGPT profile.
+// UseSusanFromDesktop adds Susan models to the regular ChatGPT profile.
 // Its startup-only catalog requires a confirmed restart when running.
-func (c *CodexApp) UseOllamaFromDesktop(primary string, models []LaunchModel, restartConfirmed bool) error {
-	return c.updateOllamaModelsFromDesktop(primary, models, true, restartConfirmed)
+func (c *CodexApp) UseSusanFromDesktop(primary string, models []LaunchModel, restartConfirmed bool) error {
+	return c.updateSusanModelsFromDesktop(primary, models, true, restartConfirmed)
 }
 
-// UpdateOllamaModelsFromDesktop changes the Ollama catalog without opening a
+// UpdateSusanModelsFromDesktop changes the Susan catalog without opening a
 // stopped ChatGPT app. A running app still restarts after confirmation.
-func (c *CodexApp) UpdateOllamaModelsFromDesktop(primary string, models []LaunchModel, restartConfirmed bool) error {
-	return c.updateOllamaModelsFromDesktop(primary, models, false, restartConfirmed)
+func (c *CodexApp) UpdateSusanModelsFromDesktop(primary string, models []LaunchModel, restartConfirmed bool) error {
+	return c.updateSusanModelsFromDesktop(primary, models, false, restartConfirmed)
 }
 
-func (c *CodexApp) updateOllamaModelsFromDesktop(primary string, models []LaunchModel, openWhenStopped, restartConfirmed bool) error {
+func (c *CodexApp) updateSusanModelsFromDesktop(primary string, models []LaunchModel, openWhenStopped, restartConfirmed bool) error {
 	if err := codexAppSupported(); err != nil {
 		return err
 	}
@@ -700,7 +711,7 @@ func (c *CodexApp) updateOllamaModelsFromDesktop(primary string, models []Launch
 	if (codexAppIsRunning() || codexAppProfileIsRunning()) && !restartConfirmed {
 		return ErrCodexAppRestartConfirmationRequired
 	}
-	if err := stopLegacyCodexAppOllamaProfile(); err != nil {
+	if err := stopLegacyCodexAppSusanProfile(); err != nil {
 		return err
 	}
 	return codexAppApplyProfileFromDesktop(func() error {
@@ -722,12 +733,12 @@ func defaultCodexAppRouterHealth() error {
 	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("ChatGPT routing is unavailable at %s; restart Ollama and try again: %w", endpoint, err)
+		return fmt.Errorf("ChatGPT routing is unavailable at %s; restart Susan and try again: %w", endpoint, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
-		return fmt.Errorf("the running Ollama server does not include ChatGPT routing; restart Ollama using this build and try again")
+		return fmt.Errorf("the running Susan server does not include ChatGPT routing; restart Susan using this build and try again")
 	}
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("ChatGPT router health check returned %s", resp.Status)
@@ -740,12 +751,12 @@ func defaultCodexAppRouterHealth() error {
 		return fmt.Errorf("read ChatGPT router health check: %w", err)
 	}
 	if !status.OK {
-		return errors.New("ChatGPT router is not ready; restart Ollama and try again")
+		return errors.New("ChatGPT router is not ready; restart Susan and try again")
 	}
 	return nil
 }
 
-// RestoreFromDesktop removes the additive Ollama catalog and restores the
+// RestoreFromDesktop removes the additive Susan catalog and restores the
 // prior base URL and model settings. A stopped ChatGPT app remains stopped.
 func (c *CodexApp) RestoreFromDesktop(restartConfirmed bool) error {
 	if err := codexAppSupported(); err != nil {
@@ -754,7 +765,7 @@ func (c *CodexApp) RestoreFromDesktop(restartConfirmed bool) error {
 	if (codexAppIsRunning() || codexAppProfileIsRunning()) && !restartConfirmed {
 		return ErrCodexAppRestartConfirmationRequired
 	}
-	if err := stopLegacyCodexAppOllamaProfile(); err != nil {
+	if err := stopLegacyCodexAppSusanProfile(); err != nil {
 		return err
 	}
 	return codexAppApplyProfileFromDesktop(restoreCodexAppProfile, false, restartConfirmed)
@@ -768,22 +779,22 @@ func (c *CodexApp) RestartFromDesktop(restartConfirmed bool) error {
 	if !codexAppInstalled() {
 		return errors.New("ChatGPT is not installed")
 	}
-	if !c.OllamaConfigured() {
-		return errors.New("ChatGPT is not configured to use Ollama")
+	if !c.SusanConfigured() {
+		return errors.New("ChatGPT is not configured to use Susan")
 	}
 	return codexAppApplyProfileFromDesktop(repairCodexAppCatalogAuthVisibility, true, restartConfirmed)
 }
 
-func (c *CodexApp) OllamaRequestCount() uint64 {
+func (c *CodexApp) SusanRequestCount() uint64 {
 	return codexAppRegularProfileRequestCount()
 }
 
-func stopLegacyCodexAppOllamaProfile() error {
+func stopLegacyCodexAppSusanProfile() error {
 	if codexAppGOOS != "darwin" || !codexAppProfileIsRunning() {
 		return nil
 	}
 	if err := codexAppStopProfile(); err != nil {
-		return fmt.Errorf("close the previous ChatGPT · Ollama profile: %w", err)
+		return fmt.Errorf("close the previous ChatGPT · Susan profile: %w", err)
 	}
 	return nil
 }
@@ -902,28 +913,28 @@ func codexAppModelCatalogPath() (string, error) {
 	return codexAppModelCatalogPathForConfig(configPath), nil
 }
 
-func codexAppOllamaProfileRoot() (string, error) {
+func codexAppSusanProfileRoot() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".susan", codexAppOllamaProfileDirName), nil
+	return filepath.Join(home, ".ollama", codexAppSusanProfileDirName), nil
 }
 
-func codexAppOllamaProfileUserDataDir() (string, error) {
-	root, err := codexAppOllamaProfileRoot()
+func codexAppSusanProfileUserDataDir() (string, error) {
+	root, err := codexAppSusanProfileRoot()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(root, codexAppOllamaUserDataName), nil
+	return filepath.Join(root, codexAppSusanUserDataName), nil
 }
 
-func codexAppOllamaProfilePIDPath() (string, error) {
-	root, err := codexAppOllamaProfileRoot()
+func codexAppSusanProfilePIDPath() (string, error) {
+	root, err := codexAppSusanProfileRoot()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(root, codexAppOllamaPIDFilename), nil
+	return filepath.Join(root, codexAppSusanPIDFilename), nil
 }
 
 func codexAppProfileConfigPath() (string, error) {
@@ -962,7 +973,7 @@ func writeCodexAppCombinedModelCatalog(path string, models []LaunchModel, native
 		return fmt.Errorf("parse native Codex model catalog: %w", err)
 	}
 	baseInstructions := codexAppBaseInstructionsFromCatalog(nativeCatalog)
-	ollamaPriorityStart := codexAppOllamaPriorityStart(nativeCatalog, len(models))
+	ollamaPriorityStart := codexAppSusanPriorityStart(nativeCatalog, len(models))
 	entries := make([]json.RawMessage, 0, len(models)+len(nativeCatalog.Models))
 	seen := make(map[string]bool, len(models)+len(nativeCatalog.Models))
 	for i, model := range models {
@@ -1012,7 +1023,7 @@ func codexAppCatalogEntryWithAPISupport(entry json.RawMessage, supported bool) (
 	return json.Marshal(fields)
 }
 
-// Repair legacy visibility using the routing catalog without contacting Ollama.
+// Repair legacy visibility using the routing catalog without contacting Susan.
 func repairCodexAppCatalogAuthVisibility() error {
 	configPath, err := codexConfigPath()
 	if err != nil {
@@ -1020,7 +1031,7 @@ func repairCodexAppCatalogAuthVisibility() error {
 	}
 	routingModels, err := codexAppRoutingModels()
 	if err != nil {
-		return fmt.Errorf("read ChatGPT Ollama routing catalog: %w", err)
+		return fmt.Errorf("read ChatGPT Susan routing catalog: %w", err)
 	}
 	routed := make(map[string]bool, len(routingModels))
 	for _, model := range routingModels {
@@ -1071,7 +1082,7 @@ func repairCodexAppCatalogAuthVisibility() error {
 	return nil
 }
 
-func codexAppOllamaPriorityStart(nativeCatalog codexAppRawModelCatalog, ollamaModelCount int) int {
+func codexAppSusanPriorityStart(nativeCatalog codexAppRawModelCatalog, ollamaModelCount int) int {
 	lowestNativePriority := 0
 	found := false
 	for _, entry := range nativeCatalog.Models {
@@ -1102,9 +1113,10 @@ func writeCodexAppRoutingCatalog(path string, models []LaunchModel, autoReview c
 		return fmt.Errorf("chatgpt routing catalog cannot be empty")
 	}
 	type thinkingMetadata struct {
-		Supported bool           `json:"supported"`
-		Levels    []string       `json:"levels,omitempty"`
-		Values    map[string]any `json:"values,omitempty"`
+		Supported bool               `json:"supported"`
+		Levels    []string           `json:"levels,omitempty"`
+		Values    map[string]any     `json:"values,omitempty"`
+		Controls  *modelpkg.Thinking `json:"controls,omitempty"`
 	}
 	type routingEntry struct {
 		Slug     string           `json:"slug"`
@@ -1119,6 +1131,7 @@ func writeCodexAppRoutingCatalog(path string, models []LaunchModel, autoReview c
 				Supported: len(metadata.thinking.levels) > 0,
 				Levels:    metadata.thinking.levels,
 				Values:    metadata.thinking.values,
+				Controls:  metadata.thinking.controls,
 			},
 		})
 	}
@@ -1234,6 +1247,7 @@ type codexAppThinkingContract struct {
 	defaultLevel string
 	levels       []string
 	values       map[string]any
+	controls     *modelpkg.Thinking
 }
 
 func codexAppDefaultModelMetadata() codexAppModelMetadata {
@@ -1278,54 +1292,62 @@ func codexAppThinkingContractForModel(model LaunchModel) codexAppThinkingContrac
 		}
 	}
 
-	// Binary thinking maps "none" to off and "medium" to on.
+	// Binary thinking maps "none" to off and "high" to on.
 	return codexAppThinkingContract{
-		defaultLevel: "medium",
-		levels:       []string{"none", "medium"},
-		values:       map[string]any{"none": false, "medium": true},
+		defaultLevel: "high",
+		levels:       []string{"none", "high"},
+		values:       map[string]any{"none": false, "high": true},
 	}
 }
 
 func codexAppThinkingContractFromRecommendation(thinking *api.ModelRecommendationThinking) (codexAppThinkingContract, bool) {
-	if thinking == nil || len(thinking.Values) == 0 || thinking.Default == nil {
+	if !thinking.Valid() {
 		return codexAppThinkingContract{}, false
 	}
 
-	contract := codexAppThinkingContract{values: make(map[string]any, len(thinking.Values))}
+	contract := codexAppThinkingContract{values: make(map[string]any, len(thinking.Values)), controls: thinking.Clone()}
 	for _, value := range thinking.Values {
-		level, ok := codexAppThinkingLevelForOllamaValue(value)
+		if value == true && thinking.Supports("high") {
+			continue
+		}
+		level, ok := codexAppThinkingLevelForSusanValue(value)
 		if !ok {
-			return codexAppThinkingContract{}, false
+			continue
 		}
 		if _, duplicate := contract.values[level]; duplicate {
-			return codexAppThinkingContract{}, false
+			continue
 		}
 		contract.levels = append(contract.levels, level)
 		contract.values[level] = value
 	}
 
-	defaultLevel, ok := codexAppThinkingLevelForOllamaValue(thinking.Default)
+	defaultLevel, ok := codexAppThinkingLevelForSusanValue(thinking.Default)
 	advertisedDefault, advertised := contract.values[defaultLevel]
 	if !ok || !advertised || advertisedDefault != thinking.Default {
-		return codexAppThinkingContract{}, false
+		return contract, true
 	}
-	if len(contract.levels) == 1 && contract.levels[0] == "none" {
-		return codexAppThinkingContract{}, true
+	if len(thinking.Values) == 1 && thinking.Supports(false) {
+		contract.levels = nil
+		contract.values = nil
+		return contract, true
 	}
 	contract.defaultLevel = defaultLevel
 	return contract, true
 }
 
-func codexAppThinkingLevelForOllamaValue(value any) (string, bool) {
+func codexAppThinkingLevelForSusanValue(value any) (string, bool) {
 	switch value := value.(type) {
 	case bool:
 		if value {
-			return "medium", true
+			return "high", true
 		}
 		return "none", true
 	case string:
-		think := api.ThinkValue{Value: value}
-		return value, think.IsValid()
+		switch value {
+		case "minimal", "low", "medium", "high", "xhigh", "max", "ultra":
+			return value, true
+		}
+		return "", false
 	}
 	return "", false
 }
@@ -1368,11 +1390,11 @@ func codexAppCatalogEntry(model string, metadata codexAppModelMetadata, priority
 		})
 	}
 
-	// Keep Ollama models visible in API-key sessions.
+	// Keep Susan models visible in API-key sessions.
 	return map[string]any{
 		"slug":                                 model,
 		"display_name":                         model,
-		"description":                          "Ollama model",
+		"description":                          "Susan model",
 		"default_reasoning_level":              defaultReasoningLevel,
 		"supported_reasoning_levels":           supportedReasoningLevels,
 		"shell_type":                           "unified_exec",
@@ -1410,7 +1432,7 @@ func codexAppCatalogEntry(model string, metadata codexAppModelMetadata, priority
 }
 
 func codexAppInstructionsForModel(baseInstructions, model string) string {
-	replacement := fmt.Sprintf("You are Codex, a coding agent powered by %s through Ollama.", model)
+	replacement := fmt.Sprintf("You are Codex, a coding agent powered by %s through Susan.", model)
 	for _, identity := range []string{
 		"You are Codex, an agent based on GPT-5.",
 		"You are Codex, a coding agent based on GPT-5.",
@@ -1864,7 +1886,7 @@ func waitForCodexAppCondition(timeout time.Duration, cancel <-chan struct{}, don
 	return fmt.Errorf("ChatGPT did not quit. Close it manually, then try again")
 }
 
-func defaultCodexAppOllamaProfileApplication() (string, error) {
+func defaultCodexAppSusanProfileApplication() (string, error) {
 	appPath := codexAppAppPath()
 	if appPath == "" {
 		return "", fmt.Errorf("ChatGPT was not found; install it from https://chatgpt.com/download")
@@ -1872,7 +1894,7 @@ func defaultCodexAppOllamaProfileApplication() (string, error) {
 	return appPath, nil
 }
 
-func defaultCodexAppOllamaProfileExecutable() (string, error) {
+func defaultCodexAppSusanProfileExecutable() (string, error) {
 	appPath, err := codexAppProfileApplication()
 	if err != nil {
 		return "", err
@@ -1884,11 +1906,11 @@ func defaultCodexAppOllamaProfileExecutable() (string, error) {
 	return executable, nil
 }
 
-func prepareCodexAppOllamaProfileUserData(userDataDir string) (bool, error) {
+func prepareCodexAppSusanProfileUserData(userDataDir string) (bool, error) {
 	if err := os.MkdirAll(userDataDir, 0o700); err != nil {
 		return false, err
 	}
-	if adoptCodexAppOllamaProfileSingleton(userDataDir) {
+	if adoptCodexAppSusanProfileSingleton(userDataDir) {
 		return true, nil
 	}
 	for _, name := range []string{
@@ -1897,21 +1919,21 @@ func prepareCodexAppOllamaProfileUserData(userDataDir string) (bool, error) {
 		codexAppSingletonCookieName,
 	} {
 		if err := os.Remove(filepath.Join(userDataDir, name)); err != nil && !os.IsNotExist(err) {
-			return false, fmt.Errorf("clear stale ChatGPT · Ollama %s: %w", name, err)
+			return false, fmt.Errorf("clear stale ChatGPT · Susan %s: %w", name, err)
 		}
 	}
 	return false, nil
 }
 
-func adoptCodexAppOllamaProfileSingleton(userDataDir string) bool {
-	pid, ok := codexAppOllamaProfileSingletonPID(userDataDir)
-	if !ok || !codexAppOllamaProfileProcessMatches(pid) {
+func adoptCodexAppSusanProfileSingleton(userDataDir string) bool {
+	pid, ok := codexAppSusanProfileSingletonPID(userDataDir)
+	if !ok || !codexAppSusanProfileProcessMatches(pid) {
 		return false
 	}
-	return writeCodexAppOllamaProfilePID(pid) == nil
+	return writeCodexAppSusanProfilePID(pid) == nil
 }
 
-func codexAppOllamaProfileSingletonPID(userDataDir string) (int, bool) {
+func codexAppSusanProfileSingletonPID(userDataDir string) (int, bool) {
 	target, err := os.Readlink(filepath.Join(userDataDir, codexAppSingletonLockName))
 	if err != nil {
 		return 0, false
@@ -1929,33 +1951,33 @@ func codexAppOllamaProfileSingletonPID(userDataDir string) (int, bool) {
 }
 
 // Detect isolated legacy processes for cleanup; this integration uses one profile.
-func defaultCodexAppOllamaProfileIsRunning() bool {
-	pid, ok := codexAppOllamaProfilePID()
+func defaultCodexAppSusanProfileIsRunning() bool {
+	pid, ok := codexAppSusanProfilePID()
 	if !ok {
-		return reconcileCodexAppOllamaProfileSingleton()
+		return reconcileCodexAppSusanProfileSingleton()
 	}
-	running, matches := codexAppOllamaProfileProcessIdentity(pid)
+	running, matches := codexAppSusanProfileProcessIdentity(pid)
 	if !running || !matches {
-		_ = removeCodexAppOllamaProfilePID()
-		return reconcileCodexAppOllamaProfileSingleton()
+		_ = removeCodexAppSusanProfilePID()
+		return reconcileCodexAppSusanProfileSingleton()
 	}
 	return true
 }
 
-func reconcileCodexAppOllamaProfileSingleton() bool {
-	userDataDir, err := codexAppOllamaProfileUserDataDir()
+func reconcileCodexAppSusanProfileSingleton() bool {
+	userDataDir, err := codexAppSusanProfileUserDataDir()
 	if err != nil {
 		return false
 	}
-	running, err := prepareCodexAppOllamaProfileUserData(userDataDir)
+	running, err := prepareCodexAppSusanProfileUserData(userDataDir)
 	return err == nil && running
 }
 
-func writeCodexAppOllamaProfilePID(pid int) error {
+func writeCodexAppSusanProfilePID(pid int) error {
 	if pid <= 1 || pid == os.Getpid() {
-		return fmt.Errorf("invalid ChatGPT · Ollama process ID %d", pid)
+		return fmt.Errorf("invalid ChatGPT · Susan process ID %d", pid)
 	}
-	pidPath, err := codexAppOllamaProfilePIDPath()
+	pidPath, err := codexAppSusanProfilePIDPath()
 	if err != nil {
 		return err
 	}
@@ -1965,8 +1987,8 @@ func writeCodexAppOllamaProfilePID(pid int) error {
 	return os.WriteFile(pidPath, []byte(strconv.Itoa(pid)+"\n"), 0o600)
 }
 
-func codexAppOllamaProfilePID() (int, bool) {
-	pidPath, err := codexAppOllamaProfilePIDPath()
+func codexAppSusanProfilePID() (int, bool) {
+	pidPath, err := codexAppSusanProfilePIDPath()
 	if err != nil {
 		return 0, false
 	}
@@ -1982,12 +2004,12 @@ func codexAppOllamaProfilePID() (int, bool) {
 	return pid, true
 }
 
-func codexAppOllamaProfileProcessMatches(pid int) bool {
-	_, matches := codexAppOllamaProfileProcessIdentity(pid)
+func codexAppSusanProfileProcessMatches(pid int) bool {
+	_, matches := codexAppSusanProfileProcessIdentity(pid)
 	return matches
 }
 
-func codexAppOllamaProfileProcessIdentity(pid int) (bool, bool) {
+func codexAppSusanProfileProcessIdentity(pid int) (bool, bool) {
 	if pid <= 1 || pid == os.Getpid() {
 		return false, false
 	}
@@ -1995,7 +2017,7 @@ func codexAppOllamaProfileProcessIdentity(pid int) (bool, bool) {
 	if err != nil {
 		return false, false
 	}
-	userDataDir, err := codexAppOllamaProfileUserDataDir()
+	userDataDir, err := codexAppSusanProfileUserDataDir()
 	if err != nil {
 		return false, false
 	}
@@ -2013,8 +2035,8 @@ func defaultCodexAppProcessCommand(pid int) (string, error) {
 	return string(out), err
 }
 
-func removeCodexAppOllamaProfilePID() error {
-	pidPath, err := codexAppOllamaProfilePIDPath()
+func removeCodexAppSusanProfilePID() error {
+	pidPath, err := codexAppSusanProfilePIDPath()
 	if err != nil {
 		return err
 	}
@@ -2024,34 +2046,34 @@ func removeCodexAppOllamaProfilePID() error {
 	return nil
 }
 
-func defaultCodexAppStopOllamaProfile() error {
-	pid, ok := codexAppOllamaProfilePID()
+func defaultCodexAppStopSusanProfile() error {
+	pid, ok := codexAppSusanProfilePID()
 	if !ok {
-		return removeCodexAppOllamaProfilePID()
+		return removeCodexAppSusanProfilePID()
 	}
-	running, matches := codexAppOllamaProfileProcessIdentity(pid)
+	running, matches := codexAppSusanProfileProcessIdentity(pid)
 	if !running {
-		return removeCodexAppOllamaProfilePID()
+		return removeCodexAppSusanProfilePID()
 	}
 	if !matches {
-		_ = removeCodexAppOllamaProfilePID()
-		return fmt.Errorf("ChatGPT · Ollama process identity could not be verified")
+		_ = removeCodexAppSusanProfilePID()
+		return fmt.Errorf("ChatGPT · Susan process identity could not be verified")
 	}
 	process, err := os.FindProcess(pid)
 	if err != nil {
 		return err
 	}
 	if err := process.Signal(syscall.SIGTERM); err != nil {
-		return fmt.Errorf("stop ChatGPT · Ollama: %w", err)
+		return fmt.Errorf("stop ChatGPT · Susan: %w", err)
 	}
 	deadline := time.Now().Add(codexAppExitTimeout)
 	for time.Now().Before(deadline) {
-		if !codexAppOllamaProfileProcessMatches(pid) {
-			return removeCodexAppOllamaProfilePID()
+		if !codexAppSusanProfileProcessMatches(pid) {
+			return removeCodexAppSusanProfilePID()
 		}
 		codexAppSleep(100 * time.Millisecond)
 	}
-	return fmt.Errorf("ChatGPT · Ollama did not close; quit that window and try again")
+	return fmt.Errorf("ChatGPT · Susan did not close; quit that window and try again")
 }
 
 func defaultCodexAppOpenApp(args []string) error {
@@ -2076,13 +2098,7 @@ func defaultCodexAppOpenApp(args []string) error {
 		}
 		return fmt.Errorf("ChatGPT was not found; install it from https://chatgpt.com/download, then re-run 'susan launch chatgpt'")
 	case "darwin":
-		if path := codexAppAppPath(); path != "" {
-			cmd := exec.Command("open", path)
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			return cmd.Run()
-		}
-		cmd := exec.Command("open", "-b", codexAppBundleID)
+		cmd := exec.Command("open", codexAppDarwinOpenArgs(codexAppAppPath())...)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		return cmd.Run()
@@ -2091,12 +2107,26 @@ func defaultCodexAppOpenApp(args []string) error {
 	}
 }
 
+func codexAppDarwinOpenArgs(path string) []string {
+	args := []string{"-b", codexAppBundleID}
+	if path != "" {
+		args = []string{path}
+	}
+	if (&CodexApp{}).SusanConfigured() {
+		if path != "" {
+			args = []string{"-a", path}
+		}
+		args = append(args, codexAppLaunchURL)
+	}
+	return args
+}
+
 func defaultCodexAppOpenAppPath(path string) error {
 	switch codexAppGOOS {
 	case "windows":
 		return exec.Command("powershell.exe", "-NoProfile", "-Command", "Start-Process -FilePath "+quotePowerShellString(path)).Run()
 	case "darwin":
-		cmd := exec.Command("open", path)
+		cmd := exec.Command("open", codexAppDarwinOpenArgs(path)...)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		return cmd.Run()
@@ -2130,12 +2160,7 @@ func defaultCodexAppIsRunning() bool {
 	case "windows":
 		return len(codexAppMatchingProcessIDs()) > 0
 	case "darwin":
-		out, err := exec.Command("osascript", "-e", `tell application "System Events" to exists process "ChatGPT"`).Output()
-		if err == nil && strings.TrimSpace(string(out)) == "true" {
-			return true
-		}
-		out, err = exec.Command("osascript", "-e", `tell application "System Events" to exists process "Codex"`).Output()
-		if err == nil && strings.TrimSpace(string(out)) == "true" {
+		if err := exec.Command("pgrep", "-a", "-x", "ChatGPT|Codex").Run(); err == nil {
 			return true
 		}
 		return len(codexAppMatchingProcessIDs()) > 0
@@ -2307,7 +2332,8 @@ func codexAppManagedProxyURL(raw string) bool {
 			return false
 		}
 	}
-	return strings.TrimSuffix(u.Path, "/") == proxy.CodexDesktopPathPrefix+"/v1"
+	// ConnectableHost preserves proxy path prefixes from SUSAN_HOST.
+	return strings.HasSuffix(strings.TrimSuffix(u.Path, "/"), proxy.CodexDesktopPathPrefix+"/v1")
 }
 
 func codexAppRootReferencesCatalog(text string) bool {
@@ -2423,7 +2449,7 @@ func codexAppRestoreRootValues(text string, state codexAppRestoreState) string {
 }
 
 // codexAppShouldPreserveCurrentModel keeps a native model the user selected
-// while Ollama routing was active. Selected Ollama slugs are launch-owned and
+// while Susan routing was active. Selected Susan slugs are launch-owned and
 // must still be replaced with the pre-integration model during restore.
 func codexAppShouldPreserveCurrentModel(text string) bool {
 	config, err := codexParseConfig(text)
@@ -2622,7 +2648,7 @@ func removeCodexAppRestoreState() error {
 func codexAppRestoreStatePath() string {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return filepath.Join(os.TempDir(), "susan-codex-app-restore.json")
+		return filepath.Join(os.TempDir(), "ollama-codex-app-restore.json")
 	}
-	return filepath.Join(home, ".susan", "launch", "codex-app-restore.json")
+	return filepath.Join(home, ".ollama", "launch", "codex-app-restore.json")
 }

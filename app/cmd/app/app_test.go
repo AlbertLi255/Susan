@@ -48,24 +48,34 @@ func TestDispatchURLSchemeRequest(t *testing.T) {
 		request     string
 		wantConnect bool
 		wantOpen    bool
+		wantApps    bool
 		wantErr     bool
 	}{
 		{name: "bare URL opens app", request: "ollama://", wantOpen: true},
+		{name: "root URL opens app", request: "ollama:///", wantOpen: true},
+		{name: "apps URL opens Apps", request: "ollama://apps", wantApps: true},
+		{name: "apps path opens Apps", request: "ollama:///apps", wantApps: true},
+		{name: "apps trailing slash opens Apps", request: "ollama://apps/", wantApps: true},
 		{name: "connect URL starts connection", request: "ollama://connect", wantConnect: true},
+		{name: "connect path starts connection", request: "ollama:///connect", wantConnect: true},
 		{name: "unsupported URL", request: "ollama://unsupported", wantErr: true},
-		{name: "bare susan URL opens app", request: "susan://", wantOpen: true},
-		{name: "susan connect URL starts connection", request: "susan://connect", wantConnect: true},
-		{name: "unsupported susan URL", request: "susan://unsupported", wantErr: true},
+		{name: "invalid URL", request: "ollama://%", wantErr: true},
+		{name: "bare Susan URL opens app", request: "susan://", wantOpen: true},
+		{name: "Susan Apps URL opens Apps", request: "susan://apps", wantApps: true},
+		{name: "Susan connect URL starts connection", request: "susan://connect", wantConnect: true},
+		{name: "unsupported Susan URL", request: "susan://unsupported", wantErr: true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			connected := false
 			opened := false
+			openedApps := false
 			err := dispatchURLSchemeRequest(
 				tt.request,
 				func() { connected = true },
 				func() { opened = true },
+				func() { openedApps = true },
 			)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("dispatchURLSchemeRequest() error = %v, wantErr %v", err, tt.wantErr)
@@ -75,6 +85,9 @@ func TestDispatchURLSchemeRequest(t *testing.T) {
 			}
 			if opened != tt.wantOpen {
 				t.Errorf("open called = %v, want %v", opened, tt.wantOpen)
+			}
+			if openedApps != tt.wantApps {
+				t.Errorf("open Apps called = %v, want %v", openedApps, tt.wantApps)
 			}
 		})
 	}
@@ -89,11 +102,16 @@ func TestRunInitialWindowsUIWithBareURL(t *testing.T) {
 	runInitialWindowsUI(
 		false,
 		true,
-		"ollama://",
+		"susan://",
 		func() { hiddenCalls++ },
 		func(request string) {
 			urlCalls++
-			if err := dispatchURLSchemeRequest(request, func() {}, func() { openCalls++ }); err != nil {
+			err := dispatchURLSchemeRequest(request,
+				func() { t.Fatal("unexpected sign-in") },
+				func() { openCalls++ },
+				func() { t.Fatal("unexpected Apps navigation") },
+			)
+			if err != nil {
 				t.Fatalf("dispatchURLSchemeRequest() error = %v", err)
 			}
 		},
@@ -113,6 +131,30 @@ func TestRunInitialWindowsUIWithBareURL(t *testing.T) {
 	}
 	if onboardingCalls != 0 {
 		t.Errorf("onboarding opened %d times, want 0", onboardingCalls)
+	}
+}
+
+func TestRunInitialWindowsUIWithAppsURL(t *testing.T) {
+	appsCalls := 0
+	runInitialWindowsUI(
+		false,
+		true,
+		"susan://apps",
+		func() { t.Fatal("unexpected hidden startup") },
+		func(request string) {
+			err := dispatchURLSchemeRequest(request,
+				func() { t.Fatal("unexpected sign-in") },
+				func() { t.Fatal("unexpected home navigation") },
+				func() { appsCalls++ },
+			)
+			if err != nil {
+				t.Fatalf("dispatchURLSchemeRequest() error = %v", err)
+			}
+		},
+		func(string) { t.Fatal("unexpected onboarding") },
+	)
+	if appsCalls != 1 {
+		t.Fatalf("Apps opened %d times, want 1", appsCalls)
 	}
 }
 

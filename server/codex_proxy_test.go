@@ -41,7 +41,7 @@ func TestCodexProxyWebSocketUpgradeRequestsHTTPFallback(t *testing.T) {
 	}
 }
 
-func TestCodexProxyRemainsLocalOnExposedOllamaListener(t *testing.T) {
+func TestCodexProxyRemainsLocalOnExposedSusanListener(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	handler, err := (&Server{addr: &net.TCPAddr{IP: net.IPv4zero, Port: 14343}}).GenerateRoutes()
 	if err != nil {

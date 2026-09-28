@@ -50,7 +50,7 @@ const (
 	// the inventory value rather than blocking the launch.
 	museLoadTimeout = 5 * time.Minute
 
-	museRowDescription = "Served by Ollama"
+	museRowDescription = "Served by Susan"
 )
 
 var museGOOS = runtime.GOOS
@@ -215,7 +215,7 @@ func museConfigHome() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".susan", "launch", "muse-config"), nil
+	return filepath.Join(home, ".ollama", "launch", "muse-config"), nil
 }
 
 func museSettingsPath() (string, error) {
@@ -294,7 +294,7 @@ func writeMuseSettingsFile(models []LaunchModel, backup bool) error {
 	settings["model"] = models[0].Name
 	settings["endpoint_transport"] = map[string]any{
 		"base_url": envconfig.ConnectableHost().String() + "/v1",
-		// Ollama wants no credential, and muse refuses to start on the default
+		// Susan wants no credential, and muse refuses to start on the default
 		// "bearer" unless one is configured.
 		"auth": "none",
 	}

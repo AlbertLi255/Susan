@@ -30,6 +30,7 @@ import { isWindowsPlatform } from "@/lib/platform";
 import { settingsMutationScope } from "@/lib/settingsMutationScope";
 import { useUser } from "@/hooks/useUser";
 import { useDeviceSignin } from "@/hooks/useDeviceSignin";
+import { invalidateDesktopModels } from "@/lib/desktopModels";
 import { useCloudStatus } from "@/hooks/useCloudStatus";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useBlocker } from "@tanstack/react-router";
@@ -263,6 +264,7 @@ export default function Settings() {
     },
     onSettled: (_status, _error, request) => {
       if (request.requestId !== latestCloudRequestId) return;
+      void invalidateDesktopModels();
       queryClient.invalidateQueries({ queryKey: ["models"] });
       queryClient.invalidateQueries({ queryKey: ["cloudStatus"] });
     },
@@ -272,7 +274,6 @@ export default function Settings() {
     const requestId = ++latestCloudRequestId;
     return updateCloudMutation.mutateAsync({ enabled, requestId });
   };
-
   useEffect(() => {
     window
       .getShowAppsInMenu?.()
@@ -751,6 +752,7 @@ export default function Settings() {
               </h2>
               <ClaudeDesktopModelsSettings
                 ref={claudeModelsSettingsRef}
+                accountKey={`${user?.id ?? "signed-out"}:${user?.plan ?? ""}:${cloudStatusKnown ? cloudDisabled : "unknown"}`}
                 includeCloudModels={
                   isAuthenticated && cloudStatusKnown && !cloudDisabled
                 }

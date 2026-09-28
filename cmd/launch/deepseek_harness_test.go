@@ -76,7 +76,7 @@ func TestDeepSeekHarnessConfigurePreservesSettingsAndIsIdempotent(t *testing.T) 
 	secondSettings, _ := os.ReadFile(settingsPath)
 	secondPatch, _ := os.ReadFile(patchPath)
 	if string(firstSettings) != string(secondSettings) || string(firstPatch) != string(secondPatch) {
-		t.Fatal("repeated configuration changed Ollama-managed files")
+		t.Fatal("repeated configuration changed Susan-managed files")
 	}
 	for _, preserved := range []string{"# keep-comment", "&defaults", "*defaults", "# keep-reasoning-comment", "# keep-retry-comment"} {
 		if !strings.Contains(string(firstSettings), preserved) {
@@ -105,11 +105,11 @@ func TestDeepSeekHarnessConfigurePreservesSettingsAndIsIdempotent(t *testing.T) 
 	}
 	provider, _ := providers[deepSeekHarnessProvider].(map[string]any)
 	if provider["baseURL"] != "http://127.0.0.1:12345/v1" || provider["apiKeyEnv"] != deepSeekHarnessAPIKeyEnv {
-		t.Fatalf("Ollama provider = %#v", provider)
+		t.Fatalf("Susan provider = %#v", provider)
 	}
 	retryPolicy, _ := provider["retryPolicy"].(map[string]any)
 	if retryPolicy["maxAttempts"] != 2 {
-		t.Fatalf("Ollama provider settings were not preserved: %#v", provider)
+		t.Fatalf("Susan provider settings were not preserved: %#v", provider)
 	}
 	configuredModels, _ := provider["models"].([]any)
 	if len(configuredModels) != 2 {
@@ -128,7 +128,7 @@ func TestDeepSeekHarnessConfigurePreservesSettingsAndIsIdempotent(t *testing.T) 
 	}
 	web, _ := settings[deepSeekHarnessWebSettings].(map[string]any)
 	if web["baseURL"] != "http://127.0.0.1:12345/v1" || web["apiKeyEnv"] != deepSeekHarnessAPIKeyEnv || web["model"] != "qwen3.5:latest" {
-		t.Fatalf("Ollama web search provider = %#v", web)
+		t.Fatalf("Susan web search provider = %#v", web)
 	}
 	if web["maxUses"] != 3 {
 		t.Fatalf("existing web search settings were not preserved: %#v", web)

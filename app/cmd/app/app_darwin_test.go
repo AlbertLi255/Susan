@@ -50,7 +50,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestLoadClaudeDesktopModelsUsesAppEndpoint(t *testing.T) {
-	useTestOllamaRequestSigner(t)
+	useTestSusanRequestSigner(t)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/api/experimental/model-recommendations" || r.URL.Query().Get("app") != "claude-desktop" {
 			t.Fatalf("request URL = %q", r.URL.String())
@@ -86,7 +86,7 @@ func TestLoadClaudeDesktopModelsUsesAppEndpoint(t *testing.T) {
 }
 
 func TestCurrentClaudeDesktopCloudModelsUsesAccountEndpoint(t *testing.T) {
-	useTestOllamaRequestSigner(t)
+	useTestSusanRequestSigner(t)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/api/tags" || r.URL.Query().Get("ts") == "" {
 			t.Fatalf("request URL = %q", r.URL.String())
@@ -123,8 +123,8 @@ func TestCurrentClaudeDesktopCloudModelsUsesAccountEndpoint(t *testing.T) {
 }
 
 func TestClaudeDesktopDownloadEndpointUsesTypedZipContract(t *testing.T) {
-	useTestOllamaRequestSigner(t)
-	req, err := newSignedOllamaRequest(context.Background(), http.MethodGet, claudeDesktopDownloadEndpoint("http://127.0.0.1:18080/"))
+	useTestSusanRequestSigner(t)
+	req, err := newSignedSusanRequest(context.Background(), http.MethodGet, claudeDesktopDownloadEndpoint("http://127.0.0.1:18080/"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -140,9 +140,9 @@ func TestClaudeDesktopDownloadEndpointUsesTypedZipContract(t *testing.T) {
 }
 
 func TestClaudeEndpointRequestsSignCompleteRequestURI(t *testing.T) {
-	previousSigner := signOllamaData
+	previousSigner := signSusanData
 	t.Cleanup(func() {
-		signOllamaData = previousSigner
+		signSusanData = previousSigner
 	})
 
 	for _, endpoint := range []string{
@@ -151,11 +151,11 @@ func TestClaudeEndpointRequestsSignCompleteRequestURI(t *testing.T) {
 		"https://ollama.com/download-app?app=claude-desktop&type=mac-zip",
 	} {
 		var challenge string
-		signOllamaData = func(_ context.Context, data []byte) (string, error) {
+		signSusanData = func(_ context.Context, data []byte) (string, error) {
 			challenge = string(data)
 			return "test-public-key:test-signature", nil
 		}
-		req, err := newSignedOllamaRequest(context.Background(), http.MethodGet, endpoint)
+		req, err := newSignedSusanRequest(context.Background(), http.MethodGet, endpoint)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -166,12 +166,12 @@ func TestClaudeEndpointRequestsSignCompleteRequestURI(t *testing.T) {
 }
 
 func TestClaudeEndpointRequestsAreNotSentUnsigned(t *testing.T) {
-	previousSigner := signOllamaData
-	signOllamaData = func(context.Context, []byte) (string, error) {
+	previousSigner := signSusanData
+	signSusanData = func(context.Context, []byte) (string, error) {
 		return "", errors.New("signing unavailable")
 	}
 	t.Cleanup(func() {
-		signOllamaData = previousSigner
+		signSusanData = previousSigner
 	})
 
 	called := false
@@ -202,19 +202,19 @@ func TestClaudeEndpointRequestsAreNotSentUnsigned(t *testing.T) {
 	if called {
 		t.Fatal("model recommendations request was sent without identity")
 	}
-	if _, err := newSignedOllamaRequest(context.Background(), http.MethodGet, claudeDesktopDownloadEndpoint(server.URL)); err == nil {
+	if _, err := newSignedSusanRequest(context.Background(), http.MethodGet, claudeDesktopDownloadEndpoint(server.URL)); err == nil {
 		t.Fatal("Claude Desktop download request succeeded without identity")
 	}
 }
 
-func useTestOllamaRequestSigner(t *testing.T) {
+func useTestSusanRequestSigner(t *testing.T) {
 	t.Helper()
-	previous := signOllamaData
-	signOllamaData = func(context.Context, []byte) (string, error) {
+	previous := signSusanData
+	signSusanData = func(context.Context, []byte) (string, error) {
 		return "test-public-key:test-signature", nil
 	}
 	t.Cleanup(func() {
-		signOllamaData = previous
+		signSusanData = previous
 	})
 }
 
@@ -254,7 +254,7 @@ func TestResolveClaudeDesktopStartupCatalogVerifiesPersistedAccountCloudModel(t 
 	t.Cleanup(func() { claudeCloudModelsResolver = previousResolver })
 
 	_, selected, source := resolveClaudeDesktopStartupCatalog(context.Background())
-	if source != "user" || len(selected) != 1 || selected[0].OllamaModel != "custom:cloud" {
+	if source != "user" || len(selected) != 1 || selected[0].SusanModel != "custom:cloud" {
 		t.Fatalf("selected/source = %+v/%q", selected, source)
 	}
 	access := proxy.EvaluateClaudeDesktopModelAccess(selected[0], proxy.ClaudeDesktopAccessState{
@@ -409,7 +409,7 @@ func TestClaudeDesktopCatalogListsAccountModelsWithoutChangingDefaults(t *testin
 			t.Fatalf("default mappings = %v, want GLM Flash for Sonnet 5", got)
 		}
 		for _, model := range available {
-			if model.OllamaModel != "deepseek-v4-flash:cloud" {
+			if model.SusanModel != "deepseek-v4-flash:cloud" {
 				continue
 			}
 			if model.Recommended {
@@ -621,7 +621,7 @@ func TestResolveClaudeDesktopStartupCatalogVerifiesFallbackFromAccountInventory(
 	if source != "user" || len(available) == 0 || len(selected) != 1 {
 		t.Fatalf("catalog = %+v selected = %+v source = %q", available, selected, source)
 	}
-	if selected[0].OllamaModel != "glm-5.2:cloud" || !selected[0].AccountCloud {
+	if selected[0].SusanModel != "glm-5.2:cloud" || !selected[0].AccountCloud {
 		t.Fatalf("selected model = %+v, want verified GLM route", selected[0])
 	}
 	access := proxy.EvaluateClaudeDesktopModelAccess(selected[0], proxy.ClaudeDesktopAccessState{
@@ -656,7 +656,7 @@ func TestResolveClaudeDesktopStartupCatalogDoesNotListCloudWhenOff(t *testing.T)
 	})
 
 	_, selected, _ := resolveClaudeDesktopStartupCatalog(context.Background())
-	if len(selected) != 1 || selected[0].OllamaModel != "custom:cloud" {
+	if len(selected) != 1 || selected[0].SusanModel != "custom:cloud" {
 		t.Fatalf("selected = %+v", selected)
 	}
 	access := proxy.EvaluateClaudeDesktopModelAccess(selected[0], proxy.ClaudeDesktopAccessState{
@@ -889,7 +889,7 @@ func TestSelectKnownClaudeDesktopModelsAllowsInstalledModelsOnly(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(selected) != 1 || selected[0].Name != "deepseek-v4-flash" || selected[0].OllamaModel != "deepseek-v4-flash:0731:cloud" {
+	if len(selected) != 1 || selected[0].Name != "deepseek-v4-flash" || selected[0].SusanModel != "deepseek-v4-flash:0731:cloud" {
 		t.Fatalf("selected cloud model = %+v", selected)
 	}
 
@@ -902,7 +902,7 @@ func TestSelectKnownClaudeDesktopModelsAllowsInstalledModelsOnly(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(selected) != 1 || selected[0].OllamaModel != "custom:cloud" || selected[0].Recommended {
+	if len(selected) != 1 || selected[0].SusanModel != "custom:cloud" || selected[0].Recommended {
 		t.Fatalf("account cloud selection = %+v", selected)
 	}
 
@@ -940,7 +940,7 @@ func TestMapKnownClaudeDesktopModelsAllowsSharedModels(t *testing.T) {
 		t.Fatalf("selected models = %+v", selected)
 	}
 	for _, model := range selected {
-		if model.OllamaModel != "qwen3:8b" {
+		if model.SusanModel != "qwen3:8b" {
 			t.Fatalf("selected model = %+v", model)
 		}
 	}
@@ -1303,7 +1303,7 @@ func TestSetClaudeDesktopAutoModeRejectsUnsupportedSelection(t *testing.T) {
 	t.Cleanup(func() { claudeAvailableModels = previousAvailable })
 
 	err := setClaudeDesktopAutoMode(true, true)
-	if err == nil || !strings.Contains(err.Error(), "cloud model available to your Ollama.com account") {
+	if err == nil || !strings.Contains(err.Error(), "cloud model available to your Susan.com account") {
 		t.Fatalf("setClaudeDesktopAutoMode() error = %v", err)
 	}
 	enabled, loadErr := launch.ClaudeDesktopAutoModeEnabled()
@@ -1347,7 +1347,7 @@ func TestApplyClaudeDesktopMappingsPersistsSelection(t *testing.T) {
 		t.Fatal("expected the account cloud model to keep Auto mode enabled")
 	}
 	if got, want := launch.ClaudeDesktopModels(), []string{"kimi-k3:cloud", "kimi-k3:cloud", "kimi-k3:cloud", "kimi-k3:cloud", "kimi-k3:cloud"}; !slices.Equal(got, want) {
-		t.Fatalf("persisted models = %v, want Ollama routes %v", got, want)
+		t.Fatalf("persisted models = %v, want Susan routes %v", got, want)
 	}
 }
 
@@ -1425,7 +1425,7 @@ func TestApplyClaudeDesktopMappingsRollsBackWhenRestartFails(t *testing.T) {
 	gateway, err := proxy.NewClaudeDesktop(proxy.ClaudeDesktopConfig{
 		ListenAddr: "127.0.0.1:0",
 		OllamaURL:  "http://127.0.0.1:14343",
-		Model:      models[0].OllamaModel,
+		Model:      models[0].SusanModel,
 		Models:     models,
 	})
 	if err != nil {
@@ -1469,7 +1469,7 @@ func TestApplyClaudeDesktopMappingsRollsBackWhenRestartFails(t *testing.T) {
 		t.Fatalf("models visible before restart = %v, want new selection", fake.modelsAtSet)
 	}
 	gotModels := gateway.Models()
-	if len(gotModels) != 1 || gotModels[0].OllamaModel != "glm-5.2:cloud" {
+	if len(gotModels) != 1 || gotModels[0].SusanModel != "glm-5.2:cloud" {
 		t.Fatalf("live gateway models after failure = %+v", gotModels)
 	}
 }
@@ -1691,7 +1691,7 @@ func testResetClaudeDesktopMappingsSerializesLifecycleChange(t *testing.T, name 
 	gateway, err := proxy.NewClaudeDesktop(proxy.ClaudeDesktopConfig{
 		ListenAddr: "127.0.0.1:0",
 		OllamaURL:  "http://127.0.0.1:14343",
-		Model:      current[0].OllamaModel,
+		Model:      current[0].SusanModel,
 		Models:     current,
 	})
 	if err != nil {
@@ -1997,7 +1997,7 @@ func TestPrepareClaudeDesktopConnectionPreservesFirstUseIntro(t *testing.T) {
 }
 
 func TestLoadClaudeDesktopModelsFallsBackWithoutMLX(t *testing.T) {
-	useTestOllamaRequestSigner(t)
+	useTestSusanRequestSigner(t)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		http.Error(w, "unavailable", http.StatusServiceUnavailable)
 	}))
@@ -2144,7 +2144,7 @@ func TestValidateClaudeDesktopModels(t *testing.T) {
 			models:         free,
 			state:          proxy.ClaudeDesktopAccessState{Cloud: proxy.ClaudeDesktopCloudOn, Account: proxy.ClaudeDesktopAccountSignedOut},
 			inventoryKnown: true,
-			wantError:      "Sign in to Ollama",
+			wantError:      "Sign in to Susan",
 		},
 		{
 			name:           "plan upgrade required",
@@ -2322,7 +2322,7 @@ func TestSetClaudeGatewayInstalledRejectsEmptyUsableCatalog(t *testing.T) {
 				Cloud:   proxy.ClaudeDesktopCloudOn,
 				Account: proxy.ClaudeDesktopAccountSignedOut,
 			},
-			wantError: "Sign in to Ollama",
+			wantError: "Sign in to Susan",
 		},
 		{
 			name:      "SUSAN_NO_CLOUD or Cloud setting disabled",
@@ -2525,7 +2525,7 @@ func TestClaudeGatewayStartupWithLocalSelectionSkipsCloudLookupsButSettingsLoads
 	claudeProxyMu.Lock()
 	models := claudeAppProxy.Models()
 	claudeProxyMu.Unlock()
-	if len(models) != 1 || models[0].OllamaModel != "qwen3:8b" {
+	if len(models) != 1 || models[0].SusanModel != "qwen3:8b" {
 		t.Fatalf("startup models = %+v", models)
 	}
 }
@@ -2548,7 +2548,7 @@ func TestClaudeDesktopConnectionStatusPrefersActiveGatewayMappings(t *testing.T)
 	gateway, err := proxy.NewClaudeDesktop(proxy.ClaudeDesktopConfig{
 		ListenAddr: "127.0.0.1:0",
 		OllamaURL:  "http://127.0.0.1:14343",
-		Model:      activeModels[0].OllamaModel,
+		Model:      activeModels[0].SusanModel,
 		Models:     activeModels,
 	})
 	if err != nil {
@@ -2734,7 +2734,7 @@ func TestClaudeGatewayLocalSelectionCatalogPolicy(t *testing.T) {
 			claudeProxyMu.Lock()
 			models := claudeAppProxy.Models()
 			claudeProxyMu.Unlock()
-			if len(models) != 1 || models[0].OllamaModel != "qwen3:8b" {
+			if len(models) != 1 || models[0].SusanModel != "qwen3:8b" {
 				t.Fatalf("active gateway models = %+v, want local selection unchanged", models)
 			}
 		})
@@ -2900,7 +2900,7 @@ func TestContinueAfterBarrierErrorOnlyBlocksNewerInstance(t *testing.T) {
 		want bool
 	}{
 		{name: "success", err: nil, want: true},
-		{name: "discovery failure", err: errors.New("discover other Ollama app processes"), want: true},
+		{name: "discovery failure", err: errors.New("discover other Susan app processes"), want: true},
 		{name: "handoff timeout", err: errors.New("timed out waiting for app instances to exit"), want: true},
 		{name: "newer instance", err: fmt.Errorf("%w: pid 2", errNewerAppInstance), want: false},
 		{name: "wrapped newer instance", err: fmt.Errorf("barrier: %w", fmt.Errorf("%w: pid 2", errNewerAppInstance)), want: false},
@@ -3101,7 +3101,7 @@ func TestCodexDesktopInstallResultFromCode(t *testing.T) {
 	}
 }
 
-func TestClaudeGatewayRejectsOllamaHostPortConflict(t *testing.T) {
+func TestClaudeGatewayRejectsSusanHostPortConflict(t *testing.T) {
 	t.Setenv("SUSAN_HOST", "0.0.0.0:11435")
 
 	previousInstalled := claudeDesktopInstalled
@@ -3218,7 +3218,7 @@ func TestClaudeGatewayRejectsSpoofedExistingGateway(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	setClaudeProxyRetry(t, 20*time.Millisecond, 5*time.Millisecond)
 	spoof := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("X-Ollama-Claude-Gateway", "1")
+		w.Header().Set("X-Susan-Claude-Gateway", "1")
 		w.WriteHeader(http.StatusNoContent)
 	}))
 	defer spoof.Close()

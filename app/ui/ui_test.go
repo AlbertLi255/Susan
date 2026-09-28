@@ -17,6 +17,7 @@ import (
 
 	"github.com/ollama/ollama/api"
 	"github.com/ollama/ollama/app/store"
+	"github.com/ollama/ollama/app/ui/responses"
 	"github.com/ollama/ollama/app/updater"
 	"github.com/ollama/ollama/cmd/launch"
 )
@@ -190,7 +191,7 @@ func TestGetIntegrationStatuses(t *testing.T) {
 		t.Fatalf("got %d integrations, want %d launcher entries", len(got), wantCount)
 	}
 	terminal := got[len(got)-1]
-	if terminal.ID != "terminal" || terminal.Installed != nil || terminal.Command != "susan" {
+	if terminal.ID != "terminal" || terminal.Installed != nil || terminal.Command != "ollama" {
 		t.Fatalf("last integration = %+v, want Terminal without install status", terminal)
 	}
 }
@@ -198,6 +199,7 @@ func TestGetIntegrationStatuses(t *testing.T) {
 func TestHandlePostApiCloudSetting(t *testing.T) {
 	tmpHome := t.TempDir()
 	t.Setenv("HOME", tmpHome)
+	t.Setenv("USERPROFILE", tmpHome) // os.UserHomeDir uses USERPROFILE on Windows.
 	t.Setenv("SUSAN_NO_CLOUD", "")
 
 	testStore := &store.Store{
@@ -259,6 +261,7 @@ func TestHandlePostApiCloudSetting(t *testing.T) {
 func TestHandleGetApiCloudSetting(t *testing.T) {
 	tmpHome := t.TempDir()
 	t.Setenv("HOME", tmpHome)
+	t.Setenv("USERPROFILE", tmpHome) // os.UserHomeDir uses USERPROFILE on Windows.
 	t.Setenv("SUSAN_NO_CLOUD", "")
 
 	testStore := &store.Store{
@@ -476,8 +479,8 @@ func TestUserAgent(t *testing.T) {
 	ua := userAgent()
 
 	// The userAgent function should return a string in the format:
-	// "susan/version (arch os) app/version Go/goversion"
-	// Example: "susan/v0.1.28 (amd64 darwin) Go/go1.21.0"
+	// "ollama/version (arch os) app/version Go/goversion"
+	// Example: "ollama/v0.1.28 (amd64 darwin) Go/go1.21.0"
 
 	if ua == "" {
 		t.Fatal("userAgent returned empty string")
@@ -541,8 +544,8 @@ func TestUserAgent(t *testing.T) {
 	}
 
 	info := clientInfoFromRequest(req)
-	if info.Product != "susan" {
-		t.Errorf("Expected Product to be 'susan', got '%s'", info.Product)
+	if info.Product != "ollama" {
+		t.Errorf("Expected Product to be 'ollama', got '%s'", info.Product)
 	}
 
 	if info.Version != "" && info.Version[0] != 'v' {
@@ -596,8 +599,8 @@ func TestUserAgentTransport(t *testing.T) {
 		t.Errorf("User-Agent mismatch\nExpected: %s\nReceived: %s", expectedUA, receivedUA)
 	}
 
-	if !strings.HasPrefix(receivedUA, "susan/") {
-		t.Errorf("User-Agent should start with 'susan/', got: %s", receivedUA)
+	if !strings.HasPrefix(receivedUA, "ollama/") {
+		t.Errorf("User-Agent should start with 'ollama/', got: %s", receivedUA)
 	}
 
 	t.Logf("User-Agent transport successfully set: %s", receivedUA)
@@ -1059,5 +1062,156 @@ func TestSettingsToggleAutoUpdateOn_NoPendingUpdate_DoesNotNotify(t *testing.T) 
 	// UpdateAvailableFunc should NOT be called since there's no pending update
 	if notificationCalled.Load() {
 		t.Fatal("UpdateAvailableFunc should not be called when there is no pending update")
+	}
+}
+
+func TestSettingsPreservesCodexDesktopUsedWhenOmitted(t *testing.T) {
+	testStore := &store.Store{
+		DBPath: filepath.Join(t.TempDir(), "db.sqlite"),
+	}
+	defer testStore.Close()
+
+	settings, err := testStore.Settings()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := testStore.MarkCodexDesktopUsed(); err != nil {
+		t.Fatal(err)
+	}
+
+	payload, err := json.Marshal(settings)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var fields map[string]any
+	if err := json.Unmarshal(payload, &fields); err != nil {
+		t.Fatal(err)
+	}
+	delete(fields, "CodexDesktopUsed")
+	payload, err = json.Marshal(fields)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	server := &Server{Store: testStore, Restart: func() {}}
+	req := httptest.NewRequest("POST", "/api/v1/settings", bytes.NewReader(payload))
+	rr := httptest.NewRecorder()
+	if err := server.settings(rr, req); err != nil {
+		t.Fatalf("settings() error = %v", err)
+	}
+
+	saved, err := testStore.Settings()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !saved.CodexDesktopUsed {
+		t.Fatal("expected CodexDesktopUsed to be preserved")
+	}
+}
+
+func TestSettingsPreservesCodexDesktopUsedWithStaleValue(t *testing.T) {
+	testStore := &store.Store{
+		DBPath: filepath.Join(t.TempDir(), "db.sqlite"),
+	}
+	defer testStore.Close()
+
+	settings, err := testStore.Settings()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := testStore.MarkCodexDesktopUsed(); err != nil {
+		t.Fatal(err)
+	}
+
+	payload, err := json.Marshal(settings)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var fields map[string]any
+	if err := json.Unmarshal(payload, &fields); err != nil {
+		t.Fatal(err)
+	}
+	fields["CodexDesktopUsed"] = false
+	payload, err = json.Marshal(fields)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	server := &Server{Store: testStore, Restart: func() {}}
+	req := httptest.NewRequest("POST", "/api/v1/settings", bytes.NewReader(payload))
+	rr := httptest.NewRecorder()
+	if err := server.settings(rr, req); err != nil {
+		t.Fatalf("settings() error = %v", err)
+	}
+
+	saved, err := testStore.Settings()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !saved.CodexDesktopUsed {
+		t.Fatal("expected CodexDesktopUsed to be preserved")
+	}
+}
+
+type settingsBodyReadHook struct {
+	io.Reader
+	onRead func()
+}
+
+func (r *settingsBodyReadHook) Read(p []byte) (int, error) {
+	if r.onRead != nil {
+		onRead := r.onRead
+		r.onRead = nil
+		onRead()
+	}
+	return r.Reader.Read(p)
+}
+
+func TestSettingsPreservesConcurrentCodexDesktopAcknowledgment(t *testing.T) {
+	testStore := &store.Store{DBPath: filepath.Join(t.TempDir(), "db.sqlite")}
+	defer testStore.Close()
+
+	settings, err := testStore.Settings()
+	if err != nil {
+		t.Fatal(err)
+	}
+	settings.Browser = !settings.Browser
+	payload, err := json.Marshal(settings)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	body := &settingsBodyReadHook{
+		Reader: bytes.NewReader(payload),
+		onRead: func() {
+			// The handler has read the old settings but has not saved the request yet.
+			if err := testStore.MarkCodexDesktopUsed(); err != nil {
+				t.Fatal(err)
+			}
+		},
+	}
+	server := &Server{Store: testStore, Restart: func() {}}
+	req := httptest.NewRequest("POST", "/api/v1/settings", body)
+	rr := httptest.NewRecorder()
+	if err := server.settings(rr, req); err != nil {
+		t.Fatal(err)
+	}
+
+	saved, err := testStore.Settings()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !saved.CodexDesktopUsed {
+		t.Error("overlapping settings save erased the acknowledgment")
+	}
+	if saved.Browser != settings.Browser {
+		t.Error("overlapping acknowledgment lost the requested setting")
+	}
+	var response responses.SettingsResponse
+	if err := json.Unmarshal(rr.Body.Bytes(), &response); err != nil {
+		t.Fatal(err)
+	}
+	if !response.Settings.CodexDesktopUsed {
+		t.Error("settings response returned a stale acknowledgment")
 	}
 }

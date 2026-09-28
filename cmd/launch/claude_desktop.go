@@ -31,7 +31,7 @@ const (
 )
 
 // Cowork needs unrestricted egress for user-configured plugins and MCP servers.
-// Restore removes this override with the rest of the Ollama profile settings.
+// Restore removes this override with the rest of the Susan profile settings.
 var claudeDesktopEgressHosts = []string{"*"}
 
 var (
@@ -48,7 +48,7 @@ var (
 )
 
 // ClaudeDesktop configures and launches Claude Desktop in third-party
-// inference mode using the Ollama app's local gateway.
+// inference mode using the Susan app's local gateway.
 type ClaudeDesktop struct{}
 
 // ErrClaudeDesktopRestartConfirmationRequired reports that applying a profile
@@ -67,9 +67,9 @@ func (c *ClaudeDesktop) AutodiscoveredModel() string {
 	return claudeDesktopModelLabel
 }
 
-// ConfigureAutodiscovery points Claude Desktop at Ollama's local gateway
+// ConfigureAutodiscovery points Claude Desktop at Susan's local gateway
 // without pinning a model list, so Claude discovers the selected catalog and
-// exact Ollama route names the gateway advertises.
+// exact Susan route names the gateway advertises.
 func (c *ClaudeDesktop) ConfigureAutodiscovery() error {
 	autoMode, err := claudeDesktopAutoModePreference()
 	if err != nil {
@@ -79,7 +79,7 @@ func (c *ClaudeDesktop) ConfigureAutodiscovery() error {
 }
 
 // ConfigureAutodiscoveryWithAutoMode writes the managed profile with the
-// effective Auto mode state selected by the Ollama app.
+// effective Auto mode state selected by the Susan app.
 func (c *ClaudeDesktop) ConfigureAutodiscoveryWithAutoMode(autoMode bool) error {
 	if err := claudeDesktopSupported(); err != nil {
 		return err
@@ -115,7 +115,7 @@ func (c *ClaudeDesktop) AutodiscoveryConfigured() bool {
 }
 
 // AutodiscoveryConfiguredWithAutoMode reports whether the managed profile has
-// the effective Auto mode state selected by the Ollama app.
+// the effective Auto mode state selected by the Susan app.
 func (c *ClaudeDesktop) AutodiscoveryConfiguredWithAutoMode(autoMode bool) bool {
 	targets, err := claudeDesktopTargetPaths()
 	if err != nil {
@@ -125,17 +125,17 @@ func (c *ClaudeDesktop) AutodiscoveryConfiguredWithAutoMode(autoMode bool) bool 
 }
 
 // UsesOllamaGateway reports whether Claude Desktop is currently routed through
-// Ollama's local gateway. It intentionally ignores auxiliary profile settings
+// Susan's local gateway. It intentionally ignores auxiliary profile settings
 // so the gateway can keep serving while those settings are repaired.
 func (c *ClaudeDesktop) UsesOllamaGateway() bool {
 	targets, err := claudeDesktopTargetPaths()
 	if err != nil {
 		return false
 	}
-	return claudeDesktopTargetsUseOllamaGateway(targets)
+	return claudeDesktopTargetsUseSusanGateway(targets)
 }
 
-// SetInstalledFromDesktop changes the Claude profile from the native Ollama app.
+// SetInstalledFromDesktop changes the Claude profile from the native Susan app.
 func (c *ClaudeDesktop) SetInstalledFromDesktop(installed, restart bool) error {
 	autoMode := false
 	if installed {
@@ -149,7 +149,7 @@ func (c *ClaudeDesktop) SetInstalledFromDesktop(installed, restart bool) error {
 }
 
 // SetInstalledFromDesktopWithAutoMode changes the Claude profile from the
-// native Ollama app with its effective Auto mode state.
+// native Susan app with its effective Auto mode state.
 func (c *ClaudeDesktop) SetInstalledFromDesktopWithAutoMode(installed, restart, autoMode bool) error {
 	if err := claudeDesktopSupported(); err != nil {
 		return err
@@ -415,7 +415,7 @@ func restoreClaudeDesktopTargets(targets claudeDesktopTargets) error {
 		if err := restoreClaudeDesktopMeta(target.meta); err != nil {
 			return err
 		}
-		if err := restoreClaudeDesktopOllamaProfile(target.profile); err != nil {
+		if err := restoreClaudeDesktopSusanProfile(target.profile); err != nil {
 			return err
 		}
 	}
@@ -793,7 +793,7 @@ func restoreClaudeDesktopMeta(path string) error {
 	return writeClaudeDesktopJSON(path, meta)
 }
 
-func restoreClaudeDesktopOllamaProfile(path string) error {
+func restoreClaudeDesktopSusanProfile(path string) error {
 	cfg, err := readClaudeDesktopJSONAllowMissing(path)
 	if err != nil {
 		return fmt.Errorf("parse Claude Desktop Susan profile: %w", err)
@@ -833,7 +833,7 @@ func readClaudeDesktopDeploymentMode(path string) string {
 }
 
 func claudeDesktopTargetsConfigured(targets claudeDesktopTargets, autoMode bool) bool {
-	if !claudeDesktopTargetsUseOllamaGateway(targets) {
+	if !claudeDesktopTargetsUseSusanGateway(targets) {
 		return false
 	}
 	for _, target := range targets.thirdPartyProfiles {
@@ -844,7 +844,7 @@ func claudeDesktopTargetsConfigured(targets claudeDesktopTargets, autoMode bool)
 	return true
 }
 
-func claudeDesktopTargetsUseOllamaGateway(targets claudeDesktopTargets) bool {
+func claudeDesktopTargetsUseSusanGateway(targets claudeDesktopTargets) bool {
 	if len(targets.normalConfigs) == 0 || len(targets.thirdPartyProfiles) == 0 {
 		return false
 	}

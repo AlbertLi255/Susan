@@ -87,7 +87,7 @@ func TestModelRecommendationsCacheRefreshAppliesServerSideChanges(t *testing.T) 
 		if query := req.URL.Query(); len(query) != 1 || query.Get("ts") == "" {
 			t.Fatalf("query does not contain only the signed timestamp: %q", req.URL.RawQuery)
 		}
-		verifySignedOllamaRequest(t, req)
+		verifySignedSusanRequest(t, req)
 
 		calls++
 		payload := api.ModelRecommendationsResponse{Recommendations: first}
@@ -612,7 +612,7 @@ func setupModelRecommendationsTestEnv(t *testing.T, noCloudEnv string) {
 	t.Setenv("USERPROFILE", home)
 	t.Setenv("HOMEDRIVE", filepath.VolumeName(home))
 	t.Setenv("HOMEPATH", strings.TrimPrefix(home, filepath.VolumeName(home)))
-	writeTestOllamaPrivateKey(t, home)
+	writeTestSusanPrivateKey(t, home)
 
 	// Use explicit false rather than empty to avoid platform/env ambiguity.
 	if noCloudEnv == "" {
@@ -623,7 +623,7 @@ func setupModelRecommendationsTestEnv(t *testing.T, noCloudEnv string) {
 	t.Cleanup(envconfig.ReloadServerConfig)
 }
 
-func writeTestOllamaPrivateKey(t *testing.T, home string) {
+func writeTestSusanPrivateKey(t *testing.T, home string) {
 	t.Helper()
 	_, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
@@ -633,7 +633,7 @@ func writeTestOllamaPrivateKey(t *testing.T, home string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	keyPath := filepath.Join(home, ".susan", "id_ed25519")
+	keyPath := filepath.Join(home, ".ollama", "id_ed25519")
 	if err := os.MkdirAll(filepath.Dir(keyPath), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -642,7 +642,7 @@ func writeTestOllamaPrivateKey(t *testing.T, home string) {
 	}
 }
 
-func verifySignedOllamaRequest(t *testing.T, req *http.Request) {
+func verifySignedSusanRequest(t *testing.T, req *http.Request) {
 	t.Helper()
 	parts := strings.Split(req.Header.Get("Authorization"), ":")
 	if len(parts) != 2 {

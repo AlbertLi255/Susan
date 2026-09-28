@@ -531,7 +531,7 @@ func (p *Pi) Paths() []string {
 }
 
 func piBaseURL() string {
-	return strings.TrimRight(envconfig.ConnectableHost().String(), "/") + "/v1"
+	return strings.TrimRight(envconfig.Host().String(), "/") + "/v1"
 }
 
 func (p *Pi) Edit(models []LaunchModel) error {
@@ -594,7 +594,7 @@ func (p *Pi) Edit(models []LaunchModel) error {
 		if modelObj, ok := m.(map[string]any); ok {
 			if id, ok := modelObj["id"].(string); ok {
 				// User-managed model (no _launch marker) - always preserve
-				if !isPiOllamaModel(modelObj) {
+				if !isPiSusanModel(modelObj) {
 					newModels = append(newModels, m)
 				} else if selectedSet[id] {
 					// Rebuild stale managed cloud entries so createConfig refreshes
@@ -683,8 +683,8 @@ func (p *Pi) Models() []string {
 	return result
 }
 
-// isPiOllamaModel reports whether a model config entry is managed by susan launch
-func isPiOllamaModel(cfg map[string]any) bool {
+// isPiSusanModel reports whether a model config entry is managed by susan launch
+func isPiSusanModel(cfg map[string]any) bool {
 	if v, ok := cfg["_launch"].(bool); ok && v {
 		return true
 	}

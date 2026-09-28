@@ -101,7 +101,7 @@ func TestMuseWriteSettings_BuildsCatalog(t *testing.T) {
 	}
 
 	// Rows that disagree with the session's provider or profile are dropped by
-	// muse, which then falls back to a catalog fetch Ollama cannot serve.
+	// muse, which then falls back to a catalog fetch Susan cannot serve.
 	for _, row := range settings.ModelCatalog {
 		if row.ProviderID != museProviderID {
 			t.Errorf("row %q provider_id = %q, want %q", row.ModelID, row.ProviderID, museProviderID)
@@ -226,7 +226,7 @@ func TestMuseWriteSettings_KeepsUserPreferences(t *testing.T) {
 		t.Errorf("model = %q, want gpt-oss:20b", settings.Model)
 	}
 	if strings.Contains(settings.Transport.BaseURL, "meta.ai") {
-		t.Errorf("base_url = %q, want it repointed at Ollama", settings.Transport.BaseURL)
+		t.Errorf("base_url = %q, want it repointed at Susan", settings.Transport.BaseURL)
 	}
 
 	// The user's own settings must be left exactly as they were.

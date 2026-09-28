@@ -13,7 +13,7 @@ tensor layouts on disk, and this directory can be removed.
 The layer is applied automatically at build time via CMake `FetchContent`'s
 `PATCH_COMMAND` for normal fetched builds. If CMake is pointed at a source
 override through `FETCHCONTENT_SOURCE_DIR_LLAMA_CPP`, the same patch is applied
-during configure. If `SUSAN_LLAMA_CPP_SOURCE` is set, the patch is
+during configure. If `OLLAMA_LLAMA_CPP_SOURCE` is set, the patch is
 intentionally skipped so a developer can iterate on a local llama.cpp tree.
 
 ## Files
@@ -25,17 +25,10 @@ intentionally skipped so a developer can iterate on a local llama.cpp tree.
   small tensor repacking primitives.
 - `001-llama-cpp-hooks.patch` - small additive call-site edits in llama.cpp files.
   It currently touches `src/llama-model-loader.cpp` and `tools/mtmd/clip.cpp`.
-- `002-llama-cpp-ui-empty-assets.patch` - lets the llama.cpp UI embed helper
-  generate an empty asset table when no UI assets are present.
 - `compat.cmake` - CMake glue that invokes the shared
   `cmake/apply-git-patches.cmake` idempotent applier (used by
   `llama/server/CMakeLists.txt`) for every `*.patch` under
-  this directory by numeric filename order — the hooks patch plus each
-  `models/` architecture patch.
-- `models/` - the sibling **new-architecture** layer: implementations of
-  architectures llama.cpp doesn't support yet, each added via a small
-  registration patch. (Those files *add* archs; the files above *translate*
-  existing GGUFs onto archs llama.cpp already has.)
+  this directory by numeric filename order.
 
 The compatibility source files stay in this directory and are linked into the
 fetched llama.cpp targets. The patch file only adds call sites.
@@ -69,7 +62,7 @@ The layer runs at a small set of loader hook points:
    split, or zero-fill.
 
 Files that do not match a supported published-model marker are left unchanged.
-Setting `SUSAN_LLAMA_CPP_COMPAT=0` disables the hook bodies for internal
+Setting `OLLAMA_LLAMA_CPP_COMPAT=0` disables the hook bodies for internal
 create-time validation and for models that are already known to be
 llama.cpp-compatible on disk.
 

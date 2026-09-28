@@ -1,7 +1,7 @@
 //go:build windows || darwin
 
 // Package store provides a simple JSON file store for the desktop application
-// to save and load data such as ollama server configuration, messages,
+// to save and load data such as susan server configuration, messages,
 // login information and more.
 package store
 
@@ -17,6 +17,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/ollama/ollama/app/types/not"
+	"github.com/ollama/ollama/internal/onboarding"
 )
 
 type File struct {
@@ -121,16 +122,16 @@ func NewChat(id string) *Chat {
 }
 
 type Settings struct {
-	// Expose is a boolean that indicates if the ollama server should
+	// Expose is a boolean that indicates if the susan server should
 	// be exposed to the network
 	Expose bool
 
-	// Browser is a boolean that indicates if the ollama server should
+	// Browser is a boolean that indicates if the susan server should
 	// be exposed to browser windows (e.g. CORS set to allow all origins)
 	Browser bool
 
 	// Survey is a boolean that indicates if the user allows anonymous
-	// inference information to be shared with Ollama
+	// inference information to be shared with Susan
 	Survey bool
 
 	// Models is a string that contains the models to load on startup
@@ -146,10 +147,10 @@ type Settings struct {
 	// WorkingDir specifies the working directory for all agent operations
 	WorkingDir string
 
-	// ContextLength specifies the context length for the ollama server (using SUSAN_CONTEXT_LENGTH)
+	// ContextLength specifies the context length for the susan server (using SUSAN_CONTEXT_LENGTH)
 	ContextLength int
 
-	// TurboEnabled indicates if Ollama Turbo features are enabled
+	// TurboEnabled indicates if Susan Turbo features are enabled
 	TurboEnabled bool
 
 	// Maps gpt-oss specific frontend name' BrowserToolEnabled' to db field 'websearch_enabled'
@@ -176,15 +177,20 @@ type Settings struct {
 	// AutoUpdateEnabled indicates if automatic updates should be downloaded
 	AutoUpdateEnabled bool
 
-	// ClaudeDesktopUsed records whether Claude Desktop has ever been connected through Ollama.
+	// ClaudeDesktopUsed records whether Claude Desktop has ever been connected through Susan.
 	ClaudeDesktopUsed bool
+
+	// CodexDesktopUsed records whether ChatGPT has successfully connected through Susan.
+	// Only MarkCodexDesktopUsed updates it; SetSettings preserves the stored value.
+	CodexDesktopUsed bool
 }
 
 // Keep in sync with CURRENT_ONBOARDING_VERSION in app/ui/app/src/lib/onboarding.ts.
-const CurrentOnboardingVersion = 1
+const CurrentOnboardingVersion = onboarding.CurrentVersion
 
 type Store struct {
-	// DBPath allows overriding the default database path (mainly for testing)
+	// DBPath overrides the database path. Custom stores keep their shared
+	// onboarding record alongside the database, isolated from the user's state.
 	DBPath string
 
 	// dbMu protects database initialization only
@@ -192,16 +198,7 @@ type Store struct {
 	db   *database
 }
 
-var defaultDBPath = func() string {
-	switch runtime.GOOS {
-	case "windows":
-		return filepath.Join(os.Getenv("LOCALAPPDATA"), "Susan", "db.sqlite")
-	case "darwin":
-		return filepath.Join(os.Getenv("HOME"), "Library", "Application Support", "Susan", "db.sqlite")
-	default:
-		return filepath.Join(os.Getenv("HOME"), ".susan", "db.sqlite")
-	}
-}()
+var defaultDBPath = onboarding.AppDatabasePath()
 
 // legacyConfigPath is the path to the old config.json file
 var legacyConfigPath = func() string {
@@ -211,7 +208,7 @@ var legacyConfigPath = func() string {
 	case "darwin":
 		return filepath.Join(os.Getenv("HOME"), "Library", "Application Support", "Susan", "config.json")
 	default:
-		return filepath.Join(os.Getenv("HOME"), ".susan", "config.json")
+		return filepath.Join(os.Getenv("HOME"), ".ollama", "config.json")
 	}
 }()
 
@@ -397,6 +394,9 @@ func (s *Store) Settings() (Settings, error) {
 	if err != nil {
 		return Settings{}, err
 	}
+	if err := s.syncOnboarding(&settings); err != nil {
+		return Settings{}, fmt.Errorf("load shared onboarding state: %w", err)
+	}
 
 	// Set default models directory if not set
 	if settings.Models == "" {
@@ -406,7 +406,7 @@ func (s *Store) Settings() (Settings, error) {
 		} else {
 			home, err := os.UserHomeDir()
 			if err == nil {
-				settings.Models = filepath.Join(home, ".susan", "models")
+				settings.Models = filepath.Join(home, ".ollama", "models")
 			}
 		}
 	}
@@ -423,7 +423,52 @@ func (s *Store) SetSettings(settings Settings) error {
 		return err
 	}
 
-	return s.db.setSettings(settings)
+	if err := s.db.setSettings(settings); err != nil {
+		return err
+	}
+	if settings.OnboardingVersion >= CurrentOnboardingVersion {
+		return s.syncOnboarding(&settings)
+	}
+	return nil
+}
+
+func (s *Store) onboardingState() onboarding.State {
+	if s.DBPath != "" {
+		return onboarding.State{Dir: filepath.Dir(s.DBPath)}
+	}
+	return onboarding.State{}
+}
+
+func (s *Store) syncOnboarding(settings *Settings) error {
+	state := s.onboardingState()
+	if settings.OnboardingVersion >= CurrentOnboardingVersion {
+		// Migrate existing app completion so the CLI recognizes it too.
+		// SQLite is already saved; publishing the shared record is best-effort.
+		if err := state.Complete(); err != nil {
+			slog.Warn("could not share onboarding completion", "error", err)
+		}
+		return nil
+	}
+	completed, err := state.Completed()
+	if err != nil {
+		slog.Warn("could not read shared onboarding completion", "error", err)
+		return nil
+	}
+	if !completed {
+		return nil
+	}
+	if err := s.db.markOnboardingCompleted(); err != nil {
+		return err
+	}
+	settings.OnboardingVersion = CurrentOnboardingVersion
+	return nil
+}
+
+func (s *Store) MarkCodexDesktopUsed() error {
+	if err := s.ensureDB(); err != nil {
+		return err
+	}
+	return s.db.markCodexDesktopUsed()
 }
 
 func (s *Store) Chats() ([]Chat, error) {

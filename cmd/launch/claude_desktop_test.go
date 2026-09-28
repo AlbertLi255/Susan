@@ -102,9 +102,9 @@ func TestClaudeDesktopIntegration(t *testing.T) {
 	t.Run("implements managed autodiscovery integration", func(t *testing.T) {
 		var _ ManagedAutodiscoveryIntegration = c
 	})
-	t.Run("does not use Ollama Cloud auth gate", func(t *testing.T) {
+	t.Run("does not use Susan Cloud auth gate", func(t *testing.T) {
 		if _, ok := any(c).(ManagedAutodiscoveryCloudIntegration); ok {
-			t.Fatal("Claude Desktop's loopback gateway should not require Ollama Cloud sign-in")
+			t.Fatal("Claude Desktop's loopback gateway should not require Susan Cloud sign-in")
 		}
 	})
 	t.Run("implements restore", func(t *testing.T) {
@@ -144,7 +144,7 @@ func TestClaudeDesktopSupportedOnlyOnDarwin(t *testing.T) {
 	}
 }
 
-func TestClaudeDesktopConfigureRequiresOllamaGateway(t *testing.T) {
+func TestClaudeDesktopConfigureRequiresSusanGateway(t *testing.T) {
 	withClaudeDesktopPlatform(t, "darwin")
 	claudeDesktopProbeGateway = func(context.Context, string) error {
 		return errors.New("another service is using 127.0.0.1:11435")
@@ -184,7 +184,7 @@ func TestLaunchIntegration_ClaudeDesktopDoesNotRequireLocalCloudSignIn(t *testin
 	t.Setenv("SUSAN_HOST", srv.URL)
 
 	DefaultSignIn = func(modelName, signInURL string) (string, error) {
-		t.Fatalf("Claude Desktop launch should not require Ollama Cloud sign-in, got %s at %s", modelName, signInURL)
+		t.Fatalf("Claude Desktop launch should not require Susan Cloud sign-in, got %s at %s", modelName, signInURL)
 		return "", nil
 	}
 
@@ -206,7 +206,7 @@ func TestLaunchIntegration_ClaudeDesktopDoesNotRequireLocalCloudSignIn(t *testin
 	}
 }
 
-func TestClaudeDesktopConfigureWritesOllamaCloudProfile(t *testing.T) {
+func TestClaudeDesktopConfigureWritesSusanCloudProfile(t *testing.T) {
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
 	withClaudeDesktopPlatform(t, "darwin")
@@ -322,7 +322,7 @@ func TestClaudeDesktopConfigureActivatesNormalProfileLast(t *testing.T) {
 		t.Fatalf("normal profile changed before third-party assets were ready: %v", normal)
 	}
 	if (&ClaudeDesktop{}).UsesOllamaGateway() {
-		t.Fatal("failed configuration left Claude routed through Ollama")
+		t.Fatal("failed configuration left Claude routed through Susan")
 	}
 }
 
@@ -492,7 +492,7 @@ func TestClaudeDesktopConfigurePreservesProfileWhenAutoModePreferenceIsUnreadabl
 	if err := os.WriteFile(paths.profile, original, 0o644); err != nil {
 		t.Fatal(err)
 	}
-	configPath := filepath.Join(tmpDir, ".susan", "config.json")
+	configPath := filepath.Join(tmpDir, ".ollama", "config.json")
 	if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -734,7 +734,7 @@ func TestClaudeDesktopConfigureDoesNotPromptForExistingAPIKey(t *testing.T) {
 	}
 }
 
-func TestClaudeDesktopAutodiscoveryConfiguredRequiresAppliedOllamaProfile(t *testing.T) {
+func TestClaudeDesktopAutodiscoveryConfiguredRequiresAppliedSusanProfile(t *testing.T) {
 	tmpDir := t.TempDir()
 	setTestHome(t, tmpDir)
 	withClaudeDesktopPlatform(t, "darwin")
@@ -759,7 +759,7 @@ func TestClaudeDesktopAutodiscoveryConfiguredRequiresAppliedOllamaProfile(t *tes
 		t.Fatal("expected another applied profile to hide Claude Desktop autodiscovery config")
 	}
 	if c.UsesOllamaGateway() {
-		t.Fatal("expected another applied profile to stop routing through Ollama")
+		t.Fatal("expected another applied profile to stop routing through Susan")
 	}
 }
 
@@ -792,7 +792,7 @@ func TestClaudeDesktopAutodiscoveryConfiguredRequiresAPIKey(t *testing.T) {
 		t.Fatal("expected missing gateway API key to force Claude Desktop reconfiguration")
 	}
 	if !c.UsesOllamaGateway() {
-		t.Fatal("expected missing gateway API key to leave Ollama routing active")
+		t.Fatal("expected missing gateway API key to leave Susan routing active")
 	}
 }
 
@@ -820,7 +820,7 @@ func TestClaudeDesktopAutodiscoveryConfiguredRequiresDisplayName(t *testing.T) {
 		t.Fatal("expected missing deployment display name to force Claude Desktop reconfiguration")
 	}
 	if !c.UsesOllamaGateway() {
-		t.Fatal("expected missing deployment display name to leave Ollama routing active")
+		t.Fatal("expected missing deployment display name to leave Susan routing active")
 	}
 }
 
@@ -847,7 +847,7 @@ func TestClaudeDesktopAutodiscoveryConfiguredRequiresTelemetryDisabled(t *testin
 		t.Fatal("expected essential telemetry to force Claude Desktop profile reconfiguration")
 	}
 	if !c.UsesOllamaGateway() {
-		t.Fatal("expected essential telemetry drift to leave Ollama routing active")
+		t.Fatal("expected essential telemetry drift to leave Susan routing active")
 	}
 
 	profile["disableEssentialTelemetry"] = true
@@ -860,7 +860,7 @@ func TestClaudeDesktopAutodiscoveryConfiguredRequiresTelemetryDisabled(t *testin
 		t.Fatal("expected nonessential telemetry to force Claude Desktop profile reconfiguration")
 	}
 	if !c.UsesOllamaGateway() {
-		t.Fatal("expected nonessential telemetry drift to leave Ollama routing active")
+		t.Fatal("expected nonessential telemetry drift to leave Susan routing active")
 	}
 }
 
@@ -891,7 +891,7 @@ func TestClaudeDesktopAutodiscoveryConfiguredRequiresSavedAutoModePreference(t *
 		t.Fatal("expected Auto mode preference drift to force Claude Desktop profile repair")
 	}
 	if !c.UsesOllamaGateway() {
-		t.Fatal("expected Auto mode drift to leave Ollama routing active")
+		t.Fatal("expected Auto mode drift to leave Susan routing active")
 	}
 }
 
@@ -923,7 +923,7 @@ func TestClaudeDesktopAutodiscoveryConfiguredRequiresEgressHosts(t *testing.T) {
 			t.Fatalf("expected egress hosts %v to force Claude Desktop profile reconfiguration", value)
 		}
 		if !c.UsesOllamaGateway() {
-			t.Fatalf("expected egress hosts %v to leave Ollama routing active", value)
+			t.Fatalf("expected egress hosts %v to leave Susan routing active", value)
 		}
 	}
 }
@@ -984,13 +984,13 @@ func TestClaudeDesktopUsesOllamaGatewayRequiresCoreRoutingSettings(t *testing.T)
 				t.Fatal(err)
 			}
 			if !c.UsesOllamaGateway() {
-				t.Fatal("expected configured Claude Desktop to route through Ollama")
+				t.Fatal("expected configured Claude Desktop to route through Susan")
 			}
 			if err := tt.mutate(); err != nil {
 				t.Fatal(err)
 			}
 			if c.UsesOllamaGateway() {
-				t.Fatal("expected core routing drift to stop Ollama routing")
+				t.Fatal("expected core routing drift to stop Susan routing")
 			}
 		})
 	}
@@ -1009,10 +1009,10 @@ func TestClaudeDesktopRestoreSwitchesBackToFirstPartyMode(t *testing.T) {
 	if err := os.MkdirAll(filepath.Dir(paths.profile), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(paths.meta, []byte(`{"appliedId":"`+claudeDesktopProfileID+`","entries":[{"id":"`+claudeDesktopProfileID+`","name":"Ollama"}]}`), 0o644); err != nil {
+	if err := os.WriteFile(paths.meta, []byte(`{"appliedId":"`+claudeDesktopProfileID+`","entries":[{"id":"`+claudeDesktopProfileID+`","name":"Susan"}]}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(paths.profile, []byte(`{"autoModeEnabled":true,"coworkEgressAllowedHosts":["github.com"],"deploymentDisplayName":"Ollama","disableDeploymentModeChooser":true,"disableEssentialTelemetry":true,"disableNonessentialTelemetry":true,"inferenceGatewayApiKey":"keep","inferenceProvider":"gateway","inferenceGatewayBaseUrl":"https://ollama.com","inferenceGatewayAuthScheme":"bearer","inferenceModels":["legacy"],"userOwned":"keep"}`), 0o644); err != nil {
+	if err := os.WriteFile(paths.profile, []byte(`{"autoModeEnabled":true,"coworkEgressAllowedHosts":["github.com"],"deploymentDisplayName":"Susan","disableDeploymentModeChooser":true,"disableEssentialTelemetry":true,"disableNonessentialTelemetry":true,"inferenceGatewayApiKey":"keep","inferenceProvider":"gateway","inferenceGatewayBaseUrl":"https://ollama.com","inferenceGatewayAuthScheme":"bearer","inferenceModels":["legacy"],"userOwned":"keep"}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1033,19 +1033,19 @@ func TestClaudeDesktopRestoreSwitchesBackToFirstPartyMode(t *testing.T) {
 		t.Fatalf("disableDeploymentModeChooser = %v, want false", profile["disableDeploymentModeChooser"])
 	}
 	if profile["inferenceGatewayApiKey"] != "keep" {
-		t.Fatal("restore should leave existing Ollama profile credentials in place")
+		t.Fatal("restore should leave existing Susan profile credentials in place")
 	}
 	if profile["userOwned"] != "keep" {
 		t.Fatalf("restore should preserve user-owned profile state: %v", profile)
 	}
 	for _, key := range []string{"inferenceProvider", "inferenceGatewayBaseUrl", "inferenceGatewayAuthScheme", "deploymentDisplayName", "inferenceModels", "coworkEgressAllowedHosts", "autoModeEnabled", "disableEssentialTelemetry", "disableNonessentialTelemetry"} {
 		if _, ok := profile[key]; ok {
-			t.Fatalf("restore should clear stale %s from the Ollama profile: %v", key, profile)
+			t.Fatalf("restore should clear stale %s from the Susan profile: %v", key, profile)
 		}
 	}
 	meta := claudeDesktopReadJSON(t, paths.meta)
 	if _, ok := meta["appliedId"]; ok {
-		t.Fatalf("restore should clear the applied Ollama third-party profile: %v", meta)
+		t.Fatalf("restore should clear the applied Susan third-party profile: %v", meta)
 	}
 	if (&ClaudeDesktop{}).AutodiscoveryConfigured() {
 		t.Fatal("restore should leave Claude Desktop autodiscovery unconfigured")
@@ -1294,7 +1294,7 @@ func TestClaudeDesktopConfigureOmitsInferenceModelsWithoutMappedIDs(t *testing.T
 		t.Fatal(err)
 	}
 
-	// Persisted selections keep exact Ollama routes, but the generic configure
+	// Persisted selections keep exact Susan routes, but the generic configure
 	// path must not write them as inferenceModels: Claude Desktop autodiscovers
 	// the Claude-facing IDs the gateway advertises instead.
 	persisted := []string{"glm-5.2:cloud", "deepseek-v4-flash:cloud", "gemma4:26b:cloud", "qwen3:8b"}
@@ -1310,7 +1310,7 @@ func TestClaudeDesktopConfigureOmitsInferenceModelsWithoutMappedIDs(t *testing.T
 		t.Fatalf("inferenceModels = %v, want omitted so Claude discovers gateway models", models)
 	}
 	if got := ClaudeDesktopModels(); !slices.Equal(got, persisted) {
-		t.Fatalf("persisted models = %v, want Ollama routes %v", got, persisted)
+		t.Fatalf("persisted models = %v, want Susan routes %v", got, persisted)
 	}
 }
 
@@ -1335,7 +1335,7 @@ func TestClaudeDesktopSetInstalledFromDesktopUsesGatewayDiscovery(t *testing.T) 
 		t.Fatal(err)
 	}
 
-	// Settings persist exact Ollama routes while Claude discovers that selected
+	// Settings persist exact Susan routes while Claude discovers that selected
 	// catalog from the gateway instead of a stale profile list.
 	persisted := []string{"kimi-k3:cloud", "gemma4:26b:cloud"}
 	if err := SaveClaudeDesktopModels(persisted); err != nil {
@@ -1357,7 +1357,7 @@ func TestClaudeDesktopSetInstalledFromDesktopUsesGatewayDiscovery(t *testing.T) 
 		t.Fatalf("unknown profile fields were not preserved: %v", profile)
 	}
 	if got := ClaudeDesktopModels(); !slices.Equal(got, persisted) {
-		t.Fatalf("persisted models = %v, want Ollama routes %v", got, persisted)
+		t.Fatalf("persisted models = %v, want Susan routes %v", got, persisted)
 	}
 }
 
@@ -1422,7 +1422,7 @@ func TestClaudeDesktopSetInstalledFromDesktopDoesNotOpenStoppedAppWhenDisabled(t
 		func() error { t.Fatal("stopped Claude should not be quit"); return nil },
 		func() error { t.Fatal("disabling should not open stopped Claude"); return nil },
 	)
-	configPath := filepath.Join(tmpDir, ".susan", "config.json")
+	configPath := filepath.Join(tmpDir, ".ollama", "config.json")
 	if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
 		t.Fatal(err)
 	}

@@ -30,9 +30,9 @@ var (
 	deepSeekHarnessGOOS     = runtime.GOOS
 )
 
-// DeepSeekHarness is the Ollama-managed DeepSeek Harness integration.
+// DeepSeekHarness is the Susan-managed DeepSeek Harness integration.
 // It redirects only the settings provider for this invocation to an
-// Ollama-owned document. The user's normal DSH_HOME, profiles, sessions,
+// Susan-owned document. The user's normal DSH_HOME, profiles, sessions,
 // credentials, and patch layers remain available and untouched.
 type DeepSeekHarness struct{}
 
@@ -500,7 +500,7 @@ func deepSeekHarnessConfigDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".susan", "launch", "dsh"), nil
+	return filepath.Join(home, ".ollama", "launch", "dsh"), nil
 }
 
 func deepSeekHarnessSettingsPath() (string, error) {

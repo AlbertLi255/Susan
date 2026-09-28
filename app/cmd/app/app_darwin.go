@@ -53,7 +53,7 @@ var susanPath = func() string {
 		slog.Warn("failed to get pwd", "error", err)
 		return ""
 	}
-	return filepath.Join(pwd, "susan")
+	return filepath.Join(pwd, "ollama")
 }()
 
 type claudeProxyFailure uint8
@@ -78,8 +78,8 @@ type claudeDesktopController interface {
 
 var (
 	isApp              = updater.BundlePath != ""
-	appLogPath         = filepath.Join(os.Getenv("HOME"), ".susan", "logs", "app.log")
-	launchAgentPath    = filepath.Join(os.Getenv("HOME"), "Library", "LaunchAgents", "com.susan.susan.plist")
+	appLogPath         = filepath.Join(os.Getenv("HOME"), ".ollama", "logs", "app.log")
+	launchAgentPath    = filepath.Join(os.Getenv("HOME"), "Library", "LaunchAgents", "com.ollama.ollama.plist")
 	claudeAppProxy     *proxy.ClaudeDesktop
 	claudeProxyStartMu sync.Mutex
 	// Serialize default resets with connect, disconnect, and shutdown decisions.
@@ -102,13 +102,13 @@ var (
 	claudeShutdownTimeout         = 30 * time.Second
 	claudeRecommendationsClient   = &http.Client{Timeout: 3 * time.Second}
 	claudeRecommendationsEndpoint = func() string {
-		return strings.TrimRight(appui.OllamaDotCom, "/") + "/api/experimental/model-recommendations?app=claude-desktop"
+		return strings.TrimRight(appui.SusanDotCom, "/") + "/api/experimental/model-recommendations?app=claude-desktop"
 	}
 	claudeCloudModelsClient   = &http.Client{Timeout: 3 * time.Second}
 	claudeCloudModelsEndpoint = func() string {
-		return strings.TrimRight(appui.OllamaDotCom, "/") + "/api/tags"
+		return strings.TrimRight(appui.SusanDotCom, "/") + "/api/tags"
 	}
-	signOllamaData            = ollamaAuth.Sign
+	signSusanData            = ollamaAuth.Sign
 	claudeModelsLoader        = loadClaudeDesktopModels
 	claudeCloudModelsResolver = currentClaudeDesktopCloudModels
 	claudeAvailableModels     []proxy.ClaudeDesktopModel
@@ -150,6 +150,12 @@ func openUI(path string) {
 	p := C.CString(path)
 	defer C.free(unsafe.Pointer(p))
 	StartUI(p)
+}
+
+func openAppsUI() {
+	p := C.CString("/connect")
+	defer C.free(unsafe.Pointer(p))
+	C.uiRequest(p)
 }
 
 //export StopUI
@@ -382,11 +388,11 @@ func darwinProcessIdentityForPID(pid int) (appProcessIdentity, error) {
 	}, nil
 }
 
-func darwinOtherOllamaProcesses() ([]appProcessIdentity, error) {
+func darwinOtherSusanProcesses() ([]appProcessIdentity, error) {
 	var discovered *C.AppProcessIdentity
 	var count C.size_t
 	if !C.otherOllamaProcesses(&discovered, &count) {
-		return nil, errors.New("discover other Ollama app processes")
+		return nil, errors.New("discover other Susan app processes")
 	}
 	defer C.free(unsafe.Pointer(discovered))
 
@@ -404,7 +410,7 @@ func darwinAppProcessRunning(expected appProcessIdentity) (bool, error) {
 		return false, nil
 	}
 	if err != nil {
-		return false, fmt.Errorf("inspect Ollama app process %d: %w", expected.pid, err)
+		return false, fmt.Errorf("inspect Susan app process %d: %w", expected.pid, err)
 	}
 	return actual.sameProcess(expected), nil
 }
@@ -421,9 +427,9 @@ func stopDarwinAppProcess(process appProcessIdentity, mode appProcessStopMode) e
 	case appProcessStopForcefully:
 		processSignal = syscall.SIGKILL
 	}
-	slog.Info("signaling Ollama app process", "pid", process.pid, "signal", processSignal)
+	slog.Info("signaling Susan app process", "pid", process.pid, "signal", processSignal)
 	if err := syscall.Kill(process.pid, processSignal); err != nil && !errors.Is(err, syscall.ESRCH) {
-		return fmt.Errorf("signal Ollama app process %d: %w", process.pid, err)
+		return fmt.Errorf("signal Susan app process %d: %w", process.pid, err)
 	}
 	return nil
 }
@@ -434,7 +440,7 @@ func runDarwinAppSyncBarrier() bool {
 	self, err := darwinProcessIdentityForPID(os.Getpid())
 	if err == nil {
 		err = runAppSyncBarrier(self, appProcessController{
-			discover: darwinOtherOllamaProcesses,
+			discover: darwinOtherSusanProcesses,
 			running:  darwinAppProcessRunning,
 			stop:     stopDarwinAppProcess,
 		}, appSyncBarrierConfig{
@@ -447,7 +453,7 @@ func runDarwinAppSyncBarrier() bool {
 	}
 	switch {
 	case errors.Is(err, errNewerAppInstance):
-		slog.Info("newer Ollama app instance owns the handoff")
+		slog.Info("newer Susan app instance owns the handoff")
 	case err != nil:
 		slog.Warn("app instance sync barrier failed, continuing startup", "error", err)
 	}
@@ -478,7 +484,7 @@ func installSymlink() {
 	defer C.free(unsafe.Pointer(cliPath))
 
 	// Check the users path first
-	cmd, _ := exec.LookPath("susan")
+	cmd, _ := exec.LookPath("ollama")
 	if cmd != "" {
 		resolved, err := os.Readlink(cmd)
 		if err == nil {
@@ -490,7 +496,7 @@ func installSymlink() {
 			resolved = cmd
 		}
 		if resolved == susanPath {
-			slog.Info("susan already in users PATH", "cli", cmd)
+			slog.Info("ollama already in users PATH", "cli", cmd)
 			return
 		}
 	}
@@ -608,7 +614,7 @@ func startClaudeAppProxy() error {
 	gateway, err := proxy.NewClaudeDesktop(proxy.ClaudeDesktopConfig{
 		ListenAddr:      claudeProxyListenAddr,
 		OllamaURL:       ollamaURL.String(),
-		Model:           activeModels[0].OllamaModel,
+		Model:           activeModels[0].SusanModel,
 		Models:          activeModels,
 		Logger:          slog.Default(),
 		OnCountsChanged: updateClaudeProxyMenu,
@@ -765,7 +771,7 @@ func refreshClaudeDesktopCatalog(ctx context.Context, current []proxy.ClaudeDesk
 		}
 	}
 	// Preserve installed local choices. Preserve cloud choices only when the
-	// refreshed account inventory still contains their exact Ollama route.
+	// refreshed account inventory still contains their exact Susan route.
 	for _, model := range current {
 		if !model.Cloud {
 			available = includeSelectedClaudeDesktopModels(available, []proxy.ClaudeDesktopModel{model})
@@ -773,7 +779,7 @@ func refreshClaudeDesktopCatalog(ctx context.Context, current []proxy.ClaudeDesk
 		}
 		if cloudInventoryKnown {
 			for _, accountModel := range cloudInventory {
-				if accountModel.Name == model.Name || accountModel.OllamaModel == model.OllamaModel {
+				if accountModel.Name == model.Name || accountModel.SusanModel == model.SusanModel {
 					available = mergeClaudeDesktopCloudInventory(available, []proxy.ClaudeDesktopModel{accountModel})
 					break
 				}
@@ -812,7 +818,7 @@ func configuredClaudeDesktopModels(available, current []proxy.ClaudeDesktopModel
 }
 
 func loadClaudeDesktopModels(ctx context.Context) ([]proxy.ClaudeDesktopModel, string) {
-	req, err := newSignedOllamaRequest(ctx, http.MethodGet, claudeRecommendationsEndpoint())
+	req, err := newSignedSusanRequest(ctx, http.MethodGet, claudeRecommendationsEndpoint())
 	if err != nil {
 		slog.Debug("could not prepare Claude Desktop model recommendations request", "error", err)
 		return fallbackClaudeDesktopModels(), "fallback"
@@ -826,7 +832,7 @@ func loadClaudeDesktopModels(ctx context.Context) ([]proxy.ClaudeDesktopModel, s
 }
 
 func currentClaudeDesktopCloudModels(ctx context.Context) ([]proxy.ClaudeDesktopModel, error) {
-	req, err := newSignedOllamaRequest(ctx, http.MethodGet, claudeCloudModelsEndpoint())
+	req, err := newSignedSusanRequest(ctx, http.MethodGet, claudeCloudModelsEndpoint())
 	if err != nil {
 		return nil, fmt.Errorf("prepare account cloud model request: %w", err)
 	}
@@ -923,14 +929,14 @@ func mergeClaudeDesktopCloudInventory(available, cloudModels []proxy.ClaudeDeskt
 	models := proxy.VerifyClaudeDesktopModelsWithCloudInventory(available, cloudModels)
 	seen := make(map[string]struct{}, len(models))
 	for _, model := range models {
-		seen[model.OllamaModel] = struct{}{}
+		seen[model.SusanModel] = struct{}{}
 	}
 	for _, model := range cloudModels {
-		if _, ok := seen[model.OllamaModel]; ok {
+		if _, ok := seen[model.SusanModel]; ok {
 			continue
 		}
 		models = append(models, model)
-		seen[model.OllamaModel] = struct{}{}
+		seen[model.SusanModel] = struct{}{}
 	}
 	return models
 }
@@ -959,7 +965,7 @@ func resolveClaudeDesktopAccessState(
 	status, err := cloudStatus(statusCtx)
 	cancel()
 	if err != nil {
-		return state, fmt.Errorf("check whether Ollama cloud is enabled: %w", err)
+		return state, fmt.Errorf("check whether Susan cloud is enabled: %w", err)
 	}
 	if status != nil && status.Cloud.Disabled {
 		state.Cloud = proxy.ClaudeDesktopCloudOff
@@ -978,7 +984,7 @@ func resolveClaudeDesktopAccessState(
 			state.Account = proxy.ClaudeDesktopAccountSignedOut
 			return state, nil
 		}
-		return state, fmt.Errorf("check Ollama account: %w", err)
+		return state, fmt.Errorf("check Susan account: %w", err)
 	}
 	if user == nil || strings.TrimSpace(user.Name) == "" {
 		state.Account = proxy.ClaudeDesktopAccountSignedOut
@@ -1081,7 +1087,7 @@ func validateClaudeDesktopModels(models []proxy.ClaudeDesktopModel, state proxy.
 
 	reasons := make(map[proxy.ClaudeDesktopAccessReason]struct{})
 	for _, model := range models {
-		_, isInstalled := installed[model.OllamaModel]
+		_, isInstalled := installed[model.SusanModel]
 		access := proxy.EvaluateClaudeDesktopModelAccess(model, state, isInstalled, inventoryKnown)
 		if access.Availability == proxy.ClaudeDesktopAvailabilityAvailable {
 			return nil
@@ -1091,21 +1097,21 @@ func validateClaudeDesktopModels(models []proxy.ClaudeDesktopModel, state proxy.
 
 	// Prefer the action that resolves the broadest part of the selected set.
 	if _, ok := reasons[proxy.ClaudeDesktopAccessCloudOff]; ok {
-		return errors.New("Cloud models are off. Choose an installed model in Ollama Settings")
+		return errors.New("Cloud models are off. Choose an installed model in Susan Settings")
 	}
 	if _, ok := reasons[proxy.ClaudeDesktopAccessSignInRequired]; ok {
-		return errors.New("Sign in to Ollama or choose an installed model in Ollama Settings")
+		return errors.New("Sign in to Susan or choose an installed model in Susan Settings")
 	}
 	if _, ok := reasons[proxy.ClaudeDesktopAccessUpgradeRequired]; ok {
 		return errors.New("Select another model in Settings to connect Claude")
 	}
 	if _, ok := reasons[proxy.ClaudeDesktopAccessModelNotInstalled]; ok {
-		return errors.New("Install the selected model or choose another model in Ollama Settings")
+		return errors.New("Install the selected model or choose another model in Susan Settings")
 	}
 	if _, ok := reasons[proxy.ClaudeDesktopAccessVerificationUnavailable]; ok {
 		return errClaudeDesktopAccessUnavailable
 	}
-	return errors.New("Choose at least one model in Ollama Settings")
+	return errors.New("Choose at least one model in Susan Settings")
 }
 
 func claudeGatewayPort() (string, error) {
@@ -1244,7 +1250,7 @@ func IsCodexDesktopInstalled() C.bool {
 
 //export IsCodexDesktopConnected
 func IsCodexDesktopConnected() C.bool {
-	return C._Bool(codexDesktop.OllamaConfigured())
+	return C._Bool(codexDesktop.SusanConfigured())
 }
 
 //export IsCodexDesktopRunning
@@ -1254,7 +1260,7 @@ func IsCodexDesktopRunning() C.bool {
 
 //export CodexDesktopRequestCount
 func CodexDesktopRequestCount() C.ulonglong {
-	return C.ulonglong(codexDesktop.OllamaRequestCount())
+	return C.ulonglong(codexDesktop.SusanRequestCount())
 }
 
 //export SetCodexDesktopConnected
@@ -1349,6 +1355,10 @@ func claudeDesktopConnectionSummary(used bool) claudeDesktopStatus {
 }
 
 func getClaudeDesktopConnectionStatus() claudeDesktopStatus {
+	return claudeDesktopConnectionStatus(context.Background())
+}
+
+func claudeDesktopConnectionStatus(ctx context.Context) claudeDesktopStatus {
 	used := hasUsedClaudeDesktopIntegration()
 	var availableModels, selectedModels []proxy.ClaudeDesktopModel
 	var modelSource string
@@ -1362,7 +1372,7 @@ func getClaudeDesktopConnectionStatus() claudeDesktopStatus {
 		cachedCatalogHasCloud := hasCloudClaudeDesktopModel(claudeAvailableModels)
 		claudeProxyMu.Unlock()
 		var accessErr error
-		accessState, accessErr = claudeAccessStateResolver(context.Background())
+		accessState, accessErr = claudeAccessStateResolver(ctx)
 		if accessErr != nil {
 			slog.Debug("could not resolve Claude model access for Settings", "error", accessErr)
 		}
@@ -1373,7 +1383,7 @@ func getClaudeDesktopConnectionStatus() claudeDesktopStatus {
 		if accessErr == nil && accessState.Cloud == proxy.ClaudeDesktopCloudOn {
 			// Local-only startup deliberately seeds the cache with only the active
 			// routes. Settings still needs the recommendation catalog when Cloud is on.
-			availableModels, selectedModels, modelSource = refreshClaudeDesktopCatalog(context.Background(), current, !cachedCatalogHasCloud)
+			availableModels, selectedModels, modelSource = refreshClaudeDesktopCatalog(ctx, current, !cachedCatalogHasCloud)
 		} else {
 			selectedModels = current
 			if len(selectedModels) == 0 {
@@ -1392,7 +1402,7 @@ func getClaudeDesktopConnectionStatus() claudeDesktopStatus {
 	var localNames []string
 	var localErr error
 	if len(availableModels) > 0 {
-		localNames, localErr = claudeLocalModelsResolver(context.Background())
+		localNames, localErr = claudeLocalModelsResolver(ctx)
 		if localErr != nil {
 			slog.Debug("could not load local models for Claude Settings", "error", localErr)
 		}
@@ -1406,9 +1416,9 @@ func getClaudeDesktopConnectionStatus() claudeDesktopStatus {
 		_, isSelected := selected[model.Name]
 		name := model.Name
 		if model.Cloud {
-			name = model.OllamaModel
+			name = model.SusanModel
 		}
-		_, installed := localModels[model.OllamaModel]
+		_, installed := localModels[model.SusanModel]
 		access := proxy.EvaluateClaudeDesktopModelAccess(model, accessState, installed, localErr == nil)
 		modelStatuses = append(modelStatuses, claudeDesktopModelStatus{
 			Name:         name,
@@ -1487,7 +1497,7 @@ func openClaudeDesktopApplication() error {
 func setClaudeDesktopAutoMode(enabled, restartConfirmed bool) error {
 	models := activeClaudeDesktopModels()
 	if enabled && !claudeDesktopModelsSupportAutoMode(models) {
-		return errors.New("select at least one cloud model available to your Ollama.com account")
+		return errors.New("select at least one cloud model available to your Susan.com account")
 	}
 	previous, err := launch.ClaudeDesktopAutoModeEnabled()
 	if err != nil {
@@ -1707,7 +1717,7 @@ func mapKnownClaudeDesktopModels(available, current []proxy.ClaudeDesktopModel, 
 	allowed := make(map[string]struct{}, len(selectable)+len(localNames))
 	for _, model := range selectable {
 		allowed[model.Name] = struct{}{}
-		allowed[model.OllamaModel] = struct{}{}
+		allowed[model.SusanModel] = struct{}{}
 	}
 	for _, name := range localNames {
 		allowed[strings.TrimSpace(name)] = struct{}{}
@@ -1734,14 +1744,14 @@ func selectKnownClaudeDesktopModels(available, current []proxy.ClaudeDesktopMode
 	allowed := make(map[string]struct{}, len(selectable)+len(localNames))
 	for _, model := range selectable {
 		allowed[model.Name] = struct{}{}
-		allowed[model.OllamaModel] = struct{}{}
+		allowed[model.SusanModel] = struct{}{}
 	}
 	for _, name := range localNames {
 		allowed[strings.TrimSpace(name)] = struct{}{}
 	}
 	for _, name := range names {
 		if _, ok := allowed[strings.TrimSpace(name)]; !ok {
-			return nil, fmt.Errorf("model %q is not installed, recommended, or available to this Ollama.com account", name)
+			return nil, fmt.Errorf("model %q is not installed, recommended, or available to this Susan.com account", name)
 		}
 	}
 
@@ -1775,7 +1785,7 @@ func claudeDesktopDownloadEndpoint(baseURL string) string {
 	return strings.TrimRight(baseURL, "/") + "/download-app?app=claude-desktop&type=mac-zip"
 }
 
-func newSignedOllamaRequest(ctx context.Context, method, endpoint string) (*http.Request, error) {
+func newSignedSusanRequest(ctx context.Context, method, endpoint string) (*http.Request, error) {
 	req, err := http.NewRequestWithContext(ctx, method, endpoint, nil)
 	if err != nil {
 		return nil, err
@@ -1783,7 +1793,7 @@ func newSignedOllamaRequest(ctx context.Context, method, endpoint string) (*http
 	query := req.URL.Query()
 	query.Set("ts", strconv.FormatInt(time.Now().Unix(), 10))
 	req.URL.RawQuery = query.Encode()
-	signature, err := signOllamaData(ctx, []byte(fmt.Sprintf("%s,%s", req.Method, req.URL.RequestURI())))
+	signature, err := signSusanData(ctx, []byte(fmt.Sprintf("%s,%s", req.Method, req.URL.RequestURI())))
 	if err != nil {
 		return nil, fmt.Errorf("sign request: %w", err)
 	}
@@ -1798,7 +1808,7 @@ func ClaudeDesktopDownloadRequest(authorization **C.char) *C.char {
 	}
 	*authorization = nil
 
-	req, err := newSignedOllamaRequest(context.Background(), http.MethodGet, claudeDesktopDownloadEndpoint(appui.OllamaDotCom))
+	req, err := newSignedSusanRequest(context.Background(), http.MethodGet, claudeDesktopDownloadEndpoint(appui.SusanDotCom))
 	if err != nil {
 		slog.Warn("failed to prepare Claude Desktop download request", "error", err)
 		return nil

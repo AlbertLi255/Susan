@@ -3,10 +3,7 @@ import { getSettings } from "@/api";
 import { useSettings } from "@/hooks/useSettings";
 import { useUser } from "@/hooks/useUser";
 import { useDeviceSignin } from "@/hooks/useDeviceSignin";
-import {
-  CURRENT_ONBOARDING_VERSION,
-  homeChatId,
-} from "@/lib/onboarding";
+import { CURRENT_ONBOARDING_VERSION, homeChatId } from "@/lib/onboarding";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -20,9 +17,10 @@ export const Route = createFileRoute("/onboarding")({
       return;
     }
 
-    const settingsData = await context.queryClient.ensureQueryData({
+    const settingsData = await context.queryClient.fetchQuery({
       queryKey: ["settings"],
       queryFn: getSettings,
+      staleTime: 0,
     });
 
     if (settingsData.settings.OnboardingVersion >= CURRENT_ONBOARDING_VERSION) {
@@ -39,7 +37,7 @@ export const Route = createFileRoute("/onboarding")({
 
 function OnboardingRoute() {
   const navigate = useNavigate();
-  const { settingsData, setSettings } = useSettings();
+  const { settingsData, setSettings } = useSettings({ refetchInterval: 2000 });
   const { isAuthenticated } = useUser();
   const deviceSignin = useDeviceSignin();
   const [isAwaitingAuth, setIsAwaitingAuth] = useState(false);
@@ -47,6 +45,22 @@ function OnboardingRoute() {
   const [signInCode, setSignInCode] = useState<string | null>(null);
   const [completionError, setCompletionError] = useState<string | null>(null);
   const authAttemptRef = useRef(0);
+  const completedHereRef = useRef(false);
+
+  // The CLI can complete welcome while this window is open. Leave onboarding
+  // when its shared state changes, while preserving this window's own finish flow.
+  useEffect(() => {
+    const isPreview =
+      import.meta.env.DEV &&
+      new URLSearchParams(window.location.search).get("preview") === "1";
+    if (
+      !isPreview &&
+      !completedHereRef.current &&
+      (settingsData?.OnboardingVersion ?? 0) >= CURRENT_ONBOARDING_VERSION
+    ) {
+      void navigate({ to: "/" });
+    }
+  }, [navigate, settingsData?.OnboardingVersion]);
 
   const completeOnboarding = useCallback(async (): Promise<boolean> => {
     setCompletionError(null);
@@ -56,11 +70,13 @@ function OnboardingRoute() {
         throw new Error("Settings are not loaded");
       }
 
+      completedHereRef.current = true;
       await setSettings({
         OnboardingVersion: CURRENT_ONBOARDING_VERSION,
       });
       return true;
     } catch (error) {
+      completedHereRef.current = false;
       console.error("Failed to save onboarding state:", error);
       setCompletionError("Unable to save setup. Please try again.");
       return false;
