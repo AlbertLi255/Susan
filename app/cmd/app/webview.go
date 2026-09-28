@@ -218,6 +218,16 @@ func (w *Webview) Run(path string) unsafe.Pointer {
 			showWindow(wv.Window())
 		})
 
+		// openURL opens http(s) links in the OS default browser. WebView
+		// window.open is unreliable (blocked / same-window navigation).
+		wv.Bind("openURL", func(raw string) {
+			if !strings.HasPrefix(raw, "http://") && !strings.HasPrefix(raw, "https://") {
+				slog.Warn("refusing to open non-http(s) URL", "url", raw)
+				return
+			}
+			openInBrowser(raw)
+		})
+
 		wv.Bind("activateOllama", func() {
 			showWindow(wv.Window())
 		})

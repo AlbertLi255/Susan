@@ -53,6 +53,9 @@ func TestDispatchURLSchemeRequest(t *testing.T) {
 		{name: "bare URL opens app", request: "ollama://", wantOpen: true},
 		{name: "connect URL starts connection", request: "ollama://connect", wantConnect: true},
 		{name: "unsupported URL", request: "ollama://unsupported", wantErr: true},
+		{name: "bare susan URL opens app", request: "susan://", wantOpen: true},
+		{name: "susan connect URL starts connection", request: "susan://connect", wantConnect: true},
+		{name: "unsupported susan URL", request: "susan://unsupported", wantErr: true},
 	}
 
 	for _, tt := range tests {

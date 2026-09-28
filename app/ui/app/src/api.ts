@@ -138,6 +138,31 @@ export interface DeviceSigninStatus {
   error?: string;
 }
 
+// withLaunchParam marks a /device link as Desktop-originated so the platform
+// page shows Desktop copy and deep-links back via susan:// after Allow/Deny.
+// Pure CLI links (no launch param) keep the "return to terminal" copy.
+export function withLaunchParam(url: string): string {
+  try {
+    const u = new URL(url);
+    u.searchParams.set("launch", "true");
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
+function tagDesktopLink(status: DeviceSigninStatus): DeviceSigninStatus {
+  if (status.verification_uri_complete) {
+    return {
+      ...status,
+      verification_uri_complete: withLaunchParam(
+        status.verification_uri_complete,
+      ),
+    };
+  }
+  return status;
+}
+
 // startDeviceSignin asks the local daemon to start (or reuse) a device flow.
 export async function startDeviceSignin(
   force = false,
@@ -155,7 +180,7 @@ export async function startDeviceSignin(
     throw new Error(data || `Failed to start sign-in: ${response.status}`);
   }
 
-  return response.json();
+  return tagDesktopLink((await response.json()) as DeviceSigninStatus);
 }
 
 // getDeviceSigninStatus polls the local daemon's device flow status.
@@ -164,7 +189,7 @@ export async function getDeviceSigninStatus(): Promise<DeviceSigninStatus> {
   if (!response.ok) {
     throw new Error(`Failed to get sign-in status: ${response.status}`);
   }
-  return response.json();
+  return tagDesktopLink((await response.json()) as DeviceSigninStatus);
 }
 
 export async function getChats(): Promise<ChatsResponse> {

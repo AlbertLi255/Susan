@@ -61,8 +61,9 @@ func main() {
 	var urlSchemeRequest string
 	if len(os.Args) > 1 {
 		for _, arg := range os.Args {
-			// Handle URL scheme requests (Windows)
-			if strings.HasPrefix(arg, "ollama://") {
+			// Handle URL scheme requests (Windows). susan:// is the product
+			// scheme; ollama:// is kept for compatibility with older links.
+			if strings.HasPrefix(arg, "susan://") || strings.HasPrefix(arg, "ollama://") {
 				urlSchemeRequest = arg
 				slog.Info("received URL scheme request", "url", arg)
 				continue
@@ -519,8 +520,9 @@ func openInBrowser(url string) {
 	case "darwin":
 		cmd = "open"
 		args = []string{url}
-	default: // "linux", "freebsd", "openbsd", "netbsd"... should not reach here
-		slog.Warn("unsupported OS for openInBrowser", "os", runtime.GOOS)
+	default:
+		cmd = "xdg-open"
+		args = []string{url}
 	}
 
 	slog.Info("executing browser command", "cmd", cmd, "args", args)
@@ -529,12 +531,18 @@ func openInBrowser(url string) {
 	}
 }
 
-// parseURLScheme parses an ollama:// URL and validates it
-// Supports: ollama:// (open app) and ollama://connect (OAuth)
+// parseURLScheme parses a susan:// or ollama:// URL and validates it.
+// Supports: susan:// (open/focus app) and susan://connect (start sign-in).
 func parseURLScheme(urlSchemeRequest string) (isConnect bool, err error) {
 	parsedURL, err := url.Parse(urlSchemeRequest)
 	if err != nil {
 		return false, fmt.Errorf("invalid URL: %w", err)
+	}
+
+	switch parsedURL.Scheme {
+	case "susan", "ollama":
+	default:
+		return false, fmt.Errorf("unsupported URL scheme: %s", parsedURL.Scheme)
 	}
 
 	// Check if this is a connect URL
@@ -542,12 +550,12 @@ func parseURLScheme(urlSchemeRequest string) (isConnect bool, err error) {
 		return true, nil
 	}
 
-	// Allow bare ollama:// or ollama:/// to open the app
+	// Allow bare susan:// / ollama:// (or with a trailing slash) to open the app
 	if (parsedURL.Host == "" && parsedURL.Path == "") || parsedURL.Path == "/" {
 		return false, nil
 	}
 
-	return false, fmt.Errorf("unsupported ollama:// URL path: %s", urlSchemeRequest)
+	return false, fmt.Errorf("unsupported %s:// URL path: %s", parsedURL.Scheme, urlSchemeRequest)
 }
 
 // handleURLSchemeInCurrentInstance processes URL scheme requests in the current instance

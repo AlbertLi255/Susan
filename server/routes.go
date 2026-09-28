@@ -235,7 +235,9 @@ func (s *Server) scheduleRunner(ctx context.Context, model *Model, caps []model.
 func signinURL() (string, error) {
 	// Reuse an in-progress device flow if one exists, otherwise start a new
 	// one, and return the platform's verification_uri_complete link.
-	status, err := platform.DefaultManager().Start(context.Background(), "", false)
+	// Client name marks Desktop flows so the platform /device page can tell
+	// Desktop apart from pure CLI and deep-link back via susan://.
+	status, err := platform.DefaultManager().Start(context.Background(), "Susan Desktop", false)
 	if err != nil {
 		return "", err
 	}
