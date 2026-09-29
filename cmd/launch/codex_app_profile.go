@@ -83,7 +83,7 @@ func codexAppRegularProfileSessionStartPath() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".ollama", "launch", "chatgpt-session-start"), nil
+	return filepath.Join(home, ".susan", "launch", "chatgpt-session-start"), nil
 }
 
 func codexAppRegularProfileRoutingModels(configPath string) map[string]struct{} {

@@ -208,7 +208,7 @@ var legacyConfigPath = func() string {
 	case "darwin":
 		return filepath.Join(os.Getenv("HOME"), "Library", "Application Support", "Susan", "config.json")
 	default:
-		return filepath.Join(os.Getenv("HOME"), ".ollama", "config.json")
+		return filepath.Join(os.Getenv("HOME"), ".susan", "config.json")
 	}
 }()
 
@@ -406,7 +406,7 @@ func (s *Store) Settings() (Settings, error) {
 		} else {
 			home, err := os.UserHomeDir()
 			if err == nil {
-				settings.Models = filepath.Join(home, ".ollama", "models")
+				settings.Models = filepath.Join(home, ".susan", "models")
 			}
 		}
 	}

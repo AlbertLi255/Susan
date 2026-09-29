@@ -918,7 +918,7 @@ func codexAppSusanProfileRoot() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".ollama", codexAppSusanProfileDirName), nil
+	return filepath.Join(home, ".susan", codexAppSusanProfileDirName), nil
 }
 
 func codexAppSusanProfileUserDataDir() (string, error) {
@@ -2650,5 +2650,5 @@ func codexAppRestoreStatePath() string {
 	if err != nil {
 		return filepath.Join(os.TempDir(), "ollama-codex-app-restore.json")
 	}
-	return filepath.Join(home, ".ollama", "launch", "codex-app-restore.json")
+	return filepath.Join(home, ".susan", "launch", "codex-app-restore.json")
 }

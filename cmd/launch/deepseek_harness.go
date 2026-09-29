@@ -500,7 +500,7 @@ func deepSeekHarnessConfigDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".ollama", "launch", "dsh"), nil
+	return filepath.Join(home, ".susan", "launch", "dsh"), nil
 }
 
 func deepSeekHarnessSettingsPath() (string, error) {

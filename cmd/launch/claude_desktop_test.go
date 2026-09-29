@@ -492,7 +492,7 @@ func TestClaudeDesktopConfigurePreservesProfileWhenAutoModePreferenceIsUnreadabl
 	if err := os.WriteFile(paths.profile, original, 0o644); err != nil {
 		t.Fatal(err)
 	}
-	configPath := filepath.Join(tmpDir, ".ollama", "config.json")
+	configPath := filepath.Join(tmpDir, ".susan", "config.json")
 	if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -1422,7 +1422,7 @@ func TestClaudeDesktopSetInstalledFromDesktopDoesNotOpenStoppedAppWhenDisabled(t
 		func() error { t.Fatal("stopped Claude should not be quit"); return nil },
 		func() error { t.Fatal("disabling should not open stopped Claude"); return nil },
 	)
-	configPath := filepath.Join(tmpDir, ".ollama", "config.json")
+	configPath := filepath.Join(tmpDir, ".susan", "config.json")
 	if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
 		t.Fatal(err)
 	}

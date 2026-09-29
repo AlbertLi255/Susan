@@ -46,7 +46,7 @@ carry a model-name field to reconstruct on the way out.
 
 The cache is process-local. Cloud startup hydration runs asynchronously from
 cloud tags, while local show responses are populated on demand. No show
-responses are written to or read from ~/.ollama/cache/show. That keeps cache
+responses are written to or read from ~/.susan/cache/show. That keeps cache
 lifetime tied to the server process and avoids snapshot freshness and
 invalidation cases for this iteration.
 */

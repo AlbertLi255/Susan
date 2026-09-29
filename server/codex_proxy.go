@@ -28,7 +28,7 @@ func newCodexDesktopProxy() (http.Handler, error) {
 		ChatGPTURL:         codexDesktopChatGPTURL,
 		OpenAIURL:          codexDesktopOpenAIURL,
 		RoutingCatalogPath: filepath.Join(home, ".codex", proxy.CodexDesktopRoutingCatalogFilename),
-		ActivityLogPath:    filepath.Join(home, ".ollama", "logs", codexDesktopLogFilename),
+		ActivityLogPath:    filepath.Join(home, ".susan", "logs", codexDesktopLogFilename),
 		Logger:             slog.Default(),
 	})
 }
