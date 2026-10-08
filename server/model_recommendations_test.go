@@ -614,6 +614,10 @@ func setupModelRecommendationsTestEnv(t *testing.T, noCloudEnv string) {
 	t.Setenv("HOMEPATH", strings.TrimPrefix(home, filepath.VolumeName(home)))
 	writeTestSusanPrivateKey(t, home)
 
+	// Pin the cloud host so a developer machine's SUSAN_CLOUD_HOST cannot
+	// retarget the signed recommendations request.
+	t.Setenv("SUSAN_CLOUD_HOST", "")
+
 	// Use explicit false rather than empty to avoid platform/env ambiguity.
 	if noCloudEnv == "" {
 		noCloudEnv = "false"

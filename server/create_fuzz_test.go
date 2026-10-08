@@ -48,7 +48,7 @@ func FuzzConvertModelFromFiles(f *testing.F) {
 		if len(first) > maxCreateGGUFFuzzBytes || len(second) > maxCreateGGUFFuzzBytes {
 			t.Skip("bounded fuzz input")
 		}
-		t.Setenv("OLLAMA_MODELS", t.TempDir())
+		t.Setenv("SUSAN_MODELS", t.TempDir())
 
 		files := fuzzCreateFiles(t, mode, first, second)
 		if err := validateCreateFiles(files); err != nil {

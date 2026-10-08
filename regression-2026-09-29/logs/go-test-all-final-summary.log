@@ -1,0 +1,102 @@
+﻿
+FAIL	github.com/ollama/ollama/x/internal/mlxthreadtest [setup failed]
+FAIL	github.com/ollama/ollama/x/models/qwen4_exp [setup failed]
+?   	github.com/ollama/ollama	[no test files]
+ok  	github.com/ollama/ollama/anthropic	1.206s
+ok  	github.com/ollama/ollama/api	1.517s
+?   	github.com/ollama/ollama/api/examples/chat	[no test files]
+?   	github.com/ollama/ollama/api/examples/generate	[no test files]
+?   	github.com/ollama/ollama/api/examples/generate-streaming	[no test files]
+?   	github.com/ollama/ollama/api/examples/multimodal	[no test files]
+?   	github.com/ollama/ollama/api/examples/pull-progress	[no test files]
+?   	github.com/ollama/ollama/app/assets	[no test files]
+?   	github.com/ollama/ollama/app/auth	[no test files]
+ok  	github.com/ollama/ollama/app/cmd/app	1.226s
+?   	github.com/ollama/ollama/app/dialog	[no test files]
+ok  	github.com/ollama/ollama/app/format	0.603s
+ok  	github.com/ollama/ollama/app/logrotate	0.684s
+ok  	github.com/ollama/ollama/app/server	1.416s
+ok  	github.com/ollama/ollama/app/store	3.179s
+ok  	github.com/ollama/ollama/app/tools	0.779s
+ok  	github.com/ollama/ollama/app/types/not	0.294s
+ok  	github.com/ollama/ollama/app/ui	0.613s
+?   	github.com/ollama/ollama/app/ui/responses	[no test files]
+ok  	github.com/ollama/ollama/app/updater	1.430s
+?   	github.com/ollama/ollama/app/version	[no test files]
+?   	github.com/ollama/ollama/app/webview	[no test files]
+ok  	github.com/ollama/ollama/app/wintray	0.316s
+ok  	github.com/ollama/ollama/auth	0.487s
+ok  	github.com/ollama/ollama/auth/platform	1.080s
+ok  	github.com/ollama/ollama/cmd	14.880s
+ok  	github.com/ollama/ollama/cmd/bench	5.633s
+ok  	github.com/ollama/ollama/cmd/config	3.020s
+ok  	github.com/ollama/ollama/cmd/internal/fileutil	0.682s
+ok  	github.com/ollama/ollama/cmd/launch	46.758s
+ok  	github.com/ollama/ollama/cmd/tui	2.664s
+ok  	github.com/ollama/ollama/create	2.517s
+ok  	github.com/ollama/ollama/discover	1.383s
+?   	github.com/ollama/ollama/docs/tools/extract-examples	[no test files]
+ok  	github.com/ollama/ollama/envconfig	0.761s
+ok  	github.com/ollama/ollama/format	0.673s
+ok  	github.com/ollama/ollama/fs/gguf	1.440s
+ok  	github.com/ollama/ollama/fs/safetensors	0.952s
+ok  	github.com/ollama/ollama/fs/util/bufioutil	0.588s
+ok  	github.com/ollama/ollama/harmony	0.836s
+ok  	github.com/ollama/ollama/internal/cloud	0.699s
+ok  	github.com/ollama/ollama/internal/modelref	0.598s
+?   	github.com/ollama/ollama/internal/onboarding	[no test files]
+ok  	github.com/ollama/ollama/internal/orderedmap	0.666s
+ok  	github.com/ollama/ollama/internal/proxy	3.241s
+?   	github.com/ollama/ollama/internal/testutil/gguf	[no test files]
+ok  	github.com/ollama/ollama/llm	5.585s
+ok  	github.com/ollama/ollama/logutil	0.696s
+ok  	github.com/ollama/ollama/manifest	0.972s
+ok  	github.com/ollama/ollama/middleware	0.495s
+ok  	github.com/ollama/ollama/ml	0.790s
+ok  	github.com/ollama/ollama/mlx	0.485s
+?   	github.com/ollama/ollama/mlx/generator	[no test files]
+?   	github.com/ollama/ollama/mlx/mlxtest	[no test files]
+ok  	github.com/ollama/ollama/mlx/mlxthread	0.695s
+ok  	github.com/ollama/ollama/mlx/mlxthread/mlxthreadtest	1.188s
+ok  	github.com/ollama/ollama/mlx/quant	0.598s
+ok  	github.com/ollama/ollama/mlxrunner	0.751s
+?   	github.com/ollama/ollama/mlxrunner/batch	[no test files]
+ok  	github.com/ollama/ollama/mlxrunner/cache	0.437s
+ok  	github.com/ollama/ollama/mlxrunner/model	0.481s
+?   	github.com/ollama/ollama/mlxrunner/model/architectures	[no test files]
+ok  	github.com/ollama/ollama/mlxrunner/model/audio	1.113s
+ok  	github.com/ollama/ollama/mlxrunner/model/cohere2_moe	0.689s
+?   	github.com/ollama/ollama/mlxrunner/model/dflash	[no test files]
+ok  	github.com/ollama/ollama/mlxrunner/model/gemma4	3.305s
+ok  	github.com/ollama/ollama/mlxrunner/model/glimmer	0.736s
+ok  	github.com/ollama/ollama/mlxrunner/model/glm4_moe_lite	0.785s
+ok  	github.com/ollama/ollama/mlxrunner/model/laguna	0.609s
+?   	github.com/ollama/ollama/mlxrunner/model/llama	[no test files]
+ok  	github.com/ollama/ollama/mlxrunner/model/nemotron_h	1.232s
+?   	github.com/ollama/ollama/mlxrunner/model/qwen3	[no test files]
+ok  	github.com/ollama/ollama/mlxrunner/model/qwen3_5	0.676s
+?   	github.com/ollama/ollama/mlxrunner/model/qwen3_5_moe	[no test files]
+ok  	github.com/ollama/ollama/mlxrunner/model/qwen4_exp	0.949s
+ok  	github.com/ollama/ollama/mlxrunner/nn	0.659s
+ok  	github.com/ollama/ollama/mlxrunner/sample	0.324s
+ok  	github.com/ollama/ollama/mlxrunner/tokenizer	3.437s
+ok  	github.com/ollama/ollama/mlxrunner/xgrammar	0.997s
+ok  	github.com/ollama/ollama/model/parsers	1.691s
+ok  	github.com/ollama/ollama/model/renderers	1.717s
+ok  	github.com/ollama/ollama/openai	1.479s
+ok  	github.com/ollama/ollama/parser	1.722s
+ok  	github.com/ollama/ollama/progress	1.950s
+?   	github.com/ollama/ollama/readline	[no test files]
+FAIL	github.com/ollama/ollama/regression-2026-09-29/logs [build failed]
+ok  	github.com/ollama/ollama/server	10.355s
+ok  	github.com/ollama/ollama/template	2.701s
+ok  	github.com/ollama/ollama/thinking	0.843s
+ok  	github.com/ollama/ollama/tools	1.287s
+?   	github.com/ollama/ollama/types/errtypes	[no test files]
+ok  	github.com/ollama/ollama/types/model	0.951s
+?   	github.com/ollama/ollama/types/syncmap	[no test files]
+?   	github.com/ollama/ollama/version	[no test files]
+ok  	github.com/ollama/ollama/x/transfer	16.435s
+FAIL
+
+

@@ -632,8 +632,13 @@ func TestCodexAppManagedAuthLifecycle(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if got := info.Mode().Perm(); got != 0o600 {
-			t.Fatalf("auth mode = %o, want 600", got)
+		// Windows only exposes the read-only bit through os.FileMode, so a
+		// 0600 chmod is reported as 0666 there; secret hardening on Windows
+		// has to come from ACLs rather than mode bits.
+		if runtime.GOOS != "windows" {
+			if got := info.Mode().Perm(); got != 0o600 {
+				t.Fatalf("auth mode = %o, want 600", got)
+			}
 		}
 
 		if err := restoreCodexAppProfile(); err != nil {

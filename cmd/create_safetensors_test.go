@@ -416,7 +416,7 @@ func TestCreateOptions_Defaults(t *testing.T) {
 }
 
 func TestNewManifestWriter_PopulatesFileTypeFromEffectiveQuantize(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	opts := createOptions{
 		ModelName: "test-quantized",
@@ -459,7 +459,7 @@ func TestNewManifestWriter_PopulatesFileTypeFromEffectiveQuantize(t *testing.T) 
 }
 
 func TestNewManifestWriterPreservesMultipleLicenses(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 	opts := createOptions{
 		ModelName: "test-licenses",
 		ModelDir:  t.TempDir(),
@@ -501,7 +501,7 @@ func TestNewManifestWriterPreservesMultipleLicenses(t *testing.T) {
 }
 
 func TestNewManifestWriter_PopulatesDraftMetadata(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	draftDir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(draftDir, "config.json"), []byte(`{"architectures":["DFlashDraftModel"],"model_type":"qwen3"}`), 0o644); err != nil {
@@ -555,7 +555,7 @@ func TestNewManifestWriter_PopulatesDraftMetadata(t *testing.T) {
 }
 
 func TestCreateModelFromBaseReplacesDraftLayers(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 	newLayer := func(mediaType, name, content string) manifest.Layer {
 		t.Helper()
 		layer, err := manifest.NewLayer(strings.NewReader(content), mediaType)

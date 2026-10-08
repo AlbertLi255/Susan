@@ -1,0 +1,112 @@
+﻿.\dist\susan.exe : time=2026-09-30T00:38:32.835+08:00 level=INFO source=routes.go:2017 msg="server config" env="map[CUD
+A_VISIBLE_DEVICES: GGML_VK_VISIBLE_DEVICES: GPU_DEVICE_ORDINAL: HIP_VISIBLE_DEVICES: HSA_OVERRIDE_GFX_VERSION: HTTPS_PR
+OXY: HTTP_PROXY: LLAMA_ARG_FIT: LLAMA_ARG_FIT_TARGET: NO_PROXY: ROCR_VISIBLE_DEVICES: SUSAN_CLOUD_HOST:https://ollama.c
+om SUSAN_CONTEXT_LENGTH:0 SUSAN_CREATE_REMOTE:false SUSAN_DEBUG:INFO SUSAN_DEBUG_LOG_REQUESTS:false SUSAN_EDITOR: SUSAN
+_FLASH_ATTENTION:false SUSAN_GO_TEMPLATE:true SUSAN_GPU_OVERHEAD:0 SUSAN_HOST:http://127.0.0.1:14343 SUSAN_IGPU_ENABLE:
+ SUSAN_KEEP_ALIVE:5m0s SUSAN_KV_CACHE_TYPE: SUSAN_LLM_LIBRARY: SUSAN_LOAD_TIMEOUT:5m0s SUSAN_MAX_LOADED_MODELS:0 SUSAN_
+MAX_QUEUE:512 SUSAN_MAX_TRANSFER_STREAMS:4 SUSAN_MODELS:C:\\Users\\albert\\.susan\\models SUSAN_NOHISTORY:false SUSAN_N
+OPRUNE:false SUSAN_NO_CLOUD:true SUSAN_NUM_PARALLEL:1 SUSAN_ORIGINS:[http://localhost https://localhost http://localhos
+t:* https://localhost:* http://127.0.0.1 https://127.0.0.1 http://127.0.0.1:* https://127.0.0.1:* http://0.0.0.0 https:
+//0.0.0.0 http://0.0.0.0:* https://0.0.0.0:* app://* file://* tauri://* vscode-webview://* vscode-file://*] SUSAN_REMOT
+ES:[ollama.com] SUSAN_SCHED_SPREAD:false SUSAN_VULKAN:true]"
+At line:15 char:2726
++ ... ST -ErrorAction SilentlyContinue; .\dist\susan.exe serve 2>&1 | Tee-O ...
++                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (time=2026-09-30...N_VULKAN:true]":String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+time=2026-09-30T00:38:32.835+08:00 level=INFO source=routes.go:2019 msg="Susan cloud disabled: true"
+time=2026-09-30T00:38:32.897+08:00 level=INFO source=images.go:922 msg="total blobs: 28"
+time=2026-09-30T00:38:32.902+08:00 level=INFO source=images.go:868 msg="couldn't remove file 'C:\\Users\\albert\\.susan
+\\models\\blobs\\sha256-b83633aa785344791618f2fddf131b010ea04912a60430760b070bad293f65bd': remove C:\\Users\\albert\\.s
+usan\\models\\blobs\\sha256-b83633aa785344791618f2fddf131b010ea04912a60430760b070bad293f65bd: Access is denied."
+time=2026-09-30T00:38:32.902+08:00 level=INFO source=images.go:868 msg="couldn't remove file 'C:\\Users\\albert\\.susan
+\\models\\blobs\\sha256-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855': remove C:\\Users\\albert\\.s
+usan\\models\\blobs\\sha256-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855: Access is denied."
+time=2026-09-30T00:38:32.902+08:00 level=INFO source=images.go:868 msg="couldn't remove file 'C:\\Users\\albert\\.susan
+\\models\\blobs\\sha256-8f72d0dc2fd948271d81a503cee7d7f55828cd1fb58f8c434639aaf5e4af7698': remove C:\\Users\\albert\\.s
+usan\\models\\blobs\\sha256-8f72d0dc2fd948271d81a503cee7d7f55828cd1fb58f8c434639aaf5e4af7698: Access is denied."
+time=2026-09-30T00:38:32.903+08:00 level=INFO source=images.go:868 msg="couldn't remove file 'C:\\Users\\albert\\.susan
+\\models\\blobs\\sha256-4ffd9303bee59e0585fc4124b47d073013b0d14bb5a42728141f1718bcaabd4d': remove C:\\Users\\albert\\.s
+usan\\models\\blobs\\sha256-4ffd9303bee59e0585fc4124b47d073013b0d14bb5a42728141f1718bcaabd4d: Access is denied."
+time=2026-09-30T00:38:32.903+08:00 level=INFO source=images.go:868 msg="couldn't remove file 'C:\\Users\\albert\\.susan
+\\models\\blobs\\sha256-5c6b6f9fc492a90bc4c6f11c938120aad9f9c27b6ec212fcad814525746c8f33': remove C:\\Users\\albert\\.s
+usan\\models\\blobs\\sha256-5c6b6f9fc492a90bc4c6f11c938120aad9f9c27b6ec212fcad814525746c8f33: Access is denied."
+time=2026-09-30T00:38:32.904+08:00 level=INFO source=images.go:868 msg="couldn't remove file 'C:\\Users\\albert\\.susan
+\\models\\blobs\\sha256-507c1a291c63d7e46cce06cb843de4e7835b2afa4bae4f2ed33e2f7e28796c9c': remove C:\\Users\\albert\\.s
+usan\\models\\blobs\\sha256-507c1a291c63d7e46cce06cb843de4e7835b2afa4bae4f2ed33e2f7e28796c9c: Access is denied."
+time=2026-09-30T00:38:32.904+08:00 level=INFO source=images.go:868 msg="couldn't remove file 'C:\\Users\\albert\\.susan
+\\models\\blobs\\sha256-04452cdb72669c66f3adc55da70d94a6b9810a4f3f6050ef2db52433c2ca4425': remove C:\\Users\\albert\\.s
+usan\\models\\blobs\\sha256-04452cdb72669c66f3adc55da70d94a6b9810a4f3f6050ef2db52433c2ca4425: Access is denied."
+time=2026-09-30T00:38:32.904+08:00 level=INFO source=images.go:930 msg="total unused blobs removed: 7"
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] HEAD   /                         --> github.com/ollama/ollama/server.(*Server).GenerateRoutes.func1 (5 handlers)
+[GIN-debug] GET    /                         --> github.com/ollama/ollama/server.(*Server).GenerateRoutes.func2 (5 handlers)
+[GIN-debug] HEAD   /api/version              --> github.com/ollama/ollama/server.(*Server).GenerateRoutes.func3 (5 handlers)
+[GIN-debug] GET    /api/version              --> github.com/ollama/ollama/server.(*Server).GenerateRoutes.func4 (5 handlers)
+[GIN-debug] GET    /api/status               --> github.com/ollama/ollama/server.(*Server).StatusHandler-fm (5 handlers)
+[GIN-debug] GET    /api/codex/*path          --> github.com/ollama/ollama/server.(*Server).GenerateRoutes.WrapH.func6 (5 handlers)
+[GIN-debug] POST   /api/codex/*path          --> github.com/ollama/ollama/server.(*Server).GenerateRoutes.WrapH.func6 (5 handlers)
+[GIN-debug] PUT    /api/codex/*path          --> github.com/ollama/ollama/server.(*Server).GenerateRoutes.WrapH.func6 (5 handlers)
+[GIN-debug] PATCH  /api/codex/*path          --> github.com/ollama/ollama/server.(*Server).GenerateRoutes.WrapH.func6 (5 handlers)
+[GIN-debug] HEAD   /api/codex/*path          --> github.com/ollama/ollama/server.(*Server).GenerateRoutes.WrapH.func6 (5 handlers)
+[GIN-debug] OPTIONS /api/codex/*path          --> github.com/ollama/ollama/server.(*Server).GenerateRoutes.WrapH.func6 (5 handlers)
+[GIN-debug] DELETE /api/codex/*path          --> github.com/ollama/ollama/server.(*Server).GenerateRoutes.WrapH.func6 (5 handlers)
+[GIN-debug] CONNECT /api/codex/*path          --> github.com/ollama/ollama/server.(*Server).GenerateRoutes.WrapH.func6 (5 handlers)
+[GIN-debug] TRACE  /api/codex/*path          --> github.com/ollama/ollama/server.(*Server).GenerateRoutes.WrapH.func6 (5 handlers)
+[GIN-debug] POST   /api/pull                 --> github.com/ollama/ollama/server.(*Server).PullHandler-fm (5 handlers)
+[GIN-debug] POST   /api/push                 --> github.com/ollama/ollama/server.(*Server).PushHandler-fm (5 handlers)
+[GIN-debug] HEAD   /api/tags                 --> github.com/ollama/ollama/server.(*Server).ListHandler-fm (5 handlers)
+[GIN-debug] GET    /api/tags                 --> github.com/ollama/ollama/server.(*Server).ListHandler-fm (5 handlers)
+[GIN-debug] POST   /api/show                 --> github.com/ollama/ollama/server.(*Server).ShowHandler-fm (5 handlers)
+[GIN-debug] DELETE /api/delete               --> github.com/ollama/ollama/server.(*Server).DeleteHandler-fm (5 handlers)
+[GIN-debug] POST   /api/me                   --> github.com/ollama/ollama/server.(*Server).WhoamiHandler-fm (5 handlers)
+[GIN-debug] POST   /api/signout              --> github.com/ollama/ollama/server.(*Server).SignoutHandler-fm (5 handlers)
+[GIN-debug] DELETE /api/user/keys/:encodedKey --> github.com/ollama/ollama/server.(*Server).SignoutHandler-fm (5 handlers)
+[GIN-debug] POST   /api/signin/device        --> github.com/ollama/ollama/server.(*Server).StartSigninDeviceHandler-fm (5 handlers)
+[GIN-debug] GET    /api/signin/device        --> github.com/ollama/ollama/server.(*Server).SigninDeviceStatusHandler-fm (5 handlers)
+[GIN-debug] POST   /api/create               --> github.com/ollama/ollama/server.(*Server).CreateHandler-fm (5 handlers)
+[GIN-debug] POST   /api/blobs/:digest        --> github.com/ollama/ollama/server.(*Server).CreateBlobHandler-fm (5 handlers)
+[GIN-debug] HEAD   /api/blobs/:digest        --> github.com/ollama/ollama/server.(*Server).HeadBlobHandler-fm (5 handlers)
+[GIN-debug] POST   /api/copy                 --> github.com/ollama/ollama/server.(*Server).CopyHandler-fm (5 handlers)
+[GIN-debug] POST   /api/experimental/web_search --> github.com/ollama/ollama/server.(*Server).WebSearchExperimentalHandler-fm (5 handlers)
+[GIN-debug] POST   /api/experimental/web_fetch --> github.com/ollama/ollama/server.(*Server).WebFetchExperimentalHandler-fm (5 handlers)
+[GIN-debug] GET    /api/experimental/model-recommendations --> github.com/ollama/ollama/server.(*Server).ModelRecommendationsExperimentalHandler-fm (5 handlers)
+[GIN-debug] GET    /api/ps                   --> github.com/ollama/ollama/server.(*Server).PsHandler-fm (5 handlers)
+[GIN-debug] POST   /api/generate             --> github.com/ollama/ollama/server.(*Server).GenerateHandler-fm (5 handlers)
+[GIN-debug] POST   /api/chat                 --> github.com/ollama/ollama/server.(*Server).ChatHandler-fm (5 handlers)
+[GIN-debug] POST   /api/embed                --> github.com/ollama/ollama/server.(*Server).EmbedHandler-fm (5 handlers)
+[GIN-debug] POST   /api/embeddings           --> github.com/ollama/ollama/server.(*Server).EmbeddingsHandler-fm (5 handlers)
+[GIN-debug] POST   /v1/chat/completions      --> github.com/ollama/ollama/server.(*Server).ChatHandler-fm (7 handlers)
+[GIN-debug] POST   /v1/completions           --> github.com/ollama/ollama/server.(*Server).GenerateHandler-fm (7 handlers)
+[GIN-debug] POST   /v1/embeddings            --> github.com/ollama/ollama/server.(*Server).EmbedHandler-fm (7 handlers)
+[GIN-debug] GET    /v1/models                --> github.com/ollama/ollama/server.(*Server).ListHandler-fm (6 handlers)
+[GIN-debug] GET    /v1/models/:model         --> github.com/ollama/ollama/server.(*Server).ShowHandler-fm (7 handlers)
+[GIN-debug] POST   /v1/responses             --> github.com/ollama/ollama/server.(*Server).ChatHandler-fm (8 handlers)
+[GIN-debug] POST   /v1/responses/compact     --> github.com/ollama/ollama/server.(*Server).ResponsesCompactHandler-fm (5 handlers)
+[GIN-debug] POST   /v1/audio/transcriptions  --> github.com/ollama/ollama/server.(*Server).ChatHandler-fm (6 handlers)
+[GIN-debug] POST   /v1/messages              --> github.com/ollama/ollama/server.(*Server).ChatHandler-fm (7 handlers)
+time=2026-09-30T00:38:32.908+08:00 level=INFO source=routes.go:2077 msg="Listening on 127.0.0.1:14343 (version 0.0.0)"
+time=2026-09-30T00:38:32.909+08:00 level=INFO source=model_recommendations.go:177 msg="model recommendations cache slee
+p scheduled" wait=3h52m20.219125682s consecutive_failures=0
+time=2026-09-30T00:38:33.011+08:00 level=INFO source=runner.go:60 msg="discovering available GPUs..."
+time=2026-09-30T00:38:34.301+08:00 level=INFO source=types.go:50 msg="inference compute" id=cpu library=cpu compute="" 
+name=cpu description=cpu libdirs=ollama driver="" pci_id="" type="" total="15.9 GiB" available="4.7 GiB"
+time=2026-09-30T00:38:34.301+08:00 level=INFO source=routes.go:2127 msg="vram-based default context" total_vram="0 B" d
+efault_num_ctx=4096
+[GIN] 2026/09/30 - 00:38:52 | 404 |            0s |       127.0.0.1 | GET      "/health"
+[GIN] 2026/09/30 - 00:38:52 | 200 |            0s |       127.0.0.1 | GET      "/api/version"
+[GIN] 2026/09/30 - 00:38:52 | 400 |            0s |       127.0.0.1 | POST     "/api/signin/device"
+[GIN] 2026/09/30 - 00:40:08 | 200 |            0s |       127.0.0.1 | GET      "/"
+[GIN] 2026/09/30 - 00:40:08 | 200 |        93.8µs |       127.0.0.1 | GET      "/api/signin/device"
+time=2026-09-30T00:40:08.196+08:00 level=WARN source=images.go:800 msg="model is missing tokenizer.chat_template and Go
+ TEMPLATE support is unavailable; chat responses may be poorly formatted" model=registry.ollama.ai/library/fuzz-create-
+gguf:latest env="SUSAN_GO_TEMPLATE=1"
+[GIN] 2026/09/30 - 00:40:08 | 200 |    199.0528ms |       127.0.0.1 | GET      "/api/tags"
+[GIN] 2026/09/30 - 00:40:30 | 400 |            0s |       127.0.0.1 | POST     "/api/signin/device"
+[GIN] 2026/09/30 - 00:40:42 | 400 |            0s |       127.0.0.1 | POST     "/api/signin/device"

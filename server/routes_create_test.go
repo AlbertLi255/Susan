@@ -26,6 +26,7 @@ import (
 
 	"github.com/ollama/ollama/api"
 	"github.com/ollama/ollama/create"
+	"github.com/ollama/ollama/envconfig"
 	"github.com/ollama/ollama/fs/gguf"
 	st "github.com/ollama/ollama/fs/safetensors"
 	gguftest "github.com/ollama/ollama/internal/testutil/gguf"
@@ -1483,6 +1484,13 @@ func TestCreateRemoteModelRejectsDraftFiles(t *testing.T) {
 
 func TestCreateFromCloudSourceSuffix(t *testing.T) {
 	gin.SetMode(gin.TestMode)
+
+	// Isolate from a developer machine: a real ~/.susan/server.json may
+	// disable cloud, and SUSAN_CLOUD_HOST may retarget the :cloud source.
+	setTestHome(t, t.TempDir())
+	t.Cleanup(envconfig.ReloadServerConfig)
+	t.Setenv("SUSAN_CLOUD_HOST", "")
+	envconfig.ReloadServerConfig()
 
 	var s Server
 

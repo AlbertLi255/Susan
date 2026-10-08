@@ -1,0 +1,9 @@
+﻿ok  	github.com/ollama/ollama/llm	3.243s
+ok  	github.com/ollama/ollama/parser	0.853s
+ok  	github.com/ollama/ollama/middleware	0.268s
+--- FAIL: TestIsSafetensorsLLMModel (0.04s)
+    --- FAIL: TestIsSafetensorsLLMModel/registry.example.com:5000/team/completion:tag (0.00s)
+        create_test.go:285: mkdir C:\Users\albert\AppData\Local\Temp\TestIsSafetensorsLLMModel2319649267\001\manifests\registry.example.com:5000: The directory name is invalid.
+FAIL
+FAIL	github.com/ollama/ollama/create	1.327s
+FAIL

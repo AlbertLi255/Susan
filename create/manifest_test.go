@@ -16,7 +16,7 @@ import (
 )
 
 func TestApplyModelfileLayersIncludesParameters(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	layers, err := ApplyModelfileLayers(nil, ModelfileLayerOptions{
 		Parameters: map[string]any{
@@ -54,7 +54,7 @@ func TestApplyModelfileLayersIncludesParameters(t *testing.T) {
 }
 
 func TestApplyModelfileLayersOverlaysInheritedValues(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	layers, err := ApplyModelfileLayers(nil, ModelfileLayerOptions{
 		Template: "{{ .Prompt }}",
@@ -154,7 +154,7 @@ func TestApplyModelfileLayersOverlaysInheritedValues(t *testing.T) {
 }
 
 func TestApplyModelfileLayersRejectsInvalidTemplate(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	if _, err := ApplyModelfileLayers(nil, ModelfileLayerOptions{Template: "{{ if .Prompt }}"}); !errors.Is(err, ErrBadTemplate) {
 		t.Fatalf("ApplyModelfileLayers() error = %v, want ErrBadTemplate", err)
@@ -162,7 +162,7 @@ func TestApplyModelfileLayersRejectsInvalidTemplate(t *testing.T) {
 }
 
 func TestNewSafetensorsManifestWriterPreservesBaseConfig(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	base := model.ConfigV2{
 		ModelFormat:   "safetensors",
@@ -198,7 +198,7 @@ func TestNewSafetensorsManifestWriterPreservesBaseConfig(t *testing.T) {
 }
 
 func TestNewSafetensorsManifestWriterDefaultsMinimumVersion(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	writeManifest := NewSafetensorsManifestWriter(SafetensorsManifestOptions{MinVersion: "0.19.0"})
 	if err := writeManifest(context.Background(), "test-min-version", ManifestInfo{}); err != nil {
@@ -211,7 +211,7 @@ func TestNewSafetensorsManifestWriterDefaultsMinimumVersion(t *testing.T) {
 }
 
 func TestNewSafetensorsManifestWriterPreservesExplicitVersion(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	writeManifest := NewSafetensorsManifestWriter(SafetensorsManifestOptions{
 		MinVersion: "0.19.0",
@@ -226,7 +226,7 @@ func TestNewSafetensorsManifestWriterPreservesExplicitVersion(t *testing.T) {
 }
 
 func TestNewSafetensorsManifestWriterDoesNotPublishAfterCancellation(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	ctx, cancel := context.WithCancel(context.Background())
 	writeManifest := NewSafetensorsManifestWriter(SafetensorsManifestOptions{

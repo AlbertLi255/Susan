@@ -47,7 +47,7 @@ func TestRunThinkingNamesReachServer(t *testing.T) {
 				}
 			}))
 			defer server.Close()
-			t.Setenv("OLLAMA_HOST", server.URL)
+			t.Setenv("SUSAN_HOST", server.URL)
 			cmd := &cobra.Command{}
 			cmd.SetContext(t.Context())
 			for _, name := range []string{"format", "think", "keepalive"} {
@@ -1684,7 +1684,7 @@ func TestCreateHandlerRejectsForceForGGUF(t *testing.T) {
 }
 
 func TestSharedBlobStore(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 	blobs, err := manifest.BlobsPath("")
 	if err != nil {
 		t.Fatal(err)
@@ -1724,7 +1724,7 @@ func TestSharedBlobStore(t *testing.T) {
 	defer separate.Close()
 
 	t.Run("shared store", func(t *testing.T) {
-		t.Setenv("OLLAMA_HOST", shared.URL)
+		t.Setenv("SUSAN_HOST", shared.URL)
 		client, err := api.ClientFromEnvironment()
 		if err != nil {
 			t.Fatal(err)
@@ -1736,7 +1736,7 @@ func TestSharedBlobStore(t *testing.T) {
 	})
 
 	t.Run("separate store", func(t *testing.T) {
-		t.Setenv("OLLAMA_HOST", separate.URL)
+		t.Setenv("SUSAN_HOST", separate.URL)
 		client, err := api.ClientFromEnvironment()
 		if err != nil {
 			t.Fatal(err)
@@ -1747,9 +1747,9 @@ func TestSharedBlobStore(t *testing.T) {
 		assertNoBlobs(t)
 	})
 
-	t.Run("OLLAMA_CREATE_REMOTE forces upload", func(t *testing.T) {
-		t.Setenv("OLLAMA_HOST", shared.URL)
-		t.Setenv("OLLAMA_CREATE_REMOTE", "1")
+	t.Run("SUSAN_CREATE_REMOTE forces upload", func(t *testing.T) {
+		t.Setenv("SUSAN_HOST", shared.URL)
+		t.Setenv("SUSAN_CREATE_REMOTE", "1")
 		client, err := api.ClientFromEnvironment()
 		if err != nil {
 			t.Fatal(err)
@@ -1790,7 +1790,7 @@ func (s *blobServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func TestCreateBlob(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 	src := filepath.Join(t.TempDir(), "model.gguf")
 	data := []byte("blob contents")
 	if err := os.WriteFile(src, data, 0o644); err != nil {
@@ -1806,7 +1806,7 @@ func TestCreateBlob(t *testing.T) {
 		}
 		server := httptest.NewServer(bs)
 		t.Cleanup(server.Close)
-		t.Setenv("OLLAMA_HOST", server.URL)
+		t.Setenv("SUSAN_HOST", server.URL)
 		client, err := api.ClientFromEnvironment()
 		if err != nil {
 			t.Fatal(err)
@@ -1888,7 +1888,7 @@ func TestCreateHandlerRejectsAdaptersBeforeUpload(t *testing.T) {
 }
 
 func TestCreateHandlerRejectsTypicalPBeforeUpload(t *testing.T) {
-	t.Setenv("OLLAMA_HOST", "127.0.0.1:0")
+	t.Setenv("SUSAN_HOST", "127.0.0.1:0")
 	dir := t.TempDir()
 	modelfile := filepath.Join(dir, "Modelfile")
 	if err := os.WriteFile(modelfile, []byte("FROM base\nPARAMETER typical_p 0.5\n"), 0o644); err != nil {
@@ -1908,7 +1908,7 @@ func TestCreateHandlerRejectsTypicalPBeforeUpload(t *testing.T) {
 }
 
 func TestCreateHandlerRejectsForceForRemoteSafetensors(t *testing.T) {
-	t.Setenv("OLLAMA_CREATE_REMOTE", "1")
+	t.Setenv("SUSAN_CREATE_REMOTE", "1")
 	dir := t.TempDir()
 	modelDir := filepath.Join(dir, "model")
 	if err := os.Mkdir(modelDir, 0o755); err != nil {

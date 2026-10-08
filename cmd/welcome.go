@@ -59,7 +59,7 @@ func checkWelcomeAccount(ctx context.Context) tui.WelcomeAccount {
 	if user != nil && strings.TrimSpace(user.Name) != "" {
 		return tui.WelcomeAccount{SignedIn: true}
 	}
-	return tui.WelcomeAccount{Err: fmt.Errorf("could not verify the Ollama account")}
+	return tui.WelcomeAccount{Err: fmt.Errorf("could not verify the Susan account")}
 }
 
 func ensureWelcome(show func() error) error {

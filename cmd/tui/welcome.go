@@ -151,7 +151,7 @@ func (m welcomeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			u.RawQuery = query.Encode()
 			signInURL = u.String()
 			m.step = welcomeSignIn
-			m.signIn = signInModel{modelName: "Ollama Cloud", signInURL: signInURL, width: m.width}
+			m.signIn = signInModel{modelName: "Susan Cloud", signInURL: signInURL, width: m.width}
 			return m, tea.Batch(
 				func() tea.Msg { m.options.OpenBrowser(signInURL); return nil },
 				m.signIn.Init(),

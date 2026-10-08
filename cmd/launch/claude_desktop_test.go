@@ -1055,6 +1055,7 @@ func TestClaudeDesktopRestoreSwitchesBackToFirstPartyMode(t *testing.T) {
 func TestClaudeDesktopRestoreRemainsAvailableOnWindows(t *testing.T) {
 	localAppData := t.TempDir()
 	t.Setenv("LOCALAPPDATA", localAppData)
+	setLaunchTestHome(t, t.TempDir()) // backups live under ~/.susan; keep them out of the real home
 	withClaudeDesktopPlatform(t, "windows")
 	withClaudeDesktopProcessHooks(t, func() bool { return false }, func() error { return nil }, func() error { return nil })
 

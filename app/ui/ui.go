@@ -43,8 +43,11 @@ import (
 
 var CORS = envconfig.Bool("SUSAN_CORS")
 
-// OllamaDotCom returns the URL for ollama.com, allowing override via environment variable
-var OllamaDotCom = func() string {
+// SusanDotCom returns the base URL for Susan's web/registry endpoint.
+// It still resolves to https://ollama.com today (the registry MVP is
+// served there until the Susan platform domain goes live) and can be
+// overridden with SUSAN_DOT_COM_URL.
+var SusanDotCom = func() string {
 	if url := os.Getenv("SUSAN_DOT_COM_URL"); url != "" {
 		return url
 	}
@@ -478,7 +481,7 @@ func (s *Server) UserData(ctx context.Context) (*api.UserResponse, error) {
 	}
 
 	if user.AvatarURL != "" {
-		user.AvatarURL = fmt.Sprintf("%s/%s", OllamaDotCom, user.AvatarURL)
+		user.AvatarURL = fmt.Sprintf("%s/%s", SusanDotCom, user.AvatarURL)
 	}
 
 	storeUser := store.User{
@@ -560,7 +563,7 @@ func (s *Server) checkModelUpstream(ctx context.Context, modelName string, timeo
 	// use envconfig.CloudHost(). ollama.com serves the registry at /v2 today;
 	// a dedicated SUSAN_REGISTRY_HOST is deferred until the Susan registry
 	// (registry.susan.com) is ready.
-	url := OllamaDotCom + "/v2/" + name + "/manifests/" + tag
+	url := SusanDotCom + "/v2/" + name + "/manifests/" + tag
 	req, err := http.NewRequestWithContext(checkCtx, "HEAD", url, nil)
 	if err != nil {
 		return "", 0, err

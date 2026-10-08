@@ -35,9 +35,9 @@ const (
 	codexAppModelCatalogFilename   = proxy.CodexDesktopModelCatalogFilename
 	codexAppRoutingCatalogFilename = proxy.CodexDesktopRoutingCatalogFilename
 	codexAppAutoReviewModelEnv     = "SUSAN_CODEX_AUTO_REVIEW_MODEL"
-	codexAppSusanProfileDirName   = "chatgpt-ollama"
-	codexAppSusanUserDataName     = "electron-data"
-	codexAppSusanPIDFilename      = "chatgpt.pid"
+	codexAppSusanProfileDirName    = "chatgpt-ollama"
+	codexAppSusanUserDataName      = "electron-data"
+	codexAppSusanPIDFilename       = "chatgpt.pid"
 	codexAppSingletonLockName      = "SingletonLock"
 	codexAppSingletonSocketName    = "SingletonSocket"
 	codexAppSingletonCookieName    = "SingletonCookie"

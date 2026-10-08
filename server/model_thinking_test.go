@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/ollama/ollama/api"
+	"github.com/ollama/ollama/envconfig"
 	"github.com/ollama/ollama/llm"
 	"github.com/ollama/ollama/middleware"
 	"github.com/ollama/ollama/template"
@@ -20,8 +21,8 @@ import (
 func TestThinkingInputErrors(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	setTestHome(t, t.TempDir())
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
-	t.Setenv("OLLAMA_NO_CLOUD", "")
+	t.Setenv("SUSAN_MODELS", t.TempDir())
+	t.Setenv("SUSAN_NO_CLOUD", "")
 	s := &Server{modelCaches: &modelCaches{show: newModelShowCache()}}
 	createMinimalGGUFModel(t, s, "thinking-base", nil, "{{ .Prompt }}", nil)
 	createMinimalGGUFModel(t, s, "thinking-harmony", nil, "<|start|>{{ .Prompt }}<|end|>", map[string]any{"model_family": "gptoss", "capabilities": []any{"completion", "thinking"}})
@@ -92,7 +93,9 @@ func TestThinkingInputErrors(t *testing.T) {
 }
 
 func TestModelThinking(t *testing.T) {
-	t.Setenv("OLLAMA_GO_TEMPLATE", "1")
+	t.Setenv("SUSAN_GO_TEMPLATE", "1")
+	envconfig.ReloadServerConfig()
+	t.Cleanup(envconfig.ReloadServerConfig)
 	known := "sha256:ae370d884f108d16e7cc8fd5259ebc5773a0afa6e078b11f4ed7e39a27e0dfc4"
 	for _, tt := range []struct {
 		name string
@@ -118,7 +121,9 @@ func TestModelThinking(t *testing.T) {
 		})
 	}
 	t.Run("backfill stays off the Jinja path", func(t *testing.T) {
-		t.Setenv("OLLAMA_GO_TEMPLATE", "0")
+		t.Setenv("SUSAN_GO_TEMPLATE", "0")
+		envconfig.ReloadServerConfig()
+		t.Cleanup(envconfig.ReloadServerConfig)
 		m := &Model{HasGoTemplate: true, templateDigest: known}
 		if m.Thinking() != nil {
 			t.Fatal("inactive Go template must not supply backfill")
@@ -142,7 +147,7 @@ func TestModelThinking(t *testing.T) {
 
 func TestThinkingShowFollowsRendererChanges(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 	var s Server
 	createMinimalGGUFModel(t, &s, "thinking-base", nil, "{{ .Prompt }}", nil)
 	for _, tt := range []struct {
@@ -187,8 +192,8 @@ func TestThinkingShowFollowsRendererChanges(t *testing.T) {
 
 func TestThinkingResolvedBeforeRenderAndParse(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
-	t.Setenv("OLLAMA_CONTEXT_LENGTH", "4096")
+	t.Setenv("SUSAN_MODELS", t.TempDir())
+	t.Setenv("SUSAN_CONTEXT_LENGTH", "4096")
 	mock := mockRunner{CompletionResponse: llm.CompletionResponse{Content: "reason</think>answer", Done: true, DoneReason: llm.DoneReasonStop}}
 	s := newServerWithMockRunner(t, &mock)
 	createMinimalGGUFModel(t, s, "thinking-base", nil, "{{ .Prompt }}", nil)
@@ -243,8 +248,8 @@ func TestThinkingResolvedBeforeRenderAndParse(t *testing.T) {
 
 func TestThinkingNonthinkingFallback(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
-	t.Setenv("OLLAMA_CONTEXT_LENGTH", "4096")
+	t.Setenv("SUSAN_MODELS", t.TempDir())
+	t.Setenv("SUSAN_CONTEXT_LENGTH", "4096")
 	mock := mockRunner{CompletionResponse: llm.CompletionResponse{Content: "answer", Done: true, DoneReason: llm.DoneReasonStop}}
 	s := newServerWithMockRunner(t, &mock)
 	createMinimalGGUFModel(t, s, "thinking-base", nil, "{{ .Prompt }}", nil)
@@ -290,7 +295,7 @@ func TestThinkingNonthinkingFallback(t *testing.T) {
 
 func TestThinkingLookupModelReferences(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 	s := &Server{}
 	createMinimalGGUFModel(t, s, "thinking-base", nil, "{{ .Prompt }}", nil)
 	createMinimalGGUFModel(t, s, "thinking-harmony", nil, "<|start|>{{ .Prompt }}<|end|>", map[string]any{"model_family": "gptoss", "capabilities": []any{"completion", "thinking"}})
@@ -342,8 +347,8 @@ func TestThinkingLookupModelReferences(t *testing.T) {
 
 func TestThinkingHarmonyDiscoveryPreservesInference(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
-	t.Setenv("OLLAMA_CONTEXT_LENGTH", "4096")
+	t.Setenv("SUSAN_MODELS", t.TempDir())
+	t.Setenv("SUSAN_CONTEXT_LENGTH", "4096")
 	mock := mockRunner{CompletionResponse: llm.CompletionResponse{Done: true, DoneReason: llm.DoneReasonStop}}
 	s := newServerWithMockRunner(t, &mock)
 	createMinimalGGUFModel(t, s, "thinking-harmony", nil, "<|start|><|end|>Reasoning: {{ .ThinkLevel }} {{ .Prompt }}", map[string]any{"model_family": "gptoss", "capabilities": []any{"completion", "thinking"}})

@@ -108,7 +108,7 @@ var (
 	claudeCloudModelsEndpoint = func() string {
 		return strings.TrimRight(appui.SusanDotCom, "/") + "/api/tags"
 	}
-	signSusanData            = ollamaAuth.Sign
+	signSusanData             = ollamaAuth.Sign
 	claudeModelsLoader        = loadClaudeDesktopModels
 	claudeCloudModelsResolver = currentClaudeDesktopCloudModels
 	claudeAvailableModels     []proxy.ClaudeDesktopModel

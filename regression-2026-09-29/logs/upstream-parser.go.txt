@@ -1,4 +1,4 @@
-package parser
+﻿package parser
 
 import (
 	"bufio"
@@ -70,12 +70,6 @@ func (f Modelfile) CreateRequest(relativeDir string) (*api.CreateRequest, error)
 			if err != nil {
 				return nil, err
 			}
-			// A glob that matched nothing (or, on Windows, a pattern whose
-			// stat returns ERROR_INVALID_NAME) is treated as a model name.
-			if len(paths) == 0 {
-				req.From = c.Args
-				continue
-			}
 
 			digestMap, err := fileDigestMapForPaths(paths)
 			if errors.Is(err, os.ErrNotExist) {
@@ -99,9 +93,6 @@ func (f Modelfile) CreateRequest(relativeDir string) (*api.CreateRequest, error)
 			paths, err := expandPaths(c.Args, relativeDir)
 			if err != nil {
 				return nil, err
-			}
-			if len(paths) == 0 {
-				return nil, fmt.Errorf("DRAFT pattern matched no files: %s", c.Args)
 			}
 
 			digestMap, err := fileDigestMapForPaths(paths)
@@ -190,14 +181,6 @@ func (f Modelfile) CreateRequest(relativeDir string) (*api.CreateRequest, error)
 	return req, nil
 }
 
-// hasGlobMeta reports whether path contains unescaped glob metacharacters.
-// On Windows such characters are illegal in file names, and stat-ing an
-// unmatched pattern returns ERROR_INVALID_NAME instead of ENOENT, so callers
-// need to distinguish "glob matched nothing" from "plain file is missing".
-func hasGlobMeta(path string) bool {
-	return strings.ContainsAny(path, `*?[`)
-}
-
 func expandPaths(path, relativeDir string) ([]string, error) {
 	path, err := expandPath(path, relativeDir)
 	if err != nil {
@@ -209,9 +192,6 @@ func expandPaths(path, relativeDir string) ([]string, error) {
 		return nil, err
 	}
 	if len(matches) == 0 {
-		if hasGlobMeta(path) {
-			return nil, nil
-		}
 		return []string{path}, nil
 	}
 	return matches, nil

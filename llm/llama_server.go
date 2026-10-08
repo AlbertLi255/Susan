@@ -1669,6 +1669,7 @@ func (s *llamaServerRunner) Completion(ctx context.Context, req CompletionReques
 		TypicalP:        req.Options.TypicalP,
 		Seed:            req.Options.Seed,
 		PreservedTokens: llamaServerPreservedTokens(req.PreservedTokens, req.ToolCallTag),
+		TimingsPerToken: req.IncludeIntermediateMetrics,
 	}
 
 	if req.Logprobs {
@@ -1809,10 +1810,18 @@ func (s *llamaServerRunner) Completion(ctx context.Context, req CompletionReques
 			}
 
 			if lsResp.Content != "" && !lsResp.Stop {
-				fn(CompletionResponse{
+				resp := CompletionResponse{
 					Content:  lsResp.Content,
 					Logprobs: convertLogprobs(lsResp.CompletionProbabilities, req.TopLogprobs > 0),
-				})
+				}
+				if req.IncludeIntermediateMetrics {
+					resp.PromptEvalCount = lsResp.Timings.promptEvalCount()
+					resp.PromptEvalCachedCount = lsResp.Timings.CacheN
+					resp.PromptEvalDuration = time.Duration(lsResp.Timings.PromptMS * float64(time.Millisecond))
+					resp.EvalCount = lsResp.Timings.PredictN
+					resp.EvalDuration = time.Duration(lsResp.Timings.PredictMS * float64(time.Millisecond))
+				}
+				fn(resp)
 			}
 
 			if lsResp.Stop {

@@ -18,6 +18,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/ollama/ollama/api"
+	"github.com/ollama/ollama/envconfig"
 	"github.com/ollama/ollama/fs/gguf"
 	gguftest "github.com/ollama/ollama/internal/testutil/gguf"
 	"github.com/ollama/ollama/llm"
@@ -697,6 +698,11 @@ func TestGenerateHandlerChatTemplateRoute(t *testing.T) {
 
 func TestGenerateChatRemote(t *testing.T) {
 	gin.SetMode(gin.TestMode)
+
+	// The remote inference path 403s when cloud is disabled; keep the test
+	// independent of the developer machine's ~/.susan/server.json.
+	setTestHome(t, t.TempDir())
+	t.Cleanup(envconfig.ReloadServerConfig)
 
 	rs := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {

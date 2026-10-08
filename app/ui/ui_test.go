@@ -191,7 +191,7 @@ func TestGetIntegrationStatuses(t *testing.T) {
 		t.Fatalf("got %d integrations, want %d launcher entries", len(got), wantCount)
 	}
 	terminal := got[len(got)-1]
-	if terminal.ID != "terminal" || terminal.Installed != nil || terminal.Command != "ollama" {
+	if terminal.ID != "terminal" || terminal.Installed != nil || terminal.Command != "susan" {
 		t.Fatalf("last integration = %+v, want Terminal without install status", terminal)
 	}
 }
@@ -479,8 +479,8 @@ func TestUserAgent(t *testing.T) {
 	ua := userAgent()
 
 	// The userAgent function should return a string in the format:
-	// "ollama/version (arch os) app/version Go/goversion"
-	// Example: "ollama/v0.1.28 (amd64 darwin) Go/go1.21.0"
+	// "susan/version (arch os) app/version Go/goversion"
+	// Example: "susan/v0.1.28 (amd64 darwin) Go/go1.21.0"
 
 	if ua == "" {
 		t.Fatal("userAgent returned empty string")
@@ -489,7 +489,7 @@ func TestUserAgent(t *testing.T) {
 	req := httptest.NewRequest("GET", "/", nil)
 	req.Header.Set("User-Agent", ua)
 
-	// This is a copy of the logic ollama.com uses to parse the user agent
+	// This is a copy of the logic susan.com uses to parse the user agent
 	clientInfoFromRequest := func(r *http.Request) struct {
 		Product    string
 		Version    string
@@ -544,8 +544,8 @@ func TestUserAgent(t *testing.T) {
 	}
 
 	info := clientInfoFromRequest(req)
-	if info.Product != "ollama" {
-		t.Errorf("Expected Product to be 'ollama', got '%s'", info.Product)
+	if info.Product != "susan" {
+		t.Errorf("Expected Product to be 'susan', got '%s'", info.Product)
 	}
 
 	if info.Version != "" && info.Version[0] != 'v' {
@@ -599,8 +599,8 @@ func TestUserAgentTransport(t *testing.T) {
 		t.Errorf("User-Agent mismatch\nExpected: %s\nReceived: %s", expectedUA, receivedUA)
 	}
 
-	if !strings.HasPrefix(receivedUA, "ollama/") {
-		t.Errorf("User-Agent should start with 'ollama/', got: %s", receivedUA)
+	if !strings.HasPrefix(receivedUA, "susan/") {
+		t.Errorf("User-Agent should start with 'susan/', got: %s", receivedUA)
 	}
 
 	t.Logf("User-Agent transport successfully set: %s", receivedUA)

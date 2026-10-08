@@ -8,6 +8,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"testing"
@@ -240,7 +241,7 @@ func TestLayerInfo(t *testing.T) {
 }
 
 func TestIsSafetensorsLLMModel(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	tests := []struct {
 		name   string
@@ -280,6 +281,12 @@ func TestIsSafetensorsLLMModel(t *testing.T) {
 			name := model.ParseName(tt.name)
 			if !name.IsValid() {
 				t.Fatalf("invalid test model name %q", tt.name)
+			}
+			// NTFS forbids ":" in directory names, so a registry host:port
+			// cannot be materialized under manifests/ on Windows; the case
+			// stays covered on POSIX platforms.
+			if runtime.GOOS == "windows" && strings.ContainsRune(name.Host, ':') {
+				t.Skip("host:port registries cannot be represented as manifest directories on Windows")
 			}
 			if err := manifest.WriteManifest(name, configLayer, nil); err != nil {
 				t.Fatal(err)
