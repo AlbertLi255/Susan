@@ -1,0 +1,391 @@
+Susan 合入上游后的功能验收
+日期：2026-10-09
+分支：feature/sync-ollama-upstream
+对照提交：62a6b7eb（昨晚要测的那棵树的运行行为）
+代码仓：AlbertLi255/Susan
+平台仓：susan-platform（只在联调时用，本次不改平台代码）
+
+================================================================================
+0. 这份文档测什么
+================================================================================
+
+测两件事：
+
+1. 合进最新 Ollama 之后，Susan 已经有的能力还在不在。
+2. 产品文档里已经落地的 API，以及 Desktop / CLI 和这些 API 一起用的那条链。
+
+本次通过，指的是：下面「必测」项按步骤打过，结果填进文末记录表。
+不修失败的单测，不改产品代码，不把未实现的接口算失败。
+
+================================================================================
+1. 明确不测
+================================================================================
+
+1.1 Agent / Skills / Chat TUI
+    源码在工作区里（agent/、cmd/agent_tui.go、cmd/tui/chat/、cmd/internal/filedata/），
+    菜单和 `susan run` 都不调用它们。
+    本次不要打开 Agent 界面，不要把「没有 Agent」记成功能丢失。
+    以后要用时，再在 cmd/cmd.go 的 launchInteractiveModel 里接上。
+
+1.2 文档里还没落地的接口
+    不测，只在记录表写「未落地 / 跳过」：
+    - /api/health（代码里是 /api/status）
+    - /api/abort
+    - /api/manifests
+    - Cloud 推理、计费、API Key、配额、admin.susan.com
+    - Web Chat（批次 6）
+    - 官网 Hub 写操作
+
+1.3 不做的事
+    - 不修 9 月 29 日回归里那些红灯单测
+    - 不跑完整 go test ./...
+    - 不测 macOS
+    - 不做 CMake 安装包（本次用 go build 出的 susan.exe / 现有 Desktop 包）
+
+================================================================================
+2. 环境
+================================================================================
+
+本机：
+  - Windows
+  - 本仓库当前工作区
+  - 默认地址：http://127.0.0.1:14343
+  - 不要设置 SUSAN_HOST 去改端口，除非某条用例明确要求
+  - 数据目录应是 Susan 自己的目录（Windows：%LOCALAPPDATA%\Susan，模型：%USERPROFILE%\.susan）
+    不应写到默认的 .ollama
+
+联调平台（只有测登录链时才需要）：
+  - susan-platform API：http://localhost:8000
+  - Web：http://localhost:3000
+  - daemon 进程环境变量：SUSAN_CLOUD_HOST=http://localhost:8000
+  - 测试账号（产品计划里写的本地号）：susan_test@example.com / Test1234!
+  - 设完环境变量后，完全退出再启动 susan，避免旧进程还连着旧地址
+
+记录时每条写：
+  结果 = 通过 / 失败 / 跳过
+  证据 = 状态码、响应里的关键字段、或屏幕上看到的句子
+  备注 = 失败时的原文，不要改代码
+
+================================================================================
+3. 先打包再测
+================================================================================
+
+在仓库根目录：
+
+  go build -o dist/susan.exe .
+
+确认：
+
+  dist\susan.exe --version
+  dist\susan.exe --help
+
+通过标准：
+  - 编译成功
+  - 帮助和版本输出里用户能看到的名字是 Susan，不是 Ollama
+  - 二进制名是 susan.exe
+
+Desktop 若要测托盘和 Sign In：用现有的 dist\susan-app.exe。
+本次不要求重新打安装包。若 app 起不来，登录的 Desktop 项记「跳过」，
+CLI 和 HTTP 仍要测完。
+
+================================================================================
+4. 必测 A：Susan 有没有被合丢
+================================================================================
+
+A1 端口和品牌
+  1. 启动：dist\susan.exe serve
+  2. 浏览器或 curl 打开 http://127.0.0.1:14343/
+  通过：正文是 Susan is running
+  通过：监听的是 127.0.0.1:14343，不是 11434，也不是 0.0.0.0
+  失败：端口没起来、文案变成 Ollama、或默认绑到别的端口
+
+A2 数据目录
+  1. serve 起来之后看进程实际使用的目录
+  2. 看模型目录是不是 ~/.susan（Windows 用户目录下的 .susan）
+  通过：配置、日志、pid 在 Susan 目录
+  失败：新数据写进默认 .ollama
+
+A3 Cloud 和 Registry 分开
+  1. 给 daemon 设 SUSAN_CLOUD_HOST=http://localhost:8000（平台没开也可以，只看 pull 打到哪）
+  2. 重启 serve
+  3. 执行一次 dist\susan.exe pull <一个很小的已有模型名>
+  通过：下载仍走 registry（现在是 registry.ollama.ai），没有打到 SUSAN_CLOUD_HOST
+  失败：pull 的主机变成 localhost:8000 或 api.susan.com
+
+A4 保留命名空间
+  对本地 push 用一个保留名字，例如 susan/test 或 official/test
+  通过：HTTP 403，模型没有被当成可发布的名字接受
+  若本机没有可 push 的模型文件：这条记「跳过」，并写明原因
+  不要为了这条去改 push 逻辑
+
+A5 主功能烟雾
+  前提：本机至少有一个已 pull 的小模型。没有就先 pull，再继续。
+  1. dist\susan.exe list
+  2. curl http://127.0.0.1:14343/api/tags
+  3. 非交互跑一句：
+     dist\susan.exe run <模型名> "reply with ok"
+     或 POST /api/generate ，body 里 model + prompt，stream 可关
+  通过：list 和 /api/tags 能看到模型；生成返回有文字
+  这一条走的是普通对话，不是 Agent
+
+A6 本地登录 API 还在
+  与第 6 节是同一条链，这里先确认路由在：
+  POST /api/signin/device
+  GET  /api/signin/device
+  POST /api/me
+  POST /api/signout
+  未登录时 POST /api/me 应是 401，并带 signin_url
+  通过：这四个路径有响应，不是 404
+
+================================================================================
+5. 必测 B：本仓已经注册的 API
+================================================================================
+
+基地址：http://127.0.0.1:14343
+下面每一条都要打一次。推理类用同一个小模型。
+没有模型、没有登录、没有平台时，按「预期」判断，不要把 401 当成路由丢失。
+
+5.1 存活
+
+  GET  /
+  HEAD /
+  预期：200，正文 Susan is running
+
+  GET  /api/version
+  HEAD /api/version
+  预期：200，JSON 里有 version
+
+  GET  /api/status
+  预期：200。这就是探活，不要改去打 /api/health
+
+5.2 模型管理
+
+  GET  /api/tags
+  HEAD /api/tags
+  预期：200，models 数组。空数组也算通过，只要不是 404
+
+  POST /api/show
+  body: {"model":"<已有模型>"}
+  预期：200，有模型信息
+  不存在的名字：非 200，且不是连接失败
+
+  POST /api/copy
+  body: {"source":"<已有模型>","destination":"<临时名字>"}
+  预期：成功后 /api/tags 里看得到新名字
+  测完：DELETE /api/delete ，body: {"model":"<临时名字>"}
+  预期：之后 tags 里没有这个临时名字
+
+  POST /api/pull
+  body: {"model":"<小模型>","stream":false}  或用 CLI pull
+  预期：进度或成功，主机不是 Cloud Host
+
+  POST /api/push
+  预期：保留名字 403（同 A4）。普通名字若没有 registry 写权限，记录实际状态码，
+        不要为了推成功去改账号
+
+  GET  /api/ps
+  预期：200。没有正在跑的模型时，列表为空也通过
+
+5.3 推理
+
+  POST /api/generate
+  body: {"model":"<模型>","prompt":"reply with ok","stream":false}
+  预期：200，response 里有文本
+
+  POST /api/chat
+  body: {"model":"<模型>","messages":[{"role":"user","content":"reply with ok"}],"stream":false}
+  预期：200，message.content 有文本
+
+  POST /api/embed
+  用 embedding 模型。没有 embedding 模型：记跳过
+  预期：200，有 embeddings
+
+  POST /api/embeddings
+  旧路径，和 /api/embed 并存。同样：有模型就打，没有就跳过
+  预期：不是 404
+
+  POST /api/create
+  本次只确认路由在。不要求做一次完整的模型创建。
+  空 body 或非法 body 得到 4xx，记「路由在」。
+  不要把它做成一次 GGUF 转换验收。
+
+5.4 OpenAI / Anthropic 兼容（本地引擎）
+
+  POST /v1/chat/completions
+  body 用 OpenAI 形状：model、messages
+  预期：本地模型能返回 choices；云模型在没有 Cloud 时允许返回「远程推理不可用」，
+        但不能是 404
+
+  POST /v1/completions
+  预期：同上，本地能生成；不要 404
+
+  POST /v1/embeddings
+  没有 embedding 模型：跳过
+  预期：不是 404
+
+  GET  /v1/models
+  预期：200，列表形状和 /api/tags 对得上
+
+  GET  /v1/models/<模型名>
+  名字里有斜杠要 URL 编码
+  预期：200 或明确的模型不存在；不是 404 路由缺失
+
+  POST /v1/responses
+  POST /v1/responses/compact
+  POST /v1/messages
+  POST /v1/audio/transcriptions
+  这四条本次只确认不是 404。
+  /v1/audio/transcriptions 没有音频文件：用空请求看是 4xx 而不是 404，记「路由在」
+  /v1/responses/compact 同样：非法 body 得到 4xx 即记「路由在」
+
+5.5 实验接口（在就测，上游以后可能改）
+
+  POST /api/experimental/web_search
+  POST /api/experimental/web_fetch
+  GET  /api/experimental/model-recommendations
+  预期：不是 404。
+  未登录或 Cloud 关闭时，401 / 业务错误算「路由在」，把状态码记下来。
+
+5.6 Blob（create 用的，不是文档里那个新的清单接口）
+
+  HEAD /api/blobs/<一个不存在的digest>
+  POST /api/blobs/<digest>
+  预期：不是 404 路由。HEAD 对不存在的 digest 应是 404 资源不存在，这算通过。
+  不要测文档里尚未实现的 GET /api/blobs 列表。
+
+================================================================================
+6. 必测 C：Desktop / CLI 和登录 API 一起用
+================================================================================
+
+这条链的本地端点是：
+
+  POST /api/signin/device     开始
+  GET  /api/signin/device     轮询状态
+  POST /api/me                当前用户
+  POST /api/signout           登出
+
+平台端（susan-platform，已落地才打）：
+
+  POST /auth/device
+  POST /auth/token
+  浏览器打开 verification_uri_complete（/device?user_code=...）
+
+本地响应里不能出现 device_code，也不能出现 access_token。
+
+6.1 未登录
+
+  POST /api/me   body {}
+  预期：401，JSON 有 signin_url
+  POST /api/signout
+  预期：成功清除本地登录态；再打 /api/me 仍是 401
+
+6.2 CLI
+
+  dist\susan.exe login --force
+  预期：
+  - 打印 user_code
+  - 打开或打印 verification_uri_complete
+  - 终端在轮询，不退出成 404
+  然后在浏览器登录并允许。
+  预期：命令结束；POST /api/me 返回用户名或邮箱，不是 401
+
+  再测一次拒绝：
+  dist\susan.exe login --force
+  在网页上拒绝。
+  预期：CLI 报拒绝，/api/me 仍是 401
+
+  dist\susan.exe logout
+  预期：/api/me 回到 401
+  signin / signout 是别名，各打一次，行为与 login / logout 相同
+
+  过期：若 15 分钟内来不及，可以等 expires_in，或只记「本次未测过期」。
+  不要改超时时间。
+
+6.3 Desktop
+
+  启动 susan-app，托盘或设置里 Sign In。
+  预期：
+  - 走的是本机 POST/GET /api/signin/device，不是写死的 ollama.com/connect
+  - 能看到 user_code 或浏览器被打开
+  - 允许之后，界面登录态和 POST /api/me 一致
+  - 登出之后两边都回到未登录
+
+  平台网页 /account/devices 上能看到这台设备。
+  平台没开：Desktop 整节记跳过，CLI 在 6.2 已有结果即可。
+
+6.4 协议 URL
+
+  已登录或登录过程中，确认客户端打开的是 susan:// ，ollama:// 仍可被接受。
+  预期：没有把用户送回 ollama.com 的连接页。
+
+================================================================================
+7. 平台仓：只测 Susan 客户端会打到的已落地接口
+================================================================================
+
+平台进程不在时，本节全部记跳过，不要算 Susan 本仓失败。
+
+  POST /auth/device
+  body 含 public_key、client 名称
+  预期：200，有 device_code、user_code、verification_uri、expires_in、interval
+  verification_uri_complete 应带 /device?user_code=
+
+  浏览器打开该链接，用测试号允许
+
+  POST /auth/token
+  允许前：authorization_pending
+  允许后：有 access_token
+  轮询快于 interval：400，error 为 slow_down
+
+  本仓不测平台的注册、账单、API Key。那些不在这次 Susan 合入验收里。
+
+================================================================================
+8. 结果怎么算
+================================================================================
+
+必测 A、B、C 里，每一条「预期」都要有结果。
+跳过必须写原因（没模型、没平台、没 Desktop 包）。
+
+本次通过：
+  - A1 A2 A5 A6 通过
+  - A3 通过或有证据证明 pull 没打到 Cloud Host
+  - A4 通过或写明跳过原因
+  - B 节每条不是「路由 404」
+  - C 节 CLI 的允许和登出通过
+  - Desktop、过期、拒绝：没做则记跳过，不单独导致整份失败
+  - Agent 未出现在菜单和 susan run 里：这是预期，记「按计划未启用」
+
+本次失败：
+  - 14343 或 Susan is running 没了
+  - 数据写进默认 .ollama
+  - /api/signin/device、/api/me、/api/signout 变成 404
+  - /api/chat 或 /api/generate 对本地模型 404 或完全无输出
+  - pull 被 SUSAN_CLOUD_HOST 带走
+
+================================================================================
+9. 记录表（测的时候填）
+================================================================================
+
+编号 | 项 | 结果 | 证据 | 备注
+A1 | 14343 / Susan is running | | |
+A2 | Susan 数据目录 | | |
+A3 | pull 不走 Cloud Host | | |
+A4 | 保留命名空间 403 | | |
+A5 | list + tags + 一次生成 | | |
+A6 | signin/device、me、signout 路由在 | | |
+B-存活 | / 、/api/version、/api/status | | |
+B-模型 | tags show copy delete pull push ps | | |
+B-推理 | generate chat embed embeddings | | |
+B-兼容 | v1 chat/completions completions embeddings models responses messages audio | | |
+B-实验 | web_search web_fetch model-recommendations | | |
+B-blob | HEAD/POST /api/blobs/:digest | | |
+C-CLI | login 允许、login 拒绝、logout | | |
+C-Desktop | Sign In 与 /api/me 一致 | | |
+C-URL | susan:// | | |
+P | 平台 /auth/device 与 /auth/token | | |
+X | Agent/Skills/TUI | 按计划未启用 | 源码保留，未调用 | 
+
+测试人：
+开始时间：
+结束时间：
+susan.exe 版本输出：
+是否设置了 SUSAN_CLOUD_HOST：
