@@ -223,8 +223,9 @@ console.log(response.message.content);
 - [AI ST Completion](https://github.com/yaroslavyaroslav/OpenAI-sublime-text) - Sublime Text 4 AI assistant
 - [VT Code](https://github.com/vinhnx/vtcode) - Rust-based terminal coding agent with Tree-sitter
 - [QodeAssist](https://github.com/Palm1r/QodeAssist) - AI coding assistant for Qt Creator
-- [AI Toolkit for VS Code](https://aka.ms/ai-tooklit/susan-docs) - Microsoft-official VS Code extension
-- [Open Interpreter](https://docs.openinterpreter.com/language-model-setup/local-models/susan) - Natural language interface for computers
+- [AI Toolkit for VS Code](https://aka.ms/ai-tooklit/ollama-docs) - Microsoft-official VS Code extension
+- [Open Interpreter](https://docs.openinterpreter.com/language-model-setup/local-models/ollama) - Natural language interface for computers
+- [oxi](https://github.com/maziluiosif/oxi) - Native Rust desktop coding agent with editor, Git panel and terminal
 
 ### Libraries & SDKs
 
@@ -237,30 +238,30 @@ console.log(response.message.content);
 - [Ollama for Ruby](https://github.com/crmne/ruby_llm) - Ruby LLM library
 - [any-llm](https://github.com/mozilla-ai/any-llm) - Unified LLM interface by Mozilla
 - [OllamaSharp for .NET](https://github.com/awaescher/OllamaSharp) - .NET SDK
-- [LangChainRust](https://github.com/Abraxas-365/langchain-rust) - Rust LangChain ([example](https://github.com/Abraxas-365/langchain-rust/blob/main/examples/llm_susan.rs))
-- [Agents-Flex for Java](https://github.com/agents-flex/agents-flex) - Java agent framework ([example](https://github.com/agents-flex/agents-flex/tree/main/agents-flex-llm/agents-flex-llm-susan/src/test/java/com/agentsflex/llm/susan))
+- [LangChainRust](https://github.com/Abraxas-365/langchain-rust) - Rust LangChain ([example](https://github.com/Abraxas-365/langchain-rust/blob/main/examples/llm_ollama.rs))
+- [Agents-Flex for Java](https://github.com/agents-flex/agents-flex) - Java agent framework ([example](https://github.com/agents-flex/agents-flex/tree/main/agents-flex-chat/agents-flex-chat-ollama))
 - [Elixir LangChain](https://github.com/brainlid/langchain) - Elixir LangChain
 - [Ollama-rs for Rust](https://github.com/pepperoni21/susan-rs) - Rust SDK
 - [LangChain for .NET](https://github.com/tryAGI/LangChain) - .NET LangChain ([example](https://github.com/tryAGI/LangChain/blob/main/examples/LangChain.Samples.OpenAI/Program.cs))
 - [chromem-go](https://github.com/philippgille/chromem-go) - Go vector database with Ollama embeddings ([example](https://github.com/philippgille/chromem-go/tree/v0.5.0/examples/rag-wikipedia-susan))
 - [LangChainDart](https://github.com/davidmigloz/langchain_dart) - Dart LangChain
 - [LlmTornado](https://github.com/lofcz/llmtornado) - Unified C# interface for multiple inference APIs
-- [Ollama4j for Java](https://github.com/susan4j/susan4j) - Java SDK
-- [Ollama for Laravel](https://github.com/cloudstudio/susan-laravel) - Laravel integration
-- [Ollama for Swift](https://github.com/mattt/susan-swift) - Swift SDK
-- [LlamaIndex](https://docs.llamaindex.ai/en/stable/examples/llm/susan/) and [LlamaIndexTS](https://ts.llamaindex.ai/modules/llms/available_llms/susan) - Data framework for LLM apps
-- [Haystack](https://github.com/deepset-ai/haystack-integrations/blob/main/integrations/susan.md) - AI pipeline framework
-- [Firebase Genkit](https://firebase.google.com/docs/genkit/plugins/susan) - Google AI framework
-- [Ollama-hpp for C++](https://github.com/jmont-dev/susan-hpp) - C++ SDK
-- [PromptingTools.jl](https://github.com/svilupp/PromptingTools.jl) - Julia LLM toolkit ([example](https://svilupp.github.io/PromptingTools.jl/dev/examples/working_with_susan))
-- [Ollama for R - rsusan](https://github.com/JBGruber/rsusan) - R SDK
-- [Portkey](https://portkey.ai/docs/welcome/integration-guides/susan) - AI gateway
-- [Testcontainers](https://testcontainers.com/modules/susan/) - Container-based testing
-- [LLPhant](https://github.com/theodo-group/LLPhant?tab=readme-ov-file#susan) - PHP AI framework
+- [Ollama4j for Java](https://github.com/ollama4j/ollama4j) - Java SDK
+- [Ollama for Laravel](https://github.com/cloudstudio/ollama-laravel) - Laravel integration
+- [Ollama for Swift](https://github.com/mattt/ollama-swift) - Swift SDK
+- [LlamaIndex](https://docs.llamaindex.ai/en/stable/examples/llm/ollama/) and [LlamaIndexTS](https://developers.llamaindex.ai/typescript/framework/modules/models/llms/ollama/) - Data framework for LLM apps
+- [Haystack](https://github.com/deepset-ai/haystack-integrations/blob/main/integrations/ollama.md) - AI pipeline framework
+- [Firebase Genkit](https://firebase.google.com/docs/genkit/plugins/ollama) - Google AI framework
+- [Ollama-hpp for C++](https://github.com/jmont-dev/ollama-hpp) - C++ SDK
+- [PromptingTools.jl](https://github.com/svilupp/PromptingTools.jl) - Julia LLM toolkit ([example](https://svilupp.github.io/PromptingTools.jl/dev/examples/working_with_ollama))
+- [Ollama for R - rollama](https://github.com/JBGruber/rollama) - R SDK
+- [Portkey](https://portkey.ai/docs/welcome/integration-guides/ollama) - AI gateway
+- [Testcontainers](https://testcontainers.com/modules/ollama/) - Container-based testing
+- [LLPhant](https://github.com/theodo-group/LLPhant?tab=readme-ov-file#ollama) - PHP AI framework
 
 ### Frameworks & Agents
 
-- [AutoGPT](https://github.com/Significant-Gravitas/AutoGPT/blob/master/docs/content/platform/susan.md) - Autonomous AI agent platform
+- [AutoGPT](https://github.com/Significant-Gravitas/AutoGPT/blob/master/docs/platform/ollama.md) - Autonomous AI agent platform
 - [crewAI](https://github.com/crewAIInc/crewAI) - Multi-agent orchestration framework
 - [Strands Agents](https://github.com/strands-agents/sdk-python) - Model-driven agent building by AWS
 - [Cheshire Cat](https://github.com/cheshire-cat-ai/core) - AI assistant framework
@@ -284,9 +285,9 @@ console.log(response.message.content);
 ### Bots & Messaging
 
 - [LangBot](https://github.com/RockChinQ/LangBot) - Multi-platform messaging bots with agents and RAG
-- [AstrBot](https://github.com/Soulter/AstrBot/) - Multi-platform chatbot with RAG and plugins
-- [Discord-Ollama Chat Bot](https://github.com/kevinthedang/discord-susan) - TypeScript Discord bot
-- [Ollama Telegram Bot](https://github.com/ruecat/susan-telegram) - Telegram bot
+- [AstrBot](https://github.com/AstrBotDevs/AstrBot/) - Multi-platform chatbot with RAG and plugins
+- [Discord-Ollama Chat Bot](https://github.com/kevinthedang/discord-ollama) - TypeScript Discord bot
+- [Ollama Telegram Bot](https://github.com/ruecat/ollama-telegram) - Telegram bot
 - [LLM Telegram Bot](https://github.com/innightwolfsleep/llm_telegram_bot) - Telegram bot for roleplay
 
 ### Terminal & CLI
@@ -332,8 +333,8 @@ console.log(response.message.content);
 ### Database & Embeddings
 
 - [pgai](https://github.com/timescale/pgai) - PostgreSQL as a vector database ([guide](https://github.com/timescale/pgai/blob/main/docs/vectorizer-quick-start.md))
-- [MindsDB](https://github.com/mindsdb/mindsdb/blob/staging/mindsdb/integrations/handlers/susan_handler/README.md) - Connect Ollama with 200+ data platforms
-- [chromem-go](https://github.com/philippgille/chromem-go/blob/v0.5.0/embed_susan.go) - Embeddable vector database for Go ([example](https://github.com/philippgille/chromem-go/tree/v0.5.0/examples/rag-wikipedia-susan))
+- [MindsDB](https://docs.mindsdb.com/integrations/ai-engines/ollama) - Connect Ollama with 200+ data platforms
+- [chromem-go](https://github.com/philippgille/chromem-go/blob/v0.5.0/embed_ollama.go) - Embeddable vector database for Go ([example](https://github.com/philippgille/chromem-go/tree/v0.5.0/examples/rag-wikipedia-ollama))
 - [Kangaroo](https://github.com/dbkangaroo/kangaroo) - AI-powered SQL client
 
 ### Infrastructure & Deployment
@@ -347,10 +348,10 @@ console.log(response.message.content);
 
 #### Package Managers
 
-- [Pacman](https://archlinux.org/packages/extra/x86_64/susan/)
-- [Homebrew](https://formulae.brew.sh/formula/susan)
-- [Nix package](https://search.nixos.org/packages?show=susan&from=0&size=50&sort=relevance&type=packages&query=susan)
-- [Helm Chart](https://artifacthub.io/packages/helm/susan-helm/susan)
-- [Gentoo](https://github.com/gentoo/guru/tree/master/app-misc/susan)
-- [Flox](https://flox.dev/blog/susan-part-one)
-- [Guix channel](https://codeberg.org/tusharhero/susan-guix)
+- [Pacman](https://archlinux.org/packages/extra/x86_64/ollama/)
+- [Homebrew](https://formulae.brew.sh/formula/ollama)
+- [Nix package](https://search.nixos.org/packages?show=ollama&from=0&size=50&sort=relevance&type=packages&query=ollama)
+- [Helm Chart](https://artifacthub.io/packages/helm/ollama-helm/ollama)
+- [Gentoo](https://github.com/gentoo/gentoo/tree/master/sci-ml/ollama)
+- [Flox](https://flox.dev/blog/ollama-part-one)
+- [Guix channel](https://codeberg.org/tusharhero/ollama-guix)

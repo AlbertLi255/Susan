@@ -186,8 +186,11 @@ func upload(ctx context.Context, opts UploadOptions) error {
 	}
 
 	if len(opts.Manifest) > 0 && opts.ManifestRef != "" && opts.Repository != "" {
+		if opts.ManifestMediaType == "" {
+			return errors.New("manifest push requires a manifest media type")
+		}
 		logutil.Trace("pushing manifest", "repo", opts.Repository, "ref", opts.ManifestRef, "size", len(opts.Manifest))
-		if err := u.pushManifest(ctx, opts.Repository, opts.ManifestRef, opts.Manifest); err != nil {
+		if err := u.pushManifest(ctx, opts.Repository, opts.ManifestRef, opts.Manifest, opts.ManifestMediaType); err != nil {
 			logutil.Trace("manifest push failed", "error", err)
 			return err
 		}
@@ -376,11 +379,11 @@ func (u *uploader) initUpload(ctx context.Context, blob Blob) (uploadEndpoint, e
 		if !sessionURL.IsAbs() {
 			sessionURL = base.ResolveReference(sessionURL)
 		}
-		if err := validateRedirectScheme(sessionURL, u.baseURL); err != nil {
+		if err := ValidateRedirectScheme(sessionURL, u.baseURL); err != nil {
 			return uploadEndpoint{}, err
 		}
 		if base != nil && sessionURL.Host != base.Host {
-			if err := validateRedirectTarget(ctx, sessionURL, u.baseURL, u.allowPrivate); err != nil {
+			if err := ValidateRedirectTarget(ctx, sessionURL, u.baseURL, u.allowPrivate); err != nil {
 				return uploadEndpoint{}, err
 			}
 		}
@@ -397,7 +400,7 @@ func (u *uploader) initUpload(ctx context.Context, blob Blob) (uploadEndpoint, e
 			// (percent-encoding case, query ordering) which can change the
 			// canonical form a signed URL was computed over.
 			if d, err := url.Parse(directURL); err == nil && d.IsAbs() {
-				if err := validateRedirectTarget(ctx, d, u.baseURL, u.allowPrivate); err != nil {
+				if err := ValidateRedirectTarget(ctx, d, u.baseURL, u.allowPrivate); err != nil {
 					return uploadEndpoint{}, err
 				}
 				ep.directUploadURL = directURL
@@ -670,7 +673,7 @@ func (u *uploader) uploadOnePart(ctx context.Context, sessionURL *url.URL, part 
 		if redirectURL == nil {
 			return nil, nil, pr.bytes(), fmt.Errorf("patch part %d: 307 without Location", part.n)
 		}
-		if err := validateRedirectTarget(ctx, redirectURL, u.baseURL, u.allowPrivate); err != nil {
+		if err := ValidateRedirectTarget(ctx, redirectURL, u.baseURL, u.allowPrivate); err != nil {
 			return nil, nil, pr.bytes(), err
 		}
 		// The PATCH attempt's progress is wasted — we re-upload to CDN.
@@ -775,9 +778,9 @@ func computePartsWithLimits(totalSize int64, nParts int, minPart, maxPart int64)
 	return parts
 }
 
-func (u *uploader) pushManifest(ctx context.Context, repo, ref string, manifest []byte) error {
+func (u *uploader) pushManifest(ctx context.Context, repo, ref string, manifest []byte, mediaType string) error {
 	req, _ := http.NewRequestWithContext(ctx, http.MethodPut, fmt.Sprintf("%s/v2/%s/manifests/%s", u.baseURL, repo, ref), bytes.NewReader(manifest))
-	req.Header.Set("Content-Type", "application/vnd.docker.distribution.manifest.v2+json")
+	req.Header.Set("Content-Type", mediaType)
 	req.Header.Set("User-Agent", u.userAgent)
 	prev := u.authToken()
 	if prev != "" {
@@ -795,7 +798,7 @@ func (u *uploader) pushManifest(ctx context.Context, repo, ref string, manifest 
 		if err := u.refreshToken(ctx, ch, prev); err != nil {
 			return err
 		}
-		return u.pushManifest(ctx, repo, ref, manifest)
+		return u.pushManifest(ctx, repo, ref, manifest, mediaType)
 	}
 
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
