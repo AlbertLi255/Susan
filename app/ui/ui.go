@@ -43,8 +43,11 @@ import (
 
 var CORS = envconfig.Bool("SUSAN_CORS")
 
-// OllamaDotCom returns the URL for ollama.com, allowing override via environment variable
-var OllamaDotCom = func() string {
+// SusanDotCom returns the base URL for Susan's web/registry endpoint.
+// It still resolves to https://ollama.com today (the registry MVP is
+// served there until the Susan platform domain goes live) and can be
+// overridden with SUSAN_DOT_COM_URL.
+var SusanDotCom = func() string {
 	if url := os.Getenv("SUSAN_DOT_COM_URL"); url != "" {
 		return url
 	}
@@ -114,6 +117,7 @@ type Server struct {
 	Updater              *updater.Updater
 	UpdateAvailableFunc  func()
 	IntegrationInstalled func(string) bool
+	IntegrationModels    http.Handler
 	ListCloudModels      func(context.Context) (*api.ListResponse, error)
 }
 
@@ -297,6 +301,12 @@ func (s *Server) Handler() http.Handler {
 	mux.Handle("POST /api/v1/cloud", handle(s.cloudSetting))
 	mux.Handle("GET /api/v1/models/cloud", handle(s.getCloudModels))
 	mux.Handle("GET /api/v1/integrations", handle(s.getIntegrationStatuses))
+	if s.IntegrationModels != nil {
+		mux.Handle("GET /api/v1/integrations/{integration}/models", handle(func(w http.ResponseWriter, r *http.Request) error {
+			s.IntegrationModels.ServeHTTP(w, r)
+			return nil
+		}))
+	}
 
 	// Ollama proxy endpoints
 	ollamaProxy := s.ollamaProxy()
@@ -471,7 +481,7 @@ func (s *Server) UserData(ctx context.Context) (*api.UserResponse, error) {
 	}
 
 	if user.AvatarURL != "" {
-		user.AvatarURL = fmt.Sprintf("%s/%s", OllamaDotCom, user.AvatarURL)
+		user.AvatarURL = fmt.Sprintf("%s/%s", SusanDotCom, user.AvatarURL)
 	}
 
 	storeUser := store.User{
@@ -553,7 +563,7 @@ func (s *Server) checkModelUpstream(ctx context.Context, modelName string, timeo
 	// use envconfig.CloudHost(). ollama.com serves the registry at /v2 today;
 	// a dedicated SUSAN_REGISTRY_HOST is deferred until the Susan registry
 	// (registry.susan.com) is ready.
-	url := OllamaDotCom + "/v2/" + name + "/manifests/" + tag
+	url := SusanDotCom + "/v2/" + name + "/manifests/" + tag
 	req, err := http.NewRequestWithContext(checkCtx, "HEAD", url, nil)
 	if err != nil {
 		return "", 0, err
@@ -1565,6 +1575,12 @@ func (s *Server) settings(w http.ResponseWriter, r *http.Request) error {
 	if err := s.Store.SetSettings(settings); err != nil {
 		return fmt.Errorf("failed to save settings: %w", err)
 	}
+	saved, err := s.Store.Settings()
+	if err != nil {
+		return fmt.Errorf("failed to load saved settings: %w", err)
+	}
+	settings.OnboardingVersion = saved.OnboardingVersion
+	settings.CodexDesktopUsed = saved.CodexDesktopUsed
 
 	// Handle auto-update toggle changes
 	if old.AutoUpdateEnabled != settings.AutoUpdateEnabled {

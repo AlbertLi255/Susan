@@ -328,6 +328,8 @@ var (
 	EnableIntegratedGPU = BoolWithDefault("SUSAN_IGPU_ENABLE")
 	// NoCloudEnv checks the SUSAN_NO_CLOUD environment variable.
 	NoCloudEnv = Bool("SUSAN_NO_CLOUD")
+	// CreateRemote forces model creation through the server API even when the server is local.
+	CreateRemote = Bool("SUSAN_CREATE_REMOTE")
 )
 
 func String(s string) func() string {
@@ -429,6 +431,7 @@ func AsMap() map[string]EnvVar {
 		"SUSAN_EDITOR":               {"SUSAN_EDITOR", Editor(), "Path to editor for interactive prompt editing (Ctrl+G)"},
 		"SUSAN_REMOTES":              {"SUSAN_REMOTES", Remotes(), "Allowed hosts for remote models (defaults to the SUSAN_CLOUD_HOST hostname)"},
 		"SUSAN_CLOUD_HOST":           {"SUSAN_CLOUD_HOST", CloudHost(), "Base URL for the Susan cloud API: accounts, device sign-in and cloud metadata (default https://ollama.com); model registry is separate"},
+		"SUSAN_CREATE_REMOTE":        {"SUSAN_CREATE_REMOTE", CreateRemote(), "Force model creation through the server API even when the server is local"},
 
 		// Informational
 		"HTTP_PROXY":  {"HTTP_PROXY", String("HTTP_PROXY")(), "HTTP proxy"},

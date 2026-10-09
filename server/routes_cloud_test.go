@@ -442,7 +442,7 @@ func TestExplicitCloudPassthroughAPIAndV1(t *testing.T) {
 		}
 
 		if strings.Contains(capture.body, `"options"`) {
-			t.Fatalf("expected no converted Ollama options in upstream body, got %q", capture.body)
+			t.Fatalf("expected no converted Susan options in upstream body, got %q", capture.body)
 		}
 
 		if got := capture.header.Get("X-Test-Header"); got != "v1-header" {
@@ -498,7 +498,7 @@ func TestExplicitCloudPassthroughAPIAndV1(t *testing.T) {
 		}
 
 		if strings.Contains(capture.body, `"options"`) {
-			t.Fatalf("expected no converted Ollama options in upstream body, got %q", capture.body)
+			t.Fatalf("expected no converted Susan options in upstream body, got %q", capture.body)
 		}
 
 		if got := capture.header.Get("X-Test-Header"); got != "v1-legacy-header" {
@@ -553,7 +553,7 @@ func TestExplicitCloudPassthroughAPIAndV1(t *testing.T) {
 		}
 
 		if strings.Contains(capture.body, `"options"`) {
-			t.Fatalf("expected no converted Ollama options in upstream body, got %q", capture.body)
+			t.Fatalf("expected no converted Susan options in upstream body, got %q", capture.body)
 		}
 	})
 
@@ -604,7 +604,7 @@ func TestExplicitCloudPassthroughAPIAndV1(t *testing.T) {
 		}
 
 		if strings.Contains(capture.body, `"options"`) {
-			t.Fatalf("expected no converted Ollama options in upstream body, got %q", capture.body)
+			t.Fatalf("expected no converted Susan options in upstream body, got %q", capture.body)
 		}
 	})
 
@@ -818,15 +818,15 @@ func TestCloudResponsesWebSearchUsesLocalOrchestration(t *testing.T) {
 			chatCalls++
 			w.Header().Set("Content-Type", "application/x-ndjson")
 			if chatCalls == 1 {
-				_, _ = io.WriteString(w, `{"message":{"role":"assistant","tool_calls":[{"id":"call_1","function":{"name":"web_search","arguments":{"query":"latest Ollama release"}}}]},"done":false}`+"\n")
+				_, _ = io.WriteString(w, `{"message":{"role":"assistant","tool_calls":[{"id":"call_1","function":{"name":"web_search","arguments":{"query":"latest Susan release"}}}]},"done":false}`+"\n")
 				_, _ = io.WriteString(w, `{"message":{"role":"assistant"},"done":true,"prompt_eval_count":12,"prompt_eval_cached_count":5,"eval_count":4}`+"\n")
 				return
 			}
-			_, _ = io.WriteString(w, `{"message":{"role":"assistant","content":"Ollama [release](https://ollama.com/release)."},"done":true,"prompt_eval_count":20,"prompt_eval_cached_count":17,"eval_count":6}`)
+			_, _ = io.WriteString(w, `{"message":{"role":"assistant","content":"Susan [release](https://ollama.com/release)."},"done":true,"prompt_eval_count":20,"prompt_eval_cached_count":17,"eval_count":6}`)
 		case "/api/web_search":
 			searchCalls++
 			w.Header().Set("Content-Type", "application/json")
-			_, _ = io.WriteString(w, `{"results":[{"title":"Ollama release","url":"https://ollama.com/release","content":"current release"}]}`)
+			_, _ = io.WriteString(w, `{"results":[{"title":"Susan release","url":"https://ollama.com/release","content":"current release"}]}`)
 		default:
 			t.Fatalf("unexpected upstream path %q", r.URL.Path)
 		}
@@ -853,7 +853,7 @@ func TestCloudResponsesWebSearchUsesLocalOrchestration(t *testing.T) {
 
 	reqBody := `{
 		"model":"kimi-k2.5:cloud",
-		"input":"Find the latest Ollama release",
+		"input":"Find the latest Susan release",
 		"stream":true,
 		"tools":[{"type":"web_search","external_web_access":false}]
 	}`
@@ -932,7 +932,7 @@ func TestCloudResponsesUnsupportedWebSearchPassthrough(t *testing.T) {
 			capture.body = ""
 			reqBody := fmt.Sprintf(`{
 				"model":"kimi-k2.5:cloud",
-				"input":"Find the latest Ollama release",
+				"input":"Find the latest Susan release",
 				"tools":[{"type":%q}]
 			}`, toolType)
 			req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, local.URL+"/v1/responses", bytes.NewBufferString(reqBody))

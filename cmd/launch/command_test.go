@@ -415,7 +415,7 @@ func TestLaunchCmdAutodiscoveryDefaultLaunchDoesNotForceConfigure(t *testing.T) 
 	restore := OverrideIntegration("stubauto", runner)
 	defer restore()
 
-	if err := config.SaveIntegration("stubauto", []string{"Ollama Cloud"}); err != nil {
+	if err := config.SaveIntegration("stubauto", []string{"Susan Cloud"}); err != nil {
 		t.Fatalf("failed to save managed integration config: %v", err)
 	}
 	if err := config.MarkIntegrationOnboarded("stubauto"); err != nil {
@@ -433,7 +433,7 @@ func TestLaunchCmdAutodiscoveryDefaultLaunchDoesNotForceConfigure(t *testing.T) 
 	if runner.autodiscoveryConfigures != 0 {
 		t.Fatalf("expected default autodiscovery launch to reuse existing config, got %d configures", runner.autodiscoveryConfigures)
 	}
-	if runner.ranModel != "Ollama Cloud" {
+	if runner.ranModel != "Susan Cloud" {
 		t.Fatalf("expected launch to run autodiscovery label, got %q", runner.ranModel)
 	}
 }

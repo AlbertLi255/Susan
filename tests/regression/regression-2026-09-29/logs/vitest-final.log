@@ -1,0 +1,648 @@
+﻿node.exe : Browserslist: browsers data (caniuse-lite) is 16 months old. Please run:
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Browserslist: b...ld. Please run::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+️  Generating routes...
+ Processed routes in 126ms
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/projects/susanAssist/susanPlatform/Susan/app/ui/app[39m
+
+[90mstderr[2m | src/hooks/useUser.test.tsx[2m > [22m[2mshares startup account loading with Settings and reuses the
+ fresh result
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/api.test.ts[2m > [22m[2mgetClaudeDesktopAvailableModels[2m > [22m[2mkeeps local models when
+ the account cloud list fails
+[22m[39mFailed to fetch cloud models: Error: offline
+    at [90mD:\projects\susanAssist\susanPlatform\Susan\app\ui\app\[39msrc\api.test.ts:213:54
+    at [90mfile:///D:/projects/susanAssist/susanPlatform/Susan/app/ui/app/[39mnode_modules/[4m@vitest/runner[24m/di
+st/chunk-hooks.js:155:11
+    at [90mfile:///D:/projects/susanAssist/susanPlatform/Susan/app/ui/app/[39mnode_modules/[4m@vitest/runner[24m/di
+st/chunk-hooks.js:752:26
+    at [90mfile:///D:/projects/susanAssist/susanPlatform/Susan/app/ui/app/[39mnode_modules/[4m@vitest/runner[24m/di
+st/chunk-hooks.js:1897:20
+    at new Promise (<anonymous>)
+    at runWithTimeout [90m(file:///D:/projects/susanAssist/susanPlatform/Susan/app/ui/app/[39mnode_modules/[4m@vites
+t/runner[24m/dist/chunk-hooks.js:1863:10[90m)[39m
+    at runTest [90m(file:///D:/projects/susanAssist/susanPlatform/Susan/app/ui/app/[39mnode_modules/[4m@vitest/runne
+r[24m/dist/chunk-hooks.js:1574:12[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:104:5)[39m
+    at runSuite [90m(file:///D:/projects/susanAssist/susanPlatform/Susan/app/ui/app/[39mnode_modules/[4m@vitest/runn
+er[24m/dist/chunk-hooks.js:1729:8[90m)[39m
+    at runSuite [90m(file:///D:/projects/susanAssist/susanPlatform/Susan/app/ui/app/[39mnode_modules/[4m@vitest/runn
+er[24m/dist/chunk-hooks.js:1729:8[90m)[39m
+
+[90mstderr[2m | src/hooks/useUser.test.tsx[2m > [22m[2mshares startup account loading with Settings and reuses the
+ fresh result
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+ [32m✓[39m src/hooks/useUser.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 29[2mms[22m[39m
+ [32m✓[39m src/api.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+ [32m✓[39m src/lib/settingsMutationScope.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 132[2mms[22m[39m
+ [32m✓[39m src/lib/claudeDesktop.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+[90mstderr[2m | src/components/CodexConnectedIntro.test.tsx[2m > [22m[2mhands Continue to the connection flow, lik
+e Claude's intro
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+ [32m✓[39m src/components/CodexConnectedIntro.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m src/utils/fileValidation.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mCodexDesktopRow[2m > [22m[2mkeeps the conne
+ction busy until ChatGPT installation is detected
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mCodexDesktopRow[2m > [22m[2mdisables the co
+nnection button while connecting ChatGPT
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mCodexDesktopRow[2m > [22m[2mopens the insta
+ller and connects after ChatGPT is detected
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mCodexDesktopRow[2m > [22m[2mignores an expi
+red installation check ('resolved', retried: false)
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mCodexDesktopRow[2m > [22m[2mignores an expi
+red installation check ('rejected', retried: false)
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mCodexDesktopRow[2m > [22m[2mignores an expi
+red installation check ('resolved', retried: true)
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mCodexDesktopRow[2m > [22m[2mignores an expi
+red installation check ('rejected', retried: true)
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mCodexDesktopRow[2m > [22m[2mkeeps an active
+ installation's status failure visible
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mCodexDesktopRow[2m > [22m[2mkeeps an active
+ installation's connection failure visible
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mCodexDesktopRow[2m > [22m[2mdoes not restar
+t ChatGPT automatically when installation detection finds it running (used: false)
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mCodexDesktopRow[2m > [22m[2mdoes not restar
+t ChatGPT automatically when installation detection finds it running (used: true)
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mCodexDesktopRow[2m > [22m[2mreturns to the 
+disconnected state when installation is cancelled
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mCodexDesktopRow[2m > [22m[2muses concise re
+start copy when adding Susan models
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mCodexDesktopRow[2m > [22m[2madds Susan mode
+ls after the restart is confirmed
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mCodexDesktopRow[2m > [22m[2mkeeps a native 
+restart failure visible after confirmation
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mCodexDesktopRow[2m > [22m[2mhonors the nati
+ve ChatGPT disconnect confirmation: false
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mCodexDesktopRow[2m > [22m[2mhonors the nati
+ve ChatGPT disconnect confirmation: true
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mCodexDesktopRow[2m > [22m[2mallows the norm
+al profile to be restored if ChatGPT is removed
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mChatGPT first connection intro[2m > [22m[2m
+confirms before the intro and waits for Continue to launch (running: false)
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mChatGPT first connection intro[2m > [22m[2m
+confirms before the intro and waits for Continue to launch (running: true)
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mChatGPT first connection intro[2m > [22m[2m
+waits for Continue after detecting a first-time install
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mleaves the Apps page usable when the initial r
+estart is cancelled
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mshows errors on the Apps page after Continue (
+failed)
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mshows errors on the Apps page after Continue (
+rejected)
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mshows errors on the Apps page after Continue (
+save failed)
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mdismisses before launch and prevents duplicate
+ Continue requests
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mcloses the intro and restores the switch when 
+Continue is cancelled
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mcloses the intro and restores the switch when 
+Continue is status failed
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mdoes not open a restart prompt after leaving t
+he Apps page
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mkeeps the latest status when focus refreshes c
+omplete out of order
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mdoes not start overlapping installers before t
+he switch rerenders
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/utils/clipboard.test.ts[2m > [22m[2mcopyTextToClipboard[2m > [22m[2mfalls back to execComma
+nd when Clipboard API fails
+[22m[39mClipboard API failed, falling back to execCommand Error: not allowed
+    at [90mD:\projects\susanAssist\susanPlatform\Susan\app\ui\app\[39msrc\utils\clipboard.test.ts:24:49
+    at [90mfile:///D:/projects/susanAssist/susanPlatform/Susan/app/ui/app/[39mnode_modules/[4m@vitest/runner[24m/di
+st/chunk-hooks.js:155:11
+    at [90mfile:///D:/projects/susanAssist/susanPlatform/Susan/app/ui/app/[39mnode_modules/[4m@vitest/runner[24m/di
+st/chunk-hooks.js:752:26
+    at [90mfile:///D:/projects/susanAssist/susanPlatform/Susan/app/ui/app/[39mnode_modules/[4m@vitest/runner[24m/di
+st/chunk-hooks.js:1897:20
+    at new Promise (<anonymous>)
+    at runWithTimeout [90m(file:///D:/projects/susanAssist/susanPlatform/Susan/app/ui/app/[39mnode_modules/[4m@vites
+t/runner[24m/dist/chunk-hooks.js:1863:10[90m)[39m
+    at runTest [90m(file:///D:/projects/susanAssist/susanPlatform/Susan/app/ui/app/[39mnode_modules/[4m@vitest/runne
+r[24m/dist/chunk-hooks.js:1574:12[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:104:5)[39m
+    at runSuite [90m(file:///D:/projects/susanAssist/susanPlatform/Susan/app/ui/app/[39mnode_modules/[4m@vitest/runn
+er[24m/dist/chunk-hooks.js:1729:8[90m)[39m
+    at runSuite [90m(file:///D:/projects/susanAssist/susanPlatform/Susan/app/ui/app/[39mnode_modules/[4m@vitest/runn
+er[24m/dist/chunk-hooks.js:1729:8[90m)[39m
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mdoes not retry acknowledgment during a disconn
+ect, or reconnect to save afterward
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+ [32m✓[39m src/utils/clipboard.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mretries only acknowledgment after a returned s
+ave failure, including overlapping clicks
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mretries only acknowledgment after a rejected s
+ave failure, including overlapping clicks
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mpreserves save-only recovery across navigation
+ ('returned' failure 'before leaving')
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mpreserves save-only recovery across navigation
+ ('returned' failure 'before leaving')
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mpreserves save-only recovery across navigation
+ ('returned' failure 'before leaving')
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mpreserves save-only recovery across navigation
+ ('rejected' failure 'before leaving')
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mpreserves save-only recovery across navigation
+ ('rejected' failure 'before leaving')
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mpreserves save-only recovery across navigation
+ ('rejected' failure 'before leaving')
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mpreserves save-only recovery across navigation
+ ('returned' failure 'while away')
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mpreserves save-only recovery across navigation
+ ('returned' failure 'while away')
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mpreserves save-only recovery across navigation
+ ('returned' failure 'while away')
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mpreserves save-only recovery across navigation
+ ('rejected' failure 'while away')
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mpreserves save-only recovery across navigation
+ ('rejected' failure 'while away')
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mpreserves save-only recovery across navigation
+ ('rejected' failure 'while away')
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mpreserves save-only recovery across navigation
+ ('returned' failure 'after returning')
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mpreserves save-only recovery across navigation
+ ('returned' failure 'after returning')
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mpreserves save-only recovery across navigation
+ ('returned' failure 'after returning')
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mpreserves save-only recovery across navigation
+ ('rejected' failure 'after returning')
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mpreserves save-only recovery across navigation
+ ('rejected' failure 'after returning')
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mpreserves save-only recovery across navigation
+ ('rejected' failure 'after returning')
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mrefreshes connection status when Retry overtak
+es the returning page's status check
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mrefreshes connection status when Retry overtak
+es the returning page's status check
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mobserves a successful pending save after retur
+ning without saving again
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mobserves a successful pending save after retur
+ning without saving again
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mdoes not infer acknowledgment from connection 
+status (connected: false)
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mdoes not infer acknowledgment from connection 
+status (connected: true)
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mignores a stale focus refresh that is resolved
+ after the connection and save failure
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopRow.test.tsx[2m > [22m[2mignores a stale focus refresh that is rejected
+ after the connection and save failure
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+ [32m✓[39m src/components/CodexDesktopRow.test.tsx [2m([22m[2m49 tests[22m[2m)[22m[33m 536[2mms[22m[39m
+ [32m✓[39m src/components/layout/layout.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m src/lib/desktopModels.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m src/utils/vram.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/lib/chatPreload.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 10[2mms[22m[39m
+[90mstderr[2m | src/components/Settings.interaction.test.tsx[2m > [22m[2mSettings reset interactions[2m > [22m[
+2mlocks every control and shows Saved after reset succeeds
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/ClaudeDesktopModelsSettings.interaction.test.tsx[2m > [22m[2mClaudeDesktopModelsSet
+tings interactions[2m > [22m[2mkeeps the successful catalog usable while the other request is pending or fails
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/Settings.interaction.test.tsx[2m > [22m[2mSettings reset interactions[2m > [22m[
+2mhides Claude and ChatGPT desktop settings on Windows
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/ClaudeDesktopModelsSettings.interaction.test.tsx[2m > [22m[2mClaudeDesktopModelsSet
+tings interactions[2m > [22m[2mkeeps the successful inventory usable while the other request is pending or fails
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mCodexDesktopModelsSettings[2m > [
+22m[2mresets to native recommendation defaults through its settings handle
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/ClaudeDesktopModelsSettings.interaction.test.tsx[2m > [22m[2mClaudeDesktopModelsSet
+tings interactions[2m > [22m[2mkeeps saved installed models usable after editing one route when the catalog fails (r
+unning: false)
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mCodexDesktopModelsSettings[2m > [
+22m[2mresets models without restarting running ChatGPT
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mCodexDesktopModelsSettings[2m > [
+22m[2mstops loading and explains when the settings request fails
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mCodexDesktopModelsSettings[2m > [
+22m[2mkeeps restart available when live model inventory cannot refresh
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/Settings.interaction.test.tsx[2m > [22m[2mSettings reset interactions[2m > [22m[
+2mreloads Settings after signing out
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mCodexDesktopModelsSettings[2m > [
+22m[2mkeeps one stable restart operation until ChatGPT is running
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/ClaudeDesktopModelsSettings.interaction.test.tsx[2m > [22m[2mClaudeDesktopModelsSet
+tings interactions[2m > [22m[2mkeeps saved installed models usable after editing one route when the catalog fails (r
+unning: true)
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mCodexDesktopModelsSettings[2m > [
+22m[2mkeeps untouched recommendation defaults implicit when starting ChatGPT
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+ [32m✓[39m src/components/Settings.interaction.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 337[2mms[22m[39m
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mCodexDesktopModelsSettings[2m > [
+22m[2mkeeps the same automatic list after the Susan account changes
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mCodexDesktopModelsSettings[2m > [
+22m[2mtreats null native model arrays as empty
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/ClaudeDesktopModelsSettings.interaction.test.tsx[2m > [22m[2mClaudeDesktopModelsSet
+tings interactions[2m > [22m[2mkeeps unavailable models and unconfirmed placeholders disabled after inventory succee
+ds
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mCodexDesktopModelsSettings[2m > [
+22m[2mrenders five selected model chips without a selection counter
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mCodexDesktopModelsSettings[2m > [
+22m[2manchors the dropdown to the full-width model field
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mCodexDesktopModelsSettings[2m > [
+22m[2mnavigates and selects dropdown models with the keyboard
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/ClaudeDesktopModelsSettings.interaction.test.tsx[2m > [22m[2mClaudeDesktopModelsSet
+tings interactions[2m > [22m[2mkeeps the picker loading until the latest refresh finishes
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mCodexDesktopModelsSettings[2m > [
+22m[2mkeeps paid recommendations visible and editable for a Free account
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mCodexDesktopModelsSettings[2m > [
+22m[2mshows cloud recommendations to signed-out users
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mCodexDesktopModelsSettings[2m > [
+22m[2mremoves a model and applies the remaining selection
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/ClaudeDesktopModelsSettings.interaction.test.tsx[2m > [22m[2mClaudeDesktopModelsSet
+tings interactions[2m > [22m[2mopens below without scrolling and disables auto mode for draft changes
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mCodexDesktopModelsSettings[2m > [
+22m[2muses the native restart copy when connected is false
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/ClaudeDesktopModelsSettings.interaction.test.tsx[2m > [22m[2mClaudeDesktopModelsSet
+tings interactions[2m > [22m[2masks for confirmation from live native state before restarting
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mCodexDesktopModelsSettings[2m > [
+22m[2muses the native restart copy when connected is true
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+ [32m✓[39m src/lib/keyboard.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mCodexDesktopModelsSettings[2m > [
+22m[2mretries with live restart consent and applies the saved selection
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+ [32m✓[39m src/components/ClaudeDesktopModelsSettings.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[32m 196[2mms[22m[39m
+[90mstderr[2m | src/components/ClaudeDesktopModelsSettings.interaction.test.tsx[2m > [22m[2mClaudeDesktopModelsSet
+tings interactions[2m > [22m[2mrestores Auto mode when restart confirmation is canceled
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mCodexDesktopModelsSettings[2m > [
+22m[2mignores a stale focus refresh that finishes after an apply
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/ClaudeDesktopModelsSettings.interaction.test.tsx[2m > [22m[2mClaudeDesktopModelsSet
+tings interactions[2m > [22m[2mignores a stale focus refresh that finishes after apply
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mCodexDesktopModelsSettings[2m > [
+22m[2mkeeps restart available without a separate removal button
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/ClaudeDesktopModelsSettings.interaction.test.tsx[2m > [22m[2mClaudeDesktopModelsSet
+tings interactions[2m > [22m[2maccepts committed mappings when launching Claude fails
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mCodexDesktopModelsSettings[2m > [
+22m[2mkeeps pill bodies on the field trigger and reserves removal for the x
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mCodexDesktopModelsSettings[2m > [
+22m[2mdoes not show an Susan approval control
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mshows saved selections before disco
+vering models on picker open
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mimplicit recommendation defaults[2
+m > [22m[2mshows usable settings while defaults load, then fills the names without a click
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+ [32m✓[39m src/components/Settings.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 133[2mms[22m[39m
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mimplicit recommendation defaults[2
+m > [22m[2mshares background discovery with a picker opened while it is pending
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/ClaudeDesktopModelsSettings.interaction.test.tsx[2m > [22m[2mClaudeDesktopModelsSet
+tings interactions[2m > [22m[2mkeeps the previous mappings when reset restart is canceled
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/ClaudeDesktopModelsSettings.interaction.test.tsx[2m > [22m[2mClaudeDesktopModelsSet
+tings interactions[2m > [22m[2mapplies the native reset result and shows progress
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mimplicit recommendation defaults[2
+m > [22m[2mignores an old warning without canceling the current discovery
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mimplicit recommendation defaults[2
+m > [22m[2mshows cached names during background refresh and preserves edits=false
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+ [32m✓[39m src/components/ClaudeDesktopModelsSettings.interaction.test.tsx [2m([22m[2m13 tests[22m[2m)[22m[33m 523[2mms[22m[39m
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mimplicit recommendation defaults[2
+m > [22m[2mshows cached names during background refresh and preserves edits=false
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mimplicit recommendation defaults[2
+m > [22m[2mshows cached names during background refresh and preserves edits=true
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mimplicit recommendation defaults[2
+m > [22m[2mshows cached names during background refresh and preserves edits=true
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mimplicit recommendation defaults[2
+m > [22m[2mdoes not restore defaults after account changes
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mimplicit recommendation defaults[2
+m > [22m[2mdoes not restore defaults after account changes
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mimplicit recommendation defaults[2
+m > [22m[2mdoes not restore defaults after invalidation changes
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mimplicit recommendation defaults[2
+m > [22m[2mdoes not restore defaults after invalidation changes
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mimplicit recommendation defaults[2
+m > [22m[2mdoes not restore defaults after saved selection changes
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mimplicit recommendation defaults[2
+m > [22m[2mdoes not restore defaults after saved selection changes
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mimplicit recommendation defaults[2
+m > [22m[2mkeeps settings usable after a failed background fetch and retries on picker open
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mimplicit recommendation defaults[2
+m > [22m[2mkeeps defaults returned by reset through focus and remount before opening a picker
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mimplicit recommendation defaults[2
+m > [22m[2mkeeps defaults returned by reset through focus and remount before opening a picker
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/CodexDesktopModelsSettings.test.tsx[2m > [22m[2mimplicit recommendation defaults[2
+m > [22m[2mdoes not describe an empty edited selection as recommended defaults
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+ [32m✓[39m src/hooks/useHealth.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/components/CodexDesktopModelsSettings.test.tsx [2m([22m[2m33 tests[22m[2m)[22m[33m 594[2mms[22m[39m
+[90mstderr[2m | src/components/Onboarding.test.tsx[2m > [22m[2mOnboarding[2m > [22m[2mkeeps the Claude connecti
+on busy through installer detection
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/Onboarding.test.tsx[2m > [22m[2mOnboarding[2m > [22m[2mpreserves a late native e
+rror after the Connect Apps action times out
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/Onboarding.test.tsx[2m > [22m[2mOnboarding handoff[2m > [22m[2mpreserves local s
+etup without opening Apps
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/Onboarding.test.tsx[2m > [22m[2mConnectAppsScreen interactions[2m > [22m[2mhonor
+s the native Claude disconnect confirmation: false
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/Onboarding.test.tsx[2m > [22m[2mConnectAppsScreen interactions[2m > [22m[2mhonor
+s the native Claude disconnect confirmation: true
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/Onboarding.test.tsx[2m > [22m[2mConnectAppsScreen interactions[2m > [22m[2mlets 
+the user retry Connect after cancelling the native confirmation
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/Onboarding.test.tsx[2m > [22m[2mConnectAppsScreen interactions[2m > [22m[2mcopie
+s every catalog command and limits desktop connections to macOS (darwin)
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/OnboardingRoute.test.tsx[2m > [22m[2mOnboarding completion[2m > [22m[2mleaves on
+boarding when CLI completion arrives
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/OnboardingRoute.test.tsx[2m > [22m[2mOnboarding completion[2m > [22m[2mkeeps the
+ app's own local completion screen visible
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/OnboardingRoute.test.tsx[2m > [22m[2mOnboarding completion[2m > [22m[2msaves onc
+e before opening Apps directly (already signed in: true)
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/OnboardingRoute.test.tsx[2m > [22m[2mOnboarding completion[2m > [22m[2msaves onc
+e before opening Apps directly (already signed in: false)
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/Onboarding.test.tsx[2m > [22m[2mConnectAppsScreen interactions[2m > [22m[2mcopie
+s every catalog command and limits desktop connections to macOS (windows)
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+ [32m✓[39m src/components/OnboardingRoute.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[32m 177[2mms[22m[39m
+[90mstderr[2m | src/components/Onboarding.test.tsx[2m > [22m[2mConnectAppsScreen interactions[2m > [22m[2mrenew
+s the copy notification on each click and dismisses it after inactivity
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/Onboarding.test.tsx[2m > [22m[2mConnectAppsScreen interactions[2m > [22m[2moffer
+s manual copying instead of success when clipboard access denied
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/Onboarding.test.tsx[2m > [22m[2mConnectAppsScreen interactions[2m > [22m[2moffer
+s manual copying instead of success when clipboard access throws
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/Onboarding.test.tsx[2m > [22m[2mConnectAppsScreen interactions[2m > [22m[2mdismi
+sses a copy error with Escape while preserving manual copying
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/Onboarding.test.tsx[2m > [22m[2mConnectAppsScreen interactions[2m > [22m[2mdismi
+sses a copy error with outside pointer while preserving manual copying
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/Onboarding.test.tsx[2m > [22m[2mConnectAppsScreen interactions[2m > [22m[2mlets 
+users copy commands while Claude status is still loading (connected)
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/Onboarding.test.tsx[2m > [22m[2mConnectAppsScreen interactions[2m > [22m[2mlets 
+users copy commands while Claude status is still loading (disconnected)
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/Onboarding.test.tsx[2m > [22m[2mConnectAppsScreen interactions[2m > [22m[2mlets 
+users copy commands while Claude status is still loading (failed)
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/Onboarding.test.tsx[2m > [22m[2mConnectAppsScreen interactions[2m > [22m[2mshows
+ an app-list error without waiting for Claude status
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+[90mstderr[2m | src/components/Onboarding.test.tsx[2m > [22m[2mConnectAppsScreen interactions[2m > [22m[2mshows
+ the first-use intro after the user connects Claude
+[22m[39mreact-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+ [32m✓[39m src/components/StreamingMarkdownContent.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/components/Onboarding.test.tsx [2m([22m[2m39 tests[22m[2m)[22m[33m 472[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m22 passed[39m[22m[90m (22)[39m
+[2m      Tests [22m [1m[32m228 passed[39m[22m[90m (228)[39m
+[2m   Start at [22m 00:37:43
+[2m   Duration [22m 6.15s[2m (transform 2.42s, setup 0ms, collect 37.08s, tests 3.35s, environment 7ms, prepare 8.47s)[22m
+

@@ -1,0 +1,164 @@
+﻿commit 855f4bf989da9e6b43b2c0af288e668e2105c00d
+Author: Daniel Hiltgen <dhiltgen@users.noreply.github.com>
+Date:   Wed Sep 2 09:30:44 2026 -0700
+
+    Report cached prompt tokens (#17943)
+    
+    * Report cached prompt tokens
+    
+    Add prompt_eval_cached_count to native responses and expose equivalent cached-token fields through the OpenAI- and Anthropic-compatible APIs. Keep prompt_eval_count as the logical input total while excluding cache hits from CLI and benchmark prefill rates. Surface processed and cached prompt counts in benchmark output.
+    
+    Collect cache counts from llama-server and MLX, preserve coherent metrics across two-pass structured generation.
+    
+    Fixes #8008
+    
+    Related to #15758
+    
+    * review comments
+
+diff --git a/llm/llama_server.go b/llm/llama_server.go
+index 6f27b754..fc3edfbb 100644
+--- a/llm/llama_server.go
++++ b/llm/llama_server.go
+@@ -1412,6 +1412,7 @@ type llamaServerCompletionRequest struct {
+ 	JsonSchema      json.RawMessage `json:"json_schema,omitempty"`
+ 	NProbs          int             `json:"n_probs,omitempty"`
+ 	PreservedTokens []string        `json:"preserved_tokens,omitempty"`
++	TimingsPerToken bool            `json:"timings_per_token,omitempty"`
+ }
+ 
+ func llamaServerPreservedTokens(parserTokens []string, toolCallTag string) []string {
+@@ -1501,7 +1502,7 @@ type llamaServerChatResponse struct {
+ }
+ 
+ type llamaServerTimings struct {
+-	CacheN    int     `json:"cache_n"`
++	CacheN    *int    `json:"cache_n"`
+ 	PromptN   int     `json:"prompt_n"`
+ 	PromptMS  float64 `json:"prompt_ms"`
+ 	PredictN  int     `json:"predicted_n"`
+@@ -1509,7 +1510,10 @@ type llamaServerTimings struct {
+ }
+ 
+ func (t llamaServerTimings) promptEvalCount() int {
+-	return t.CacheN + t.PromptN
++	if t.CacheN == nil {
++		return t.PromptN
++	}
++	return *t.CacheN + t.PromptN
+ }
+ 
+ type llamaServerApplyTemplateResponse struct {
+@@ -1574,6 +1578,7 @@ func (s *llamaServerRunner) Completion(ctx context.Context, req CompletionReques
+ 		TypicalP:        req.Options.TypicalP,
+ 		Seed:            req.Options.Seed,
+ 		PreservedTokens: llamaServerPreservedTokens(req.PreservedTokens, req.ToolCallTag),
++		TimingsPerToken: req.IncludeIntermediateMetrics,
+ 	}
+ 
+ 	if req.Logprobs {
+@@ -1701,8 +1706,13 @@ func (s *llamaServerRunner) Completion(ctx context.Context, req CompletionReques
+ 			}
+ 
+ 			if lsResp.Content != "" && !lsResp.Stop {
+-				resp := CompletionResponse{
+-					Content: lsResp.Content,
++				resp := CompletionResponse{Content: lsResp.Content}
++				if req.IncludeIntermediateMetrics {
++					resp.PromptEvalCount = lsResp.Timings.promptEvalCount()
++					resp.PromptEvalCachedCount = lsResp.Timings.CacheN
++					resp.PromptEvalDuration = time.Duration(lsResp.Timings.PromptMS * float64(time.Millisecond))
++					resp.EvalCount = lsResp.Timings.PredictN
++					resp.EvalDuration = time.Duration(lsResp.Timings.PredictMS * float64(time.Millisecond))
+ 				}
+ 				resp.Logprobs = convertLogprobs(lsResp.CompletionProbabilities, req.TopLogprobs > 0)
+ 				fn(resp)
+@@ -1715,13 +1725,14 @@ func (s *llamaServerRunner) Completion(ctx context.Context, req CompletionReques
+ 				}
+ 
+ 				finalResp = CompletionResponse{
+-					Content:            lsResp.Content,
+-					Done:               true,
+-					DoneReason:         doneReason,
+-					PromptEvalCount:    lsResp.Timings.promptEvalCount(),
+-					PromptEvalDuration: time.Duration(lsResp.Timings.PromptMS * float64(time.Millisecond)),
+-					EvalCount:          lsResp.Timings.PredictN,
+-					EvalDuration:       time.Duration(lsResp.Timings.PredictMS * float64(time.Millisecond)),
++					Content:               lsResp.Content,
++					Done:                  true,
++					DoneReason:            doneReason,
++					PromptEvalCount:       lsResp.Timings.promptEvalCount(),
++					PromptEvalCachedCount: lsResp.Timings.CacheN,
++					PromptEvalDuration:    time.Duration(lsResp.Timings.PromptMS * float64(time.Millisecond)),
++					EvalCount:             lsResp.Timings.PredictN,
++					EvalDuration:          time.Duration(lsResp.Timings.PredictMS * float64(time.Millisecond)),
+ 				}
+ 				hasFinalResp = true
+ 			}
+@@ -2018,6 +2029,7 @@ func (s *llamaServerRunner) Chat(ctx context.Context, req ChatRequest, fn func(C
+ 				resp.Done = true
+ 				resp.DoneReason = doneReason
+ 				resp.PromptEvalCount = lsResp.Timings.promptEvalCount()
++				resp.PromptEvalCachedCount = lsResp.Timings.CacheN
+ 				resp.PromptEvalDuration = time.Duration(lsResp.Timings.PromptMS * float64(time.Millisecond))
+ 				resp.EvalCount = lsResp.Timings.PredictN
+ 				resp.EvalDuration = time.Duration(lsResp.Timings.PredictMS * float64(time.Millisecond))
+diff --git a/llm/server.go b/llm/server.go
+index c1f49446..a8a55409 100644
+--- a/llm/server.go
++++ b/llm/server.go
+@@ -214,6 +214,8 @@ type CompletionRequest struct {
+ 	PreservedTokens []string // parser tokens to render as text; ignored by non-llama-server runners
+ 	ToolCallTag     string   // raw generic tool parser tag, if any
+ 	LeadingBOS      string   // textual BOS emitted by Go rendering, if any
++	// IncludeIntermediateMetrics adds cumulative metrics to non-final responses; final responses always include metrics.
++	IncludeIntermediateMetrics bool
+ 
+ 	// Logprobs specifies whether to include log probabilities in the response
+ 	Logprobs bool
+@@ -235,14 +237,15 @@ type ChatRequest struct {
+ }
+ 
+ type ChatResponse struct {
+-	Message            api.Message   `json:"message"`
+-	DoneReason         DoneReason    `json:"done_reason"`
+-	Done               bool          `json:"done"`
+-	PromptEvalCount    int           `json:"prompt_eval_count"`
+-	PromptEvalDuration time.Duration `json:"prompt_eval_duration"`
+-	EvalCount          int           `json:"eval_count"`
+-	EvalDuration       time.Duration `json:"eval_duration"`
+-	Logprobs           []Logprob     `json:"logprobs,omitempty"`
++	Message               api.Message   `json:"message"`
++	DoneReason            DoneReason    `json:"done_reason"`
++	Done                  bool          `json:"done"`
++	PromptEvalCount       int           `json:"prompt_eval_count"`
++	PromptEvalCachedCount *int          `json:"prompt_eval_cached_count,omitempty"`
++	PromptEvalDuration    time.Duration `json:"prompt_eval_duration"`
++	EvalCount             int           `json:"eval_count"`
++	EvalDuration          time.Duration `json:"eval_duration"`
++	Logprobs              []Logprob     `json:"logprobs,omitempty"`
+ }
+ 
+ // DoneReason represents the reason why a completion response is done
+@@ -278,13 +281,14 @@ type Logprob struct {
+ }
+ 
+ type CompletionResponse struct {
+-	Content            string        `json:"content"`
+-	DoneReason         DoneReason    `json:"done_reason"`
+-	Done               bool          `json:"done"`
+-	PromptEvalCount    int           `json:"prompt_eval_count"`
+-	PromptEvalDuration time.Duration `json:"prompt_eval_duration"`
+-	EvalCount          int           `json:"eval_count"`
+-	EvalDuration       time.Duration `json:"eval_duration"`
++	Content               string        `json:"content"`
++	DoneReason            DoneReason    `json:"done_reason"`
++	Done                  bool          `json:"done"`
++	PromptEvalCount       int           `json:"prompt_eval_count"`
++	PromptEvalCachedCount *int          `json:"prompt_eval_cached_count,omitempty"`
++	PromptEvalDuration    time.Duration `json:"prompt_eval_duration"`
++	EvalCount             int           `json:"eval_count"`
++	EvalDuration          time.Duration `json:"eval_duration"`
+ 
+ 	// Logprobs contains log probability information if requested
+ 	Logprobs []Logprob `json:"logprobs,omitempty"`

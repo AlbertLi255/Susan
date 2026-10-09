@@ -913,7 +913,7 @@ func TestPiPaths(t *testing.T) {
 }
 
 func TestPiEdit(t *testing.T) {
-	// Mock Ollama server for createConfig calls during Edit
+	// Mock Susan server for createConfig calls during Edit
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/api/show" {
 			fmt.Fprintf(w, `{"capabilities":[],"model_info":{}}`)
@@ -1643,7 +1643,7 @@ func TestPiModels(t *testing.T) {
 	})
 }
 
-func TestIsPiOllamaModel(t *testing.T) {
+func TestIsPiSusanModel(t *testing.T) {
 	tests := []struct {
 		name string
 		cfg  map[string]any
@@ -1658,8 +1658,8 @@ func TestIsPiOllamaModel(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := isPiOllamaModel(tt.cfg); got != tt.want {
-				t.Errorf("isPiOllamaModel(%v) = %v, want %v", tt.cfg, got, tt.want)
+			if got := isPiSusanModel(tt.cfg); got != tt.want {
+				t.Errorf("isPiSusanModel(%v) = %v, want %v", tt.cfg, got, tt.want)
 			}
 		})
 	}

@@ -1,0 +1,1 @@
+{"model":"qwen3:0.6b","messages":[{"role":"user","content":"reply ok"}],"stream":false,"options":{"num_predict":5}}

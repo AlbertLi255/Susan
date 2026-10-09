@@ -266,11 +266,12 @@ func main() {
 				done <- osrv.Run(octx)
 			}()
 		},
-		Store:        st,
-		ToolRegistry: toolRegistry,
-		Dev:          devMode,
-		Logger:       slog.Default(),
-		Updater:      upd,
+		Store:             st,
+		IntegrationModels: desktopModelSettingsHandler(),
+		ToolRegistry:      toolRegistry,
+		Dev:               devMode,
+		Logger:            slog.Default(),
+		Updater:           upd,
 		UpdateAvailableFunc: func() {
 			UpdateAvailable("")
 		},
@@ -532,50 +533,57 @@ func openInBrowser(url string) {
 }
 
 // parseURLScheme parses a susan:// or ollama:// URL and validates it.
-// Supports: susan:// (open/focus app) and susan://connect (start sign-in).
-func parseURLScheme(urlSchemeRequest string) (isConnect bool, err error) {
+// Supports opening the app, Apps, and Device Flow sign-in.
+func parseURLScheme(urlSchemeRequest string) (action string, err error) {
 	parsedURL, err := url.Parse(urlSchemeRequest)
 	if err != nil {
-		return false, fmt.Errorf("invalid URL: %w", err)
+		return "", fmt.Errorf("invalid URL: %w", err)
 	}
 
 	switch parsedURL.Scheme {
 	case "susan", "ollama":
 	default:
-		return false, fmt.Errorf("unsupported URL scheme: %s", parsedURL.Scheme)
+		return "", fmt.Errorf("unsupported URL scheme: %s", parsedURL.Scheme)
 	}
 
 	// Check if this is a connect URL
 	if parsedURL.Host == "connect" || strings.TrimPrefix(parsedURL.Path, "/") == "connect" {
-		return true, nil
+		return "connect", nil
+	}
+
+	if parsedURL.Host == "apps" || strings.TrimPrefix(parsedURL.Path, "/") == "apps" {
+		return "apps", nil
 	}
 
 	// Allow bare susan:// / ollama:// (or with a trailing slash) to open the app
 	if (parsedURL.Host == "" && parsedURL.Path == "") || parsedURL.Path == "/" {
-		return false, nil
+		return "", nil
 	}
 
-	return false, fmt.Errorf("unsupported %s:// URL path: %s", parsedURL.Scheme, urlSchemeRequest)
+	return "", fmt.Errorf("unsupported %s:// URL path: %s", parsedURL.Scheme, urlSchemeRequest)
 }
 
 // handleURLSchemeInCurrentInstance processes URL scheme requests in the current instance
 func handleURLSchemeInCurrentInstance(urlSchemeRequest string) {
 	err := dispatchURLSchemeRequest(urlSchemeRequest, handleConnectURLScheme, func() {
 		openUI("/")
-	})
+	}, openAppsUI)
 	if err != nil {
 		slog.Error("failed to parse URL scheme request", "url", urlSchemeRequest, "error", err)
 	}
 }
 
-func dispatchURLSchemeRequest(urlSchemeRequest string, connect, open func()) error {
-	isConnect, err := parseURLScheme(urlSchemeRequest)
+func dispatchURLSchemeRequest(urlSchemeRequest string, connect, open, apps func()) error {
+	action, err := parseURLScheme(urlSchemeRequest)
 	if err != nil {
 		return err
 	}
-	if isConnect {
+	switch action {
+	case "connect":
 		connect()
-	} else {
+	case "apps":
+		apps()
+	default:
 		open()
 	}
 	return nil

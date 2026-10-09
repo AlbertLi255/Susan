@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"os"
 	"os/user"
@@ -65,52 +66,59 @@ func (f Modelfile) CreateRequest(relativeDir string) (*api.CreateRequest, error)
 	for _, c := range f.Commands {
 		switch c.Name {
 		case "model":
-			path, err := expandPath(c.Args, relativeDir)
+			paths, err := expandPaths(c.Args, relativeDir)
 			if err != nil {
 				return nil, err
 			}
+			// A glob that matched nothing (or, on Windows, a pattern whose
+			// stat returns ERROR_INVALID_NAME) is treated as a model name.
+			if len(paths) == 0 {
+				req.From = c.Args
+				continue
+			}
 
-			digestMap, err := fileDigestMap(path)
+			digestMap, err := fileDigestMapForPaths(paths)
 			if errors.Is(err, os.ErrNotExist) {
 				req.From = c.Args
 				continue
 			} else if err != nil {
 				return nil, err
 			}
-			if err := rejectMatchingLocalPath("DRAFT", path, draftPaths); err != nil {
-				return nil, err
+			for _, path := range paths {
+				if err := rejectMatchingLocalPath("DRAFT", path, draftPaths); err != nil {
+					return nil, err
+				}
 			}
-			modelPaths = append(modelPaths, path)
+			modelPaths = append(modelPaths, paths...)
 
 			if req.Files == nil {
-				req.Files = digestMap
-			} else {
-				for k, v := range digestMap {
-					req.Files[k] = v
-				}
+				req.Files = make(map[string]string)
 			}
+			maps.Copy(req.Files, digestMap)
 		case "draft":
-			path, err := expandPath(c.Args, relativeDir)
+			paths, err := expandPaths(c.Args, relativeDir)
 			if err != nil {
 				return nil, err
+			}
+			if len(paths) == 0 {
+				return nil, fmt.Errorf("DRAFT pattern matched no files: %s", c.Args)
 			}
 
-			digestMap, err := fileDigestMap(path)
+			digestMap, err := fileDigestMapForPaths(paths)
 			if err != nil {
 				return nil, err
 			}
-			if err := rejectMatchingLocalPath("DRAFT", path, modelPaths); err != nil {
-				return nil, err
+			for _, path := range paths {
+				if err := rejectMatchingLocalPath("DRAFT", path, modelPaths); err != nil {
+					return nil, err
+				}
 			}
-			draftPaths = append(draftPaths, path)
+			draftPaths = append(draftPaths, paths...)
 
 			if req.DraftFiles == nil {
-				req.DraftFiles = digestMap
-			} else {
-				for k, v := range digestMap {
-					req.DraftFiles[k] = v
-				}
+				req.DraftFiles = make(map[string]string)
 			}
+			maps.Copy(req.DraftFiles, digestMap)
 		case "adapter":
 			path, err := expandPath(c.Args, relativeDir)
 			if err != nil {
@@ -180,6 +188,45 @@ func (f Modelfile) CreateRequest(relativeDir string) (*api.CreateRequest, error)
 	}
 
 	return req, nil
+}
+
+// hasGlobMeta reports whether path contains unescaped glob metacharacters.
+// On Windows such characters are illegal in file names, and stat-ing an
+// unmatched pattern returns ERROR_INVALID_NAME instead of ENOENT, so callers
+// need to distinguish "glob matched nothing" from "plain file is missing".
+func hasGlobMeta(path string) bool {
+	return strings.ContainsAny(path, `*?[`)
+}
+
+func expandPaths(path, relativeDir string) ([]string, error) {
+	path, err := expandPath(path, relativeDir)
+	if err != nil {
+		return nil, err
+	}
+
+	matches, err := filepath.Glob(path)
+	if err != nil {
+		return nil, err
+	}
+	if len(matches) == 0 {
+		if hasGlobMeta(path) {
+			return nil, nil
+		}
+		return []string{path}, nil
+	}
+	return matches, nil
+}
+
+func fileDigestMapForPaths(paths []string) (map[string]string, error) {
+	files := make(map[string]string)
+	for _, path := range paths {
+		digests, err := fileDigestMap(path)
+		if err != nil {
+			return nil, err
+		}
+		maps.Copy(files, digests)
+	}
+	return files, nil
 }
 
 func rejectMatchingLocalPath(name, path string, existing []string) error {

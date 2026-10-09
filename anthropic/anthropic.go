@@ -21,6 +21,7 @@ import (
 	"github.com/ollama/ollama/envconfig"
 	internalcloud "github.com/ollama/ollama/internal/cloud"
 	"github.com/ollama/ollama/logutil"
+	"github.com/ollama/ollama/types/model"
 )
 
 // Error types matching Anthropic API
@@ -318,8 +319,9 @@ type StreamErrorEvent struct {
 	Error Error  `json:"error"`
 }
 
-// FromMessagesRequest converts an Anthropic MessagesRequest to an Ollama api.ChatRequest
-func FromMessagesRequest(r MessagesRequest) (*api.ChatRequest, error) {
+// FromMessagesRequest converts an Anthropic MessagesRequest to an Ollama api.ChatRequest.
+// An optional thinking descriptor preserves model-defined effort names for rendering.
+func FromMessagesRequest(r MessagesRequest, thinking ...*model.Thinking) (*api.ChatRequest, error) {
 	logutil.Trace("anthropic: converting request", "req", TraceMessagesRequest(r))
 
 	var messages []api.Message
@@ -403,14 +405,6 @@ func FromMessagesRequest(r MessagesRequest) (*api.ChatRequest, error) {
 	}
 
 	var think *api.ThinkValue
-	normalizedEffort := ""
-	if r.OutputConfig != nil {
-		normalizedEffort = strings.ToLower(strings.TrimSpace(r.OutputConfig.Effort))
-		if normalizedEffort == "xhigh" {
-			normalizedEffort = "high"
-		}
-	}
-
 	if r.Thinking != nil && r.Thinking.Type == "enabled" {
 		think = &api.ThinkValue{Value: true}
 	}
@@ -418,9 +412,20 @@ func FromMessagesRequest(r MessagesRequest) (*api.ChatRequest, error) {
 		think = &api.ThinkValue{Value: false}
 	}
 	if think == nil && r.OutputConfig != nil {
-		switch normalizedEffort {
-		case "high", "medium", "low", "max":
-			think = &api.ThinkValue{Value: normalizedEffort}
+		effort := r.OutputConfig.Effort
+		if len(thinking) > 0 && thinking[0].Valid() {
+			if effort != "" {
+				think = &api.ThinkValue{Value: effort}
+			}
+		} else {
+			effort = strings.ToLower(strings.TrimSpace(effort))
+			if effort == "xhigh" {
+				effort = "high"
+			}
+			legacyThink := &api.ThinkValue{Value: effort}
+			if api.ValidateLegacyThinking(legacyThink) == nil {
+				think = legacyThink
+			}
 		}
 	}
 

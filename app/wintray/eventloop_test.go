@@ -11,13 +11,16 @@ type lifecycleApp struct {
 	showCall   bool
 }
 
-func (a *lifecycleApp) UIRun(path string)  { a.runPath = path }
-func (a *lifecycleApp) UIShow()            { a.showCall = true }
-func (a *lifecycleApp) UITerminate()       {}
-func (a *lifecycleApp) UIRunning() bool    { return a.running }
-func (a *lifecycleApp) UIOnboarding() bool { return a.onboarding }
-func (a *lifecycleApp) Quit()              {}
-func (a *lifecycleApp) DoUpdate()          {}
+func (a *lifecycleApp) UIRun(path string)         { a.runPath = path }
+func (a *lifecycleApp) UIShow()                   { a.showCall = true }
+func (a *lifecycleApp) UITerminate()              {}
+func (a *lifecycleApp) UIRunning() bool           { return a.running }
+func (a *lifecycleApp) UIOnboarding() bool        { return a.onboarding }
+func (a *lifecycleApp) Quit()                     {}
+func (a *lifecycleApp) DoUpdate()                 {}
+func (a *lifecycleApp) AuthState() (string, bool) { return "", false }
+func (a *lifecycleApp) StartSignin()              {}
+func (a *lifecycleApp) Signout()                  {}
 
 func TestFocusUICreatesOrShowsWindow(t *testing.T) {
 	tests := []struct {

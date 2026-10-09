@@ -9,12 +9,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/ollama/ollama/api"
+	"github.com/ollama/ollama/app/store"
 	"github.com/ollama/ollama/cmd/config"
 	"github.com/ollama/ollama/cmd/launch"
 	"github.com/ollama/ollama/internal/proxy"
@@ -38,15 +40,15 @@ type fakeCodexDesktopController struct {
 }
 
 func (f *fakeCodexDesktopController) Installed() bool { return f.installed }
-func (f *fakeCodexDesktopController) OllamaConfigured() bool {
+func (f *fakeCodexDesktopController) SusanConfigured() bool {
 	return f.configured
 }
 func (f *fakeCodexDesktopController) Running() bool { return f.running }
-func (f *fakeCodexDesktopController) OllamaRequestCount() uint64 {
+func (f *fakeCodexDesktopController) SusanRequestCount() uint64 {
 	return f.requests
 }
 
-func (f *fakeCodexDesktopController) UseOllamaFromDesktop(primary string, models []launch.LaunchModel, restartConfirmed bool) error {
+func (f *fakeCodexDesktopController) UseSusanFromDesktop(primary string, models []launch.LaunchModel, restartConfirmed bool) error {
 	if f.running && !restartConfirmed {
 		return errCodexDesktopRestartConfirmationRequired
 	}
@@ -69,7 +71,7 @@ func (f *fakeCodexDesktopController) UseOllamaFromDesktop(primary string, models
 	return nil
 }
 
-func (f *fakeCodexDesktopController) UpdateOllamaModelsFromDesktop(primary string, models []launch.LaunchModel, restartConfirmed bool) error {
+func (f *fakeCodexDesktopController) UpdateSusanModelsFromDesktop(primary string, models []launch.LaunchModel, restartConfirmed bool) error {
 	if f.running && !restartConfirmed {
 		return errCodexDesktopRestartConfirmationRequired
 	}
@@ -1006,7 +1008,7 @@ func TestCodexDesktopInventoryModelAccessReportsCloudOff(t *testing.T) {
 }
 
 func TestLoadCodexDesktopRecommendationsUsesCodexQualifier(t *testing.T) {
-	useTestOllamaRequestSigner(t)
+	useTestSusanRequestSigner(t)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/api/experimental/model-recommendations" || r.URL.Query().Get("app") != "codex-desktop" {
 			t.Fatalf("request URL = %q", r.URL.String())
@@ -1259,6 +1261,55 @@ func TestLoadCodexDesktopModelsHydratesAccountOnlyCloudCapabilities(t *testing.T
 	}
 }
 
+func TestLoadCodexDesktopModelsThinkingDiscovery(t *testing.T) {
+	for _, tc := range []struct {
+		name            string
+		load            func(context.Context, []string) (string, []launch.LaunchModel, error)
+		recommendations []api.ModelRecommendation
+	}{
+		{"new connection discovers local controls", loadCodexDesktopConnectionModels, nil},
+		{"update overrides stale recommendation", loadCodexDesktopModels, []api.ModelRecommendation{{Model: "custom-local:latest", Thinking: &api.ModelRecommendationThinking{Values: []any{false, true}, Default: true}}}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			stubCodexDesktopCatalogSources(t, tc.recommendations, proxy.ClaudeDesktopAccessState{Cloud: proxy.ClaudeDesktopCloudOff})
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				switch r.URL.Path {
+				case "/api/tags":
+					fmt.Fprint(w, `{"models":[{"name":"custom-local:latest","capabilities":["completion","tools","thinking"]}]}`)
+				case "/api/show":
+					fmt.Fprint(w, `{"capabilities":["completion","thinking","tools"],"thinking":{"values":[false,"low","medium","xhigh"],"default":"medium"}}`)
+				default:
+					http.NotFound(w, r)
+				}
+			}))
+			defer server.Close()
+			base, err := url.Parse(server.URL)
+			if err != nil {
+				t.Fatal(err)
+			}
+			client := api.NewClient(base, server.Client())
+			originalFactory, originalCloudModels := codexDesktopClientFactory, codexDesktopCloudModels
+			t.Cleanup(func() { codexDesktopClientFactory = originalFactory; codexDesktopCloudModels = originalCloudModels })
+			codexDesktopClientFactory = func() (*api.Client, error) { return client, nil }
+			codexDesktopCloudModels = func(context.Context) ([]string, error) { return nil, nil }
+			primary, models, err := tc.load(t.Context(), []string{"custom-local:latest"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if primary != "custom-local:latest" || len(models) != 1 {
+				t.Fatalf("primary=%q models=%+v", primary, models)
+			}
+			thinking := models[0].Thinking
+			if !thinking.Valid() || thinking.Default != "medium" || !slices.Equal(thinking.Values, []any{false, "low", "medium", "xhigh"}) {
+				t.Fatalf("desktop lost discovered controls: %+v", thinking)
+			}
+			if len(tc.recommendations) > 0 && tc.recommendations[0].Thinking.Default != true {
+				t.Fatal("discovery mutated recommendation metadata")
+			}
+		})
+	}
+}
+
 func TestReconcileCodexDesktopModelsDropsUnavailableSavedSelections(t *testing.T) {
 	available := []launch.LaunchModel{
 		{Name: "qwen3:8b"},
@@ -1375,5 +1426,50 @@ func TestCodexDesktopModelRefreshErrorUsesUserFacingCopy(t *testing.T) {
 	withoutSavedModels := codexDesktopModelRefreshError(codexDesktopModelsSettings{})
 	if withoutSavedModels != "Couldn’t refresh available models. Try again." {
 		t.Fatalf("empty-selection message = %q", withoutSavedModels)
+	}
+}
+
+func TestCodexDesktopUsed(t *testing.T) {
+	previous := appStore
+	t.Cleanup(func() { appStore = previous })
+	path := filepath.Join(t.TempDir(), "db.sqlite")
+	appStore = &store.Store{DBPath: path}
+	if hasUsedCodexDesktopIntegration() {
+		t.Fatal("new store already acknowledged")
+	}
+	settings, err := appStore.Settings()
+	if err != nil {
+		t.Fatal(err)
+	}
+	settings.ClaudeDesktopUsed = true
+	if err := appStore.SetSettings(settings); err != nil {
+		t.Fatal(err)
+	}
+	if err := markCodexDesktopIntegrationUsed(); err != nil {
+		t.Fatal(err)
+	}
+	if err := appStore.Close(); err != nil {
+		t.Fatal(err)
+	}
+	appStore = &store.Store{DBPath: path}
+	defer appStore.Close()
+	if !hasUsedCodexDesktopIntegration() {
+		t.Fatal("acknowledgment did not survive reopening the store")
+	}
+	settings, err = appStore.Settings()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !settings.ClaudeDesktopUsed {
+		t.Fatal("changed Claude history")
+	}
+}
+
+func TestCodexDesktopUsedUnavailable(t *testing.T) {
+	previous := appStore
+	t.Cleanup(func() { appStore = previous })
+	appStore = nil
+	if err := markCodexDesktopIntegrationUsed(); err == nil {
+		t.Fatal("expected unavailable store error")
 	}
 }

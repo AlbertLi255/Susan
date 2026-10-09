@@ -80,6 +80,7 @@ func TestResolveCloudProxyBaseURL_Default(t *testing.T) {
 }
 
 func TestCloudTargetFollowsCloudHost(t *testing.T) {
+	t.Setenv("SUSAN_CLOUD_HOST", "")
 	// No override is expected at the start of this test; guard anyway.
 	if cloudProxyBaseURL != "" || cloudProxyBaseURLOverride != "" {
 		t.Skip("a cloud proxy override is active; skipping dynamic CloudHost test")

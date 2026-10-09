@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"math/rand"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -144,6 +145,7 @@ func (w *ChatWriter) writeResponse(data []byte) (int, error) {
 			if w.streamOptions != nil && w.streamOptions.IncludeUsage {
 				u := openai.ToUsage(chatResponse)
 				finishChunk.Usage = &u
+				finishChunk.Timings = openai.ToTimings(chatResponse.Metrics)
 				finishChunk.Choices = []openai.ChunkChoice{}
 				d, err := json.Marshal(finishChunk)
 				if err != nil {
@@ -210,6 +212,7 @@ func (w *CompleteWriter) writeResponse(data []byte) (int, error) {
 			if w.streamOptions != nil && w.streamOptions.IncludeUsage {
 				u := openai.ToUsageGenerate(generateResponse)
 				c.Usage = &u
+				c.Timings = openai.ToTimings(generateResponse.Metrics)
 				c.Choices = []openai.CompleteChunkChoice{}
 				d, err := json.Marshal(c)
 				if err != nil {
@@ -443,7 +446,7 @@ func EmbeddingsMiddleware() gin.HandlerFunc {
 	}
 }
 
-func ChatMiddleware() gin.HandlerFunc {
+func ChatMiddleware(thinkingLookup ...ThinkingLookup) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req openai.ChatCompletionRequest
 		err := c.ShouldBindJSON(&req)
@@ -459,7 +462,8 @@ func ChatMiddleware() gin.HandlerFunc {
 
 		var b bytes.Buffer
 
-		chatReq, err := openai.FromChatRequest(req)
+		thinking := modelThinking(thinkingLookup, req.Model)
+		chatReq, err := openai.FromChatRequest(req, thinking)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, openai.NewError(http.StatusBadRequest, err.Error()))
 			return
@@ -863,9 +867,16 @@ func (w *WebSearchResponsesWriter) runLoop(ctx context.Context, initial api.Chat
 		}
 		calls = append(calls, responseCall)
 
+		resultContent := formatResponsesWebSearchResults(searchResponse.Results)
+		if loop == maxWebSearchLoops {
+			tools = slices.DeleteFunc(tools, func(tool api.Tool) bool {
+				return tool.Function.Name == "web_search"
+			})
+			resultContent += "\nThe web search limit for this response has been reached. Continue using the available results and state any limitations."
+		}
 		messages = append(messages,
 			buildWebSearchAssistantMessage(current, currentCall),
-			api.Message{Role: "tool", ToolCallID: currentCall.ID, Content: formatResponsesWebSearchResults(searchResponse.Results)},
+			api.Message{Role: "tool", ToolCallID: currentCall.ID, Content: resultContent},
 		)
 		var followUp api.ChatResponse
 		var followUpOutputStreamed bool
@@ -1159,7 +1170,7 @@ func decodeWebSearchResponseError(status int, data []byte) error {
 	return api.StatusError{StatusCode: status, ErrorMessage: response.Error}
 }
 
-func ResponsesMiddleware() gin.HandlerFunc {
+func ResponsesMiddleware(thinkingLookup ...ThinkingLookup) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		requestCtx := c.Request.Context()
 		if c.GetHeader("Content-Encoding") == "zstd" {
@@ -1179,7 +1190,8 @@ func ResponsesMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		chatReq, err := openai.FromResponsesRequest(req)
+		thinking := modelThinking(thinkingLookup, req.Model)
+		chatReq, err := openai.FromResponsesRequest(req, thinking)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, openai.NewError(http.StatusBadRequest, err.Error()))
 			return

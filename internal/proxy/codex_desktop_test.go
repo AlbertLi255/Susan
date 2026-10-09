@@ -11,12 +11,16 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/klauspost/compress/zstd"
+	"github.com/ollama/ollama/model/renderers"
+	"github.com/ollama/ollama/openai"
+	modelpkg "github.com/ollama/ollama/types/model"
 )
 
 func TestCodexDesktopRoutesCatalogModelToOllamaAndStripsCredentials(t *testing.T) {
@@ -307,6 +311,59 @@ func TestNormalizeOllamaThinkingUsesRoutedModelContract(t *testing.T) {
 	}
 }
 
+func TestNormalizeOllamaDiscoveredThinking(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		controls *modelpkg.Thinking
+		values   map[string]any
+		effort   string
+		want     any
+	}{
+		{"exact xhigh", &modelpkg.Thinking{Values: []any{false, "low", "medium", "xhigh"}, Default: "medium"}, map[string]any{"none": false, "low": "low", "medium": "medium", "xhigh": "xhigh"}, "xhigh", "xhigh"},
+		{"exact minimal", &modelpkg.Thinking{Values: []any{"minimal", "high"}, Default: "high"}, map[string]any{"minimal": "minimal", "high": "high"}, "minimal", "minimal"},
+		{"unsupported xhigh defaults", &modelpkg.Thinking{Values: []any{false, "high", "max"}, Default: "high"}, map[string]any{"none": false, "high": "high", "max": "max"}, "xhigh", "high"},
+		{"saved Boolean medium", &modelpkg.Thinking{Values: []any{false, true}, Default: false}, map[string]any{"none": false, "high": true}, "medium", true},
+		{"Boolean effort alias", &modelpkg.Thinking{Values: []any{false, true}, Default: false}, map[string]any{"none": false, "high": true}, "minimal", true},
+		{"unknown Boolean effort defaults", &modelpkg.Thinking{Values: []any{false, true}, Default: false}, map[string]any{"none": false, "high": true}, "future", false},
+		{"mixed named medium", &modelpkg.Thinking{Values: []any{false, true, "medium"}, Default: false}, map[string]any{"none": false, "high": true, "medium": "medium"}, "medium", "medium"},
+		{"hidden named control prevents Boolean alias", &modelpkg.Thinking{Values: []any{false, true, "turbo"}, Default: false}, map[string]any{"none": false, "high": true}, "medium", false},
+		{"hidden default", &modelpkg.Thinking{Values: []any{"low", "high", "turbo"}, Default: "turbo"}, map[string]any{"low": "low", "high": "high"}, "medium", "turbo"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			metadata := routingThinkingMetadata{Supported: true, Controls: tc.controls, Values: make(map[string]json.RawMessage)}
+			for level, value := range tc.values {
+				metadata.Levels = append(metadata.Levels, level)
+				encoded, err := json.Marshal(value)
+				if err != nil {
+					t.Fatal(err)
+				}
+				metadata.Values[level] = encoded
+			}
+			body := []byte(fmt.Sprintf(`{"model":"test","input":"hi","reasoning":{"effort":%q,"summary":"auto"}}`, tc.effort))
+			normalized, err := normalizeOllamaThinking(body, metadata)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var request openai.ResponsesRequest
+			if err := json.Unmarshal(normalized, &request); err != nil {
+				t.Fatal(err)
+			}
+			converted, err := openai.FromResponsesRequest(request, tc.controls)
+			if err != nil {
+				t.Fatal(err)
+			}
+			resolved := renderers.ResolveThinking(converted.Think, tc.controls)
+			if resolved == nil || resolved.Value != tc.want {
+				t.Fatalf("resolved=%v, want %#v; request=%s", resolved, tc.want, normalized)
+			}
+		})
+	}
+	legacy := routingThinkingMetadata{Supported: true, Levels: []string{"none", "high"}, Values: map[string]json.RawMessage{"none": json.RawMessage("false"), "high": json.RawMessage("true")}}
+	if got := normalizeThinkingEffort("medium", legacy); got != "high" {
+		t.Fatalf("saved Boolean effort=%q, want high", got)
+	}
+}
+
 func TestNormalizeOllamaThinkingRejectsMalformedReasoning(t *testing.T) {
 	model := routingModel{Thinking: &routingThinkingMetadata{
 		Supported: true,
@@ -376,6 +433,76 @@ func TestNormalizeFullAccessExecToolLeavesSandboxedTurnUnchanged(t *testing.T) {
 	}
 	if !bytes.Equal(normalized, body) {
 		t.Fatalf("sandboxed request changed:\n%s", normalized)
+	}
+}
+
+func TestNormalizeFullAccessNamespacedExecTool(t *testing.T) {
+	const tools = `[{"type":"namespace","name":"functions","description":"Command tools","tools":[
+		{"type":"function","name":"exec_command","strict":false,"parameters":{"type":"object","properties":{"cmd":{"type":"string"},"sandbox_permissions":{"type":"string","enum":["use_default","require_escalated"]},"justification":{"type":"string"},"prefix_rule":{"type":"array","items":{"type":"string"}}},"required":["cmd","sandbox_permissions","justification","prefix_rule"],"additionalProperties":false}},
+		{"type":"function","name":"other_tool","parameters":{"type":"object","properties":{"sandbox_permissions":{"type":"string"}}}}
+	]}]`
+	for _, mode := range []string{"danger-full-access", "workspace-write", "read-only", ""} {
+		t.Run(mode, func(t *testing.T) {
+			metadata, err := json.Marshal(map[string]string{"sandbox_mode": mode})
+			if err != nil {
+				t.Fatal(err)
+			}
+			body := []byte(fmt.Sprintf(`{"model":"glm-5.3-flash:cloud","client_metadata":{"x-codex-turn-metadata":%q},"tools":%s}`, metadata, tools))
+			normalized, err := normalizeFullAccessExecTool(body)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if mode != "danger-full-access" {
+				if !bytes.Equal(normalized, body) {
+					t.Fatalf("sandboxed request changed: %s", normalized)
+				}
+				return
+			}
+			var want, got map[string]any
+			if err := json.Unmarshal(body, &want); err != nil {
+				t.Fatal(err)
+			}
+			if err := json.Unmarshal(normalized, &got); err != nil {
+				t.Fatal(err)
+			}
+			namespace := want["tools"].([]any)[0].(map[string]any)
+			exec := namespace["tools"].([]any)[0].(map[string]any)
+			parameters := exec["parameters"].(map[string]any)
+			properties := parameters["properties"].(map[string]any)
+			for _, key := range []string{"sandbox_permissions", "justification", "prefix_rule"} {
+				delete(properties, key)
+			}
+			parameters["required"] = []any{"cmd"}
+			if !reflect.DeepEqual(got, want) {
+				t.Fatalf("namespace tool normalization did not preserve the expected request: %s", normalized)
+			}
+		})
+	}
+}
+
+func TestNormalizeFullAccessNamespaceBoundaries(t *testing.T) {
+	for _, tt := range []struct {
+		name    string
+		tools   string
+		wantErr bool
+	}{
+		{"missing members", `[{"type":"namespace","name":"functions"}]`, false},
+		{"null members", `[{"type":"namespace","name":"functions","tools":null}]`, false},
+		{"empty members", `[{"type":"namespace","name":"functions","tools":[]}]`, false},
+		{"no escalation arguments", `[{"type":"namespace","name":"functions","tools":[{"type":"function","name":"exec_command","parameters":{"properties":{"cmd":{"type":"string"}},"required":["cmd"]}}]}]`, false},
+		{"malformed members", `[{"type":"namespace","name":"functions","tools":{}}]`, true},
+		{"malformed parameters", `[{"type":"namespace","name":"functions","tools":[{"type":"function","name":"exec_command","parameters":42}]}]`, true},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			body := []byte(`{"client_metadata":{"x-codex-turn-metadata":{"sandbox_mode":"danger-full-access"}},"tools":` + tt.tools + `}`)
+			normalized, err := normalizeFullAccessExecTool(body)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("normalization error = %v, want error = %v", err, tt.wantErr)
+			}
+			if !tt.wantErr && !bytes.Equal(normalized, body) {
+				t.Fatalf("unchanged namespace was rewritten: %s", normalized)
+			}
+		})
 	}
 }
 
@@ -1036,7 +1163,7 @@ func TestCodexDesktopPreservesToolSearchAndOllamaCompactionForOllama(t *testing.
 		"input":[
 			{"type":"compaction","encrypted_content":"native-opaque-state"},
 			{"type":"compaction","encrypted_content":"{\"type\":\"ollama_compaction\",\"version\":1,\"summary\":\"summary\",\"retained\":[]}"},
-			{"type":"tool_search_call","id":"ts_1","call_id":"call_search","execution":"client","status":"completed","arguments":{"query":"notion"}},
+			{"type":"tool_search_call","id":"tsc_1","call_id":"call_search","execution":"client","status":"completed","arguments":{"query":"notion"}},
 			{"type":"tool_search_output","id":"tso_1","call_id":"call_search","execution":"client","status":"completed","tools":[{"type":"function","name":"notion.search"}]},
 			{"type":"message","role":"user","content":"continue"},
 			{"type":"compaction_trigger"}
@@ -1644,7 +1771,7 @@ func TestCodexDesktopRecordsMidstreamAbortWithoutPanicking(t *testing.T) {
 	activityLogPath := filepath.Join(t.TempDir(), "codex-proxy.log")
 	streamErr := errors.New("upstream stream failed")
 	handler, err := NewCodexDesktop(CodexDesktopConfig{
-		OllamaURL:          "http://127.0.0.1:14343",
+		OllamaURL:          "http://127.0.0.1:11434",
 		ChatGPTURL:         "https://chatgpt.com/backend-api/codex",
 		RoutingCatalogPath: writeCatalog(t, "glm-5.3-flash:cloud"),
 		ActivityLogPath:    activityLogPath,
@@ -1704,7 +1831,7 @@ func TestCodexDesktopRecordsMidstreamAbortWithoutPanicking(t *testing.T) {
 func TestCodexDesktopRecordsClientCanceledStream(t *testing.T) {
 	activityLogPath := filepath.Join(t.TempDir(), "codex-proxy.log")
 	handler, err := NewCodexDesktop(CodexDesktopConfig{
-		OllamaURL:          "http://127.0.0.1:14343",
+		OllamaURL:          "http://127.0.0.1:11434",
 		ChatGPTURL:         "https://chatgpt.com/backend-api/codex",
 		RoutingCatalogPath: writeCatalog(t, "glm-5.3-flash:cloud"),
 		ActivityLogPath:    activityLogPath,
@@ -1752,7 +1879,7 @@ func TestCodexDesktopRecordsClientCanceledStream(t *testing.T) {
 }
 
 func TestCodexDesktopRejectsNonLoopbackClients(t *testing.T) {
-	handler := newTestCodexDesktop(t, "http://127.0.0.1:14343", "https://chatgpt.com/backend-api/codex", writeCatalog(t, "glm"))
+	handler := newTestCodexDesktop(t, "http://127.0.0.1:11434", "https://chatgpt.com/backend-api/codex", writeCatalog(t, "glm"))
 	req := httptest.NewRequest(http.MethodGet, "http://example.test"+CodexDesktopPathPrefix+"/_health", nil)
 	req.RemoteAddr = "192.0.2.10:1234"
 	recorder := httptest.NewRecorder()
@@ -1764,7 +1891,7 @@ func TestCodexDesktopRejectsNonLoopbackClients(t *testing.T) {
 }
 
 func TestCodexDesktopFailsClosedWhenCatalogIsMissing(t *testing.T) {
-	handler := newTestCodexDesktop(t, "http://127.0.0.1:14343", "https://chatgpt.com/backend-api/codex", filepath.Join(t.TempDir(), "missing.json"))
+	handler := newTestCodexDesktop(t, "http://127.0.0.1:11434", "https://chatgpt.com/backend-api/codex", filepath.Join(t.TempDir(), "missing.json"))
 	req := httptest.NewRequest(http.MethodPost, "http://localhost"+CodexDesktopPathPrefix+"/v1/responses", strings.NewReader(`{"model":"glm"}`))
 	req.RemoteAddr = "127.0.0.1:1234"
 	recorder := httptest.NewRecorder()

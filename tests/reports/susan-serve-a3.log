@@ -1,0 +1,35 @@
+﻿.\dist\susan.exe : time=2026-10-09T10:26:19.025+08:00 level=INFO source=routes.go:2017 msg="server config" env="map[CUD
+A_VISIBLE_DEVICES: GGML_VK_VISIBLE_DEVICES: GPU_DEVICE_ORDINAL: HIP_VISIBLE_DEVICES: HSA_OVERRIDE_GFX_VERSION: HTTPS_PR
+OXY: HTTP_PROXY: LLAMA_ARG_FIT: LLAMA_ARG_FIT_TARGET: NO_PROXY: ROCR_VISIBLE_DEVICES: SUSAN_CLOUD_HOST:http://localhost
+:8000 SUSAN_CONTEXT_LENGTH:0 SUSAN_CREATE_REMOTE:false SUSAN_DEBUG:INFO SUSAN_DEBUG_LOG_REQUESTS:false SUSAN_EDITOR: SU
+SAN_FLASH_ATTENTION:false SUSAN_GO_TEMPLATE:true SUSAN_GPU_OVERHEAD:0 SUSAN_HOST:http://127.0.0.1:14343 SUSAN_IGPU_ENAB
+LE: SUSAN_KEEP_ALIVE:5m0s SUSAN_KV_CACHE_TYPE: SUSAN_LLM_LIBRARY: SUSAN_LOAD_TIMEOUT:5m0s SUSAN_MAX_LOADED_MODELS:0 SUS
+AN_MAX_QUEUE:512 SUSAN_MAX_TRANSFER_STREAMS:4 SUSAN_MODELS:C:\\Users\\albert\\.susan\\models SUSAN_NOHISTORY:false SUSA
+N_NOPRUNE:false SUSAN_NO_CLOUD:true SUSAN_NUM_PARALLEL:1 SUSAN_ORIGINS:[http://localhost https://localhost http://local
+host:* https://localhost:* http://127.0.0.1 https://127.0.0.1 http://127.0.0.1:* https://127.0.0.1:* http://0.0.0.0 htt
+ps://0.0.0.0 http://0.0.0.0:* https://0.0.0.0:* app://* file://* tauri://* vscode-webview://* vscode-file://*] SUSAN_RE
+MOTES:[localhost] SUSAN_SCHED_SPREAD:false SUSAN_VULKAN:true]"
+At line:15 char:2711
++ ... D_HOST = 'http://localhost:8000'; .\dist\susan.exe serve 2>&1 | Out-F ...
++                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (time=2026-10-09...N_VULKAN:true]":String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+time=2026-10-09T10:26:19.025+08:00 level=INFO source=routes.go:2019 msg="Susan cloud disabled: true"
+time=2026-10-09T10:26:19.032+08:00 level=INFO source=images.go:922 msg="total blobs: 21"
+time=2026-10-09T10:26:19.035+08:00 level=INFO source=images.go:930 msg="total unused blobs removed: 0"
+time=2026-10-09T10:26:19.038+08:00 level=INFO source=routes.go:2077 msg="Listening on 127.0.0.1:14343 (version 0.32.8-2
+6-g6cb1291-dirty)"
+time=2026-10-09T10:26:19.038+08:00 level=INFO source=runner.go:60 msg="discovering available GPUs..."
+time=2026-10-09T10:26:19.038+08:00 level=INFO source=model_recommendations.go:177 msg="model recommendations cache slee
+p scheduled" wait=3h45m39.553166579s consecutive_failures=0
+time=2026-10-09T10:26:19.230+08:00 level=INFO source=types.go:50 msg="inference compute" id=cpu library=cpu compute="" 
+name=cpu description=cpu libdirs=ollama driver="" pci_id="" type="" total="15.9 GiB" available="6.9 GiB"
+time=2026-10-09T10:26:19.230+08:00 level=INFO source=routes.go:2127 msg="vram-based default context" total_vram="0 B" d
+efault_num_ctx=4096
+[GIN] 2026/10/09 - 10:26:19 | 200 |       578.1µs |       127.0.0.1 | GET      "/api/experimental/model-recommendations"
+[GIN] 2026/10/09 - 10:26:19 | 200 |            0s |       127.0.0.1 | GET      "/api/experimental/model-recommendations"
+[GIN] 2026/10/09 - 10:26:31 | 200 |            0s |       127.0.0.1 | GET      "/api/status"
+time=2026-10-09T10:26:35.668+08:00 level=INFO source=images.go:1114 msg="couldn't write to C:\\Users\\albert\\.susan\\m
+odels\\manifests\\registry.ollama.ai\\library\\qwen3\\0.6b"
+[GIN] 2026/10/09 - 10:26:35 | 500 |    4.5165573s |       127.0.0.1 | POST     "/api/pull"

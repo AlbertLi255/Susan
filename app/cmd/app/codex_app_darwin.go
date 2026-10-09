@@ -34,11 +34,11 @@ var errCodexDesktopRestartConfirmationRequired = launch.ErrCodexAppRestartConfir
 
 type codexDesktopController interface {
 	Installed() bool
-	OllamaConfigured() bool
+	SusanConfigured() bool
 	Running() bool
-	OllamaRequestCount() uint64
-	UseOllamaFromDesktop(string, []launch.LaunchModel, bool) error
-	UpdateOllamaModelsFromDesktop(string, []launch.LaunchModel, bool) error
+	SusanRequestCount() uint64
+	UseSusanFromDesktop(string, []launch.LaunchModel, bool) error
+	UpdateSusanModelsFromDesktop(string, []launch.LaunchModel, bool) error
 	RestoreFromDesktop(bool) error
 	RestartFromDesktop(bool) error
 	Onboard() error
@@ -54,7 +54,7 @@ var (
 	codexDesktopAccessState                                    = currentClaudeDesktopAccessState
 	codexDesktopRecommendationsClient                          = &http.Client{Timeout: 3 * time.Second}
 	codexDesktopRecommendationsEndpoint                        = func() string {
-		return strings.TrimRight(appui.OllamaDotCom, "/") + "/api/experimental/model-recommendations?app=codex-desktop"
+		return strings.TrimRight(appui.SusanDotCom, "/") + "/api/experimental/model-recommendations?app=codex-desktop"
 	}
 	codexDesktopModelLoadAttempts = 20
 	codexDesktopModelRetryWait    = 250 * time.Millisecond
@@ -62,6 +62,7 @@ var (
 )
 
 type codexDesktopStatus struct {
+	Used      bool     `json:"used"`
 	Supported bool     `json:"supported"`
 	Installed bool     `json:"installed"`
 	Connected bool     `json:"connected"`
@@ -135,10 +136,10 @@ type codexDesktopCatalogModel struct {
 }
 
 func getCodexDesktopStatus() codexDesktopStatus {
-	connected := codexDesktop.OllamaConfigured()
+	connected := codexDesktop.SusanConfigured()
 	requests := uint64(0)
 	if connected {
-		requests = codexDesktop.OllamaRequestCount()
+		requests = codexDesktop.SusanRequestCount()
 	}
 	var models []string
 	if saved, err := config.LoadIntegration(codexDesktopIntegrationName); err == nil && len(saved.Models) > 0 {
@@ -149,6 +150,7 @@ func getCodexDesktopStatus() codexDesktopStatus {
 		model = models[0]
 	}
 	return codexDesktopStatus{
+		Used:      hasUsedCodexDesktopIntegration(),
 		Supported: true,
 		Installed: codexDesktop.Installed(),
 		Connected: connected,
@@ -164,7 +166,7 @@ func setCodexDesktopConnection(enabled, restartConfirmed bool) error {
 	codexDesktopMu.Lock()
 	defer codexDesktopMu.Unlock()
 
-	if enabled == codexDesktop.OllamaConfigured() {
+	if enabled == codexDesktop.SusanConfigured() {
 		return nil
 	}
 	if !enabled {
@@ -196,12 +198,12 @@ func setCodexDesktopConnection(enabled, restartConfirmed bool) error {
 		_ = config.SaveIntegration(codexDesktopIntegrationName, previous)
 		return fmt.Errorf("save ChatGPT integration state: %w", err)
 	}
-	if err := codexDesktop.UseOllamaFromDesktop(primary, models, restartConfirmed); err != nil {
+	if err := codexDesktop.UseSusanFromDesktop(primary, models, restartConfirmed); err != nil {
 		_ = config.SaveIntegration(codexDesktopIntegrationName, previous)
 		if errors.Is(err, errCodexDesktopRestartConfirmationRequired) {
 			return err
 		}
-		if codexDesktop.OllamaConfigured() {
+		if codexDesktop.SusanConfigured() {
 			if restoreErr := codexDesktop.RestoreFromDesktop(true); restoreErr != nil {
 				return errors.Join(err, fmt.Errorf("restore ChatGPT after failed update: %w", restoreErr))
 			}
@@ -212,10 +214,16 @@ func setCodexDesktopConnection(enabled, restartConfirmed bool) error {
 }
 
 func getCodexDesktopModelsSettings() (codexDesktopModelsSettings, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	return codexDesktopSettingsWithInventory(ctx, codexDesktopSettingsSummary())
+}
+
+func codexDesktopSettingsSummary() codexDesktopModelsSettings {
 	settings := codexDesktopModelsSettings{
 		Supported: true,
 		Installed: codexDesktop.Installed(),
-		Connected: codexDesktop.OllamaConfigured(),
+		Connected: codexDesktop.SusanConfigured(),
 		Running:   codexDesktop.Running(),
 		Selected:  []string{},
 		Available: []string{},
@@ -228,8 +236,10 @@ func getCodexDesktopModelsSettings() (codexDesktopModelsSettings, error) {
 	if len(settings.Selected) > codexDesktopMaxModels {
 		settings.Selected = settings.Selected[:codexDesktopMaxModels]
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	return settings
+}
+
+func codexDesktopSettingsWithInventory(ctx context.Context, settings codexDesktopModelsSettings) (codexDesktopModelsSettings, error) {
 	inventory, err := loadCodexDesktopModelInventory(ctx)
 	if err != nil {
 		return settings, err
@@ -253,7 +263,7 @@ func resetCodexDesktopModels() error {
 	defer codexDesktopMu.Unlock()
 
 	// Reset preferences without enabling the integration or restarting ChatGPT.
-	if len(config.IntegrationModels(codexDesktopIntegrationName)) == 0 && !codexDesktop.OllamaConfigured() {
+	if len(config.IntegrationModels(codexDesktopIntegrationName)) == 0 && !codexDesktop.SusanConfigured() {
 		return nil
 	}
 	if err := config.SaveIntegration(codexDesktopIntegrationName, nil); err != nil {
@@ -265,7 +275,7 @@ func resetCodexDesktopModels() error {
 func applyCodexDesktopModelsLocked(selected []string, restartConfirmed, openWhenStopped bool) error {
 	previous := config.IntegrationModels(codexDesktopIntegrationName)
 	savedSelection := append([]string(nil), selected...)
-	wasConfigured := codexDesktop.OllamaConfigured()
+	wasConfigured := codexDesktop.SusanConfigured()
 	selectionUnchanged := slices.Equal(savedSelection, previous)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -289,9 +299,9 @@ func applyCodexDesktopModelsLocked(selected []string, restartConfirmed, openWhen
 	if err := config.SaveIntegration(codexDesktopIntegrationName, savedSelection); err != nil {
 		return fmt.Errorf("save ChatGPT models: %w", err)
 	}
-	updateModels := codexDesktop.UseOllamaFromDesktop
+	updateModels := codexDesktop.UseSusanFromDesktop
 	if !openWhenStopped {
-		updateModels = codexDesktop.UpdateOllamaModelsFromDesktop
+		updateModels = codexDesktop.UpdateSusanModelsFromDesktop
 	}
 	if err := updateModels(primary, models, restartConfirmed); err == nil {
 		return nil
@@ -299,7 +309,7 @@ func applyCodexDesktopModelsLocked(selected []string, restartConfirmed, openWhen
 		_ = config.SaveIntegration(codexDesktopIntegrationName, previous)
 		return err
 	} else if !wasConfigured {
-		if codexDesktop.OllamaConfigured() {
+		if codexDesktop.SusanConfigured() {
 			if restoreErr := codexDesktop.RestoreFromDesktop(true); restoreErr != nil {
 				_ = config.SaveIntegration(codexDesktopIntegrationName, previous)
 				return errors.Join(err, fmt.Errorf("restore ChatGPT after failed update: %w", restoreErr))
@@ -320,11 +330,11 @@ func applyCodexDesktopModelsLocked(selected []string, restartConfirmed, openWhen
 			// Restore the original profile if the previous selection is no longer usable.
 			if restoreErr := codexDesktop.RestoreFromDesktop(true); restoreErr != nil {
 				return errors.Join(
-					fmt.Errorf("apply ChatGPT models: %v; restore previous Ollama profile: %w", applyErr, rollbackErr),
+					fmt.Errorf("apply ChatGPT models: %v; restore previous Susan profile: %w", applyErr, rollbackErr),
 					fmt.Errorf("restore normal ChatGPT profile: %w", restoreErr),
 				)
 			}
-			return fmt.Errorf("apply ChatGPT models: %v; restore previous Ollama profile: %v; restored the normal ChatGPT profile", applyErr, rollbackErr)
+			return fmt.Errorf("apply ChatGPT models: %v; restore previous Susan profile: %v; restored the normal ChatGPT profile", applyErr, rollbackErr)
 		}
 		return fmt.Errorf("apply ChatGPT models: %w", applyErr)
 	}
@@ -363,7 +373,7 @@ func loadCodexDesktopConnectionModels(ctx context.Context, selected []string) (s
 	return primary, hydrateCodexDesktopModelCapabilities(ctx, models), nil
 }
 
-// /api/show supplies capabilities and family metadata without replacing recommended thinking controls.
+// /api/show refreshes selected model metadata; recommendations remain the fallback.
 func hydrateCodexDesktopModelCapabilities(ctx context.Context, models []launch.LaunchModel) []launch.LaunchModel {
 	client, err := codexDesktopClientFactory()
 	if err != nil {
@@ -381,6 +391,9 @@ func hydrateCodexDesktopModelCapabilities(ctx context.Context, models []launch.L
 		}
 		if response.Details.Family != "" || len(response.Details.Families) > 0 {
 			hydrated[i].Details = response.Details
+		}
+		if response.Thinking.Valid() {
+			hydrated[i].Thinking = response.Thinking.Clone()
 		}
 	}
 	return hydrated
@@ -451,7 +464,7 @@ func loadCodexDesktopModelInventory(ctx context.Context) (codexDesktopModelInven
 }
 
 func loadCodexDesktopRecommendations(ctx context.Context) ([]api.ModelRecommendation, error) {
-	req, err := newSignedOllamaRequest(ctx, http.MethodGet, codexDesktopRecommendationsEndpoint())
+	req, err := newSignedSusanRequest(ctx, http.MethodGet, codexDesktopRecommendationsEndpoint())
 	if err != nil {
 		return nil, fmt.Errorf("prepare ChatGPT model recommendations request: %w", err)
 	}
@@ -483,7 +496,7 @@ func loadCodexDesktopAccountCloudModels(ctx context.Context) ([]string, error) {
 	}
 	names := make([]string, 0, len(models))
 	for _, model := range models {
-		name := strings.TrimSpace(model.OllamaModel)
+		name := strings.TrimSpace(model.SusanModel)
 		if name == "" {
 			name = strings.TrimSpace(model.Name)
 		}
@@ -893,7 +906,7 @@ func selectCodexDesktopModels(selected []string, available []launch.LaunchModel)
 		}
 	}
 	if len(resolved) == 0 {
-		return "", nil, errors.New("choose at least one available Ollama model for ChatGPT")
+		return "", nil, errors.New("choose at least one available Susan model for ChatGPT")
 	}
 	return resolved[0].Name, resolved, nil
 }
@@ -976,4 +989,24 @@ func codexDesktopModelKey(name string) string {
 func codexDesktopCloudModel(name string) bool {
 	name = strings.ToLower(strings.TrimSpace(name))
 	return strings.HasSuffix(name, ":cloud") || strings.HasSuffix(name, "-cloud")
+}
+
+func hasUsedCodexDesktopIntegration() bool {
+	if appStore == nil {
+		return false
+	}
+	settings, err := appStore.Settings()
+	if err != nil {
+		return false
+	}
+	return settings.CodexDesktopUsed
+}
+
+func markCodexDesktopIntegrationUsed() error {
+	codexDesktopMu.Lock()
+	defer codexDesktopMu.Unlock()
+	if appStore == nil {
+		return errors.New("settings are unavailable")
+	}
+	return appStore.MarkCodexDesktopUsed()
 }
