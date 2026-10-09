@@ -1,0 +1,81 @@
+Susan 跟上 Ollama 的合并规则
+================================================================================
+
+目的
+----
+Susan 是 Ollama 的 fork。合上游时要让 Git 记住「这些 Ollama 提交已经在 main 里」。
+记住了，下次只会带上新提交。没记住，同一批冲突会再来一遍。
+
+
+已经发生的事
+------------
+2026-10-09 前后，冲突解完后用 Squash and merge 进了 main（97de78ef）。
+代码在 main 里，但 Git 的历史上没有 Ollama 那次终点 16b4376a。
+
+同日在 feature/sync-ollama-2026-10-09 上补过：
+  a80a4b11  只记录 16b4376a 已经合并，不改文件
+  275be9a2  真正合入当时的 upstream/main（c2b7368d）
+这两笔还在功能分支上，还没有进 main。
+
+不要对移动中的 upstream/main 使用 git merge -s ours。
+fetch 之后上游若又有新提交，-s ours 会把那些新代码标成已合并，但文件不会进来。
+补历史只能指向已经在 Susan 代码里的那个终点，这次是 16b4376a。
+
+
+以后每次跟上 Ollama
+------------------
+时机（两条里先到的那条）：
+  - 每两周一次
+  - 或者动手改 server/、cmd/、envconfig/ 之前
+
+步骤：
+  1. 从当时的 main 拉分支
+  2. git fetch upstream
+  3. git merge upstream/main
+  4. 冲突只处理两边都在改的文件
+  5. 用 Create a merge commit 合回 main
+  6. 做烟雾测试
+
+不要用：
+  - Squash and merge
+  - Rebase and merge
+这两种都会换成新的提交编号，Git 再次认不出上游已经合过。
+
+Susan 自己的功能单独一个 PR。不要和这次上游合并写在同一个 PR 里。
+顺序：当前功能先提交，再合 Ollama，然后再做下一件 Susan 的事。
+
+
+冲突时怎么留
+------------
+跟着上游：
+  MLX、模型代码、目录搬迁、上游已经删掉的旧 convert 和旧 x/ 路径。
+
+留下 Susan 自己的：
+  端口 14343
+  数据目录 ~/.susan（Windows 为 %LOCALAPPDATA%\Susan）
+  环境变量 SUSAN_*
+  Cloud 和 Registry 分开（SUSAN_CLOUD_HOST 不带走 pull）
+  保留命名空间
+  设备登录：/api/signin/device、/api/me、/api/signout，CLI login/logout，Desktop Sign In
+
+Agent / Skills / Chat TUI：
+  源码保留，暂不调用。
+  目录：agent/、cmd/agent_tui.go、cmd/tui/chat/、cmd/internal/filedata/
+  上游已经删除，以后的合并通常不会再改这些文件。
+  若合并碰到 cmd/cmd.go，菜单启动继续走普通对话 launchInteractiveModel，不要接 GenerateAgentTUI。
+  以后要用，再只改这一处调用。
+
+
+测试
+----
+补记（-s ours）：不测。
+
+平时的小合并，只测这三项：
+  1. http://127.0.0.1:14343/ 返回 Susan is running
+  2. 本地打一次 /api/chat 或 /api/generate，有文字返回
+  3. 未登录时 POST /api/me 为 401
+
+完整 API 测试单只在合并改到这三处时再跑：
+  server/routes.go
+  登录链路
+  Cloud 和 Registry 的分开方式
