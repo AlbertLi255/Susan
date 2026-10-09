@@ -565,20 +565,6 @@ int mlx_gather_qqmm(
     const mlx_array global_scale_w /* may be null */,
     bool sorted_indices,
     const mlx_stream s);
-int mlx_gather_qqmm(
-    mlx_array* res,
-    const mlx_array x,
-    const mlx_array w,
-    const mlx_array scales_w /* may be null */,
-    const mlx_array lhs_indices /* may be null */,
-    const mlx_array rhs_indices /* may be null */,
-    mlx_optional_int group_size,
-    mlx_optional_int bits,
-    const char* mode,
-    const mlx_array global_scale_x /* may be null */,
-    const mlx_array global_scale_w /* may be null */,
-    bool sorted_indices,
-    const mlx_stream s);
 int mlx_greater(
     mlx_array* res,
     const mlx_array a,
