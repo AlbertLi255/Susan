@@ -167,12 +167,15 @@ func (s *Server) ollamaProxy() http.Handler {
 				s.log().Info("configuring ollama proxy", "target", target.String())
 
 				newProxy := httputil.NewSingleHostReverseProxy(target)
+				// Route all proxied requests through userAgentTransport so that
+				// User-Agent and X-Susan-Client:desktop headers are injected on
+				// every outbound HTTP request, regardless of code path.
+				newProxy.Transport = &userAgentTransport{base: http.DefaultTransport}
 
 				originalDirector := newProxy.Director
 				newProxy.Director = func(req *http.Request) {
 					originalDirector(req)
 					req.Host = target.Host
-					req.Header.Set(api.ClientKindHeader, "desktop")
 					s.log().Debug("proxying request", "method", req.Method, "path", req.URL.Path, "target", target.Host)
 				}
 
@@ -637,22 +640,15 @@ func (s *Server) getError(err error) responses.ErrorEvent {
 
 	errStr := err.Error()
 
-	var statusErr api.StatusError
-	errors.As(err, &statusErr)
+	if api.UsageLimitHit(err) != "" {
+		return responses.ErrorEvent{
+			EventName: "error",
+			Error:     "You've reached your usage limit, please upgrade to continue",
+			Code:      "usage_limit_upgrade",
+		}
+	}
 
 	switch {
-	case statusErr.StatusCode == http.StatusPaymentRequired || strings.Contains(errStr, "402"):
-		return responses.ErrorEvent{
-			EventName: "error",
-			Error:     "You've reached your usage limit, please upgrade to continue",
-			Code:      "usage_limit_upgrade",
-		}
-	case (statusErr.StatusCode == http.StatusForbidden || strings.Contains(errStr, "403")) && strings.Contains(errStr, "susancloud") && !strings.Contains(errStr, "is reserved"):
-		return responses.ErrorEvent{
-			EventName: "error",
-			Error:     "You've reached your usage limit, please upgrade to continue",
-			Code:      "usage_limit_upgrade",
-		}
 	case strings.HasPrefix(errStr, "pull model manifest") && isNetworkError(errStr):
 		return responses.ErrorEvent{
 			EventName: "error",

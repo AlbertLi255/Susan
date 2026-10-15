@@ -1173,8 +1173,10 @@ Susan 需要调用的平台接口（其余平台接口只给 Web 页面用，Sus
 | 5.13 | 测试里残留的 `OLLAMA_*` 环境变量改为 `SUSAN_*`（`MODELS`、`HOST`、`DEBUG`、`GO_TEMPLATE`、`CREATE_REMOTE`、`LIBRARY_PATH`），避免测试写进真实的 `~/.susan/models` 或连到真实的 daemon。`TestHostIgnoresOllamaHost` 保留。 | 已完成：`./server/` 整包、`./manifest/`、`./compatmigrate/` 通过，模型目录不受影响 |
 | 5.14 | 未登录跑 `:cloud` 时 CLI 要有登录链接。平台的 401 不带 `signin_url`，daemon 的转发代理原样转出去，CLI 就只能打印「需要登录」。改为：上游 401 自带 `signin_url` 时原样转发，否则由 daemon 发起设备授权，补上链接。 | 已完成：`TestCloudPassthroughUpstreamUnauthorizedAddsSigninURL` 通过，E2E-5.9 复验通过 |
 | 5.15 | 被动登录链接区分客户端。原先 daemon 在所有 401 里生成的登录链接，客户端名都写死为「Susan Desktop」，平台确认页会让 CLI 用户（尤其是没有 Desktop 的 Linux 终端）「返回 Susan Desktop」。改为：Desktop 发往 daemon 的请求统一带 `X-Susan-Client: desktop`；daemon 按「带此请求头 → Susan Desktop；User-Agent 以 `susan/` 开头 → Susan CLI；其它 → Susan」选名字；进行中的流程仍跨客户端复用（daemon 共用，确认一次所有客户端都登录，也避免 Desktop 轮询 `/api/me` 时让 CLI 打印的链接失效）。CLI 提示改为「Open this link to sign in, then run the command again」，并单独打印验证码。 | 已完成：`TestSigninClientName`、`TestDesktopRequestsIdentifyClient`、`TestPrintSigninInstructions` 通过；E2E 实测 CLI 先发起时平台记录 `client_name=Susan CLI`，Desktop 先发起时记录 `Susan Desktop` |
+| 5.16 | **集中 usage limit 判定 helper**。Desktop（`app/ui/ui.go:getError`）和 CLI（`cmd/cloud_upgrade.go:cloudUpgradeURL`）各自维护了一份 402/403+susancloud+!is-reserved 判定表，且实现不同步：Desktop 有字符串兜底分支，CLI 只认 `StatusError`，未来平台加新错误码时容易漏判。改为：在 `api/errors.go` 新增 `UsageLimitHit(err) UsageUpgradeClass` + 表驱动的 `classifyUsageLimit`，两边调用同一个 helper。顺带对齐：CLI 现在也对字符串形式的 "402" 错误返回升级提示（`errors.New("402 Payment Required")` 之前被 CLI 忽略，Desktop 能识别）。 | 已完成：`TestUsageLimitHit`（8 条）、`TestCloudUpgradeURL`、`TestGetError*`、`TestChatShowErrorOnlyPullsOnNotFound` 全 PASS；`./api`、`./cmd`、`./app/ui`、`./server` 回归全绿 |
+| 5.17 | **统一 ClientKindHeader 注入路径**。Desktop 有两条出站 HTTP 路径：`httputil.ReverseProxy`（用于 `/api/*` 代理）和 `api.Client`（通过 `userAgentHTTPClient` 构造）。原来两条路径各自设 ClientKindHeader——proxy 在 `Director` 里 `req.Header.Set`，transport 也 `RoundTrip` 里 `req.Header.Set`。两者都能工作，但风格不统一，以后新增 HTTP client 容易漏设。改为：把 `ReverseProxy.Transport` 也换成 `userAgentTransport` 实例，proxy 的 `Director` 里删掉重复 Set。所有 Desktop 出站 HTTP 统一经 `userAgentTransport.RoundTrip` 注入 `User-Agent` 和 `X-Susan-Client: desktop`。 | 已完成：`TestDesktopRequestsIdentifyClient` 通过；`./app/ui` 回归全绿 |
 
-**Scope（包含）**：5.6～5.15，以及下面的自动化用例与手工验收。
+**Scope（包含）**：5.6～5.17，以及下面的自动化用例与手工验收。
 
 **Scope（不包含）**
 

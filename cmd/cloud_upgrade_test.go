@@ -58,8 +58,12 @@ func TestCloudUpgradeURL(t *testing.T) {
 			err:  api.StatusError{StatusCode: http.StatusTooManyRequests, ErrorMessage: "Rate limit exceeded / 请求过于频繁"},
 		},
 		{
+			// plain error with no magic strings → no hint. Note: an error whose
+			// text literally contains "402" or "403+susancloud" will hit the
+			// same table-driven classification that Desktop uses; CLI and
+			// Desktop are intentionally aligned here.
 			name: "plain error has no hint",
-			err:  errors.New("402 Payment Required"),
+			err:  errors.New("something went wrong"),
 		},
 		{
 			name: "nil error",

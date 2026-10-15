@@ -2,10 +2,7 @@ package cmd
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"net/http"
-	"strings"
 	"time"
 
 	"github.com/ollama/ollama/api"
@@ -26,20 +23,14 @@ func withCloudUpgradeHint(ctx context.Context, err error) error {
 }
 
 func cloudUpgradeURL(ctx context.Context, err error, plan func(context.Context) string) string {
-	var statusErr api.StatusError
-	if err == nil || !errors.As(err, &statusErr) {
-		return ""
-	}
-
-	switch {
-	case statusErr.StatusCode == http.StatusPaymentRequired:
+	class := api.UsageLimitHit(err)
+	switch class {
+	case api.UsageUpgradePaymentRequired:
 		if launch.PlanSatisfies(plan(ctx), "pro") {
 			return launch.DefaultBillingURL
 		}
 		return launch.DefaultUpgradeURL
-	case statusErr.StatusCode == http.StatusForbidden &&
-		strings.Contains(statusErr.ErrorMessage, "susancloud") &&
-		!strings.Contains(statusErr.ErrorMessage, "is reserved"):
+	case api.UsageUpgradeSusancloudForbidden:
 		return launch.DefaultUpgradeURL
 	}
 	return ""
