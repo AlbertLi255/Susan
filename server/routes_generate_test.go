@@ -193,7 +193,7 @@ func newServerWithMockRunner(t *testing.T, mock *mockRunner) *Server {
 
 func TestEmbeddingHandlersUseRunnerSelection(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	writeShowManifestVariant(t, "embed-ggml", manifest.RunnerGGML, manifest.FormatGGUF, model.ConfigV2{
 		ModelFormat:  manifest.FormatGGUF,

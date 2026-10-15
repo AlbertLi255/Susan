@@ -105,17 +105,17 @@ func ollamaBin() string {
 	return "ollama"
 }
 
-// ensureMLXLibraryPath sets OLLAMA_LIBRARY_PATH so the MLX dynamic library
+// ensureMLXLibraryPath sets SUSAN_LIBRARY_PATH so the MLX dynamic library
 // is discoverable. Integration tests run from integration/ dir, so the
 // default CWD-based search won't find the library at the repo root.
 func ensureMLXLibraryPath(t *testing.T) {
 	t.Helper()
 	if libPath, err := filepath.Abs("../build/lib/ollama"); err == nil {
 		if _, err := os.Stat(libPath); err == nil {
-			if existing := os.Getenv("OLLAMA_LIBRARY_PATH"); existing != "" {
-				t.Setenv("OLLAMA_LIBRARY_PATH", existing+string(filepath.ListSeparator)+libPath)
+			if existing := os.Getenv("SUSAN_LIBRARY_PATH"); existing != "" {
+				t.Setenv("SUSAN_LIBRARY_PATH", existing+string(filepath.ListSeparator)+libPath)
 			} else {
-				t.Setenv("OLLAMA_LIBRARY_PATH", libPath)
+				t.Setenv("SUSAN_LIBRARY_PATH", libPath)
 			}
 		}
 	}
@@ -157,7 +157,7 @@ func fileDigest(t *testing.T, path string) string {
 func isolateCreateModelStore(t *testing.T) {
 	t.Helper()
 	if os.Getenv("OLLAMA_TEST_EXISTING") == "" {
-		t.Setenv("OLLAMA_MODELS", t.TempDir())
+		t.Setenv("SUSAN_MODELS", t.TempDir())
 	}
 }
 
@@ -233,7 +233,7 @@ func runCreateSafetensorsLLM(t *testing.T) {
 	downloadHFModel(t, tinyLlamaRepo, tinyLlamaRevision, modelDir)
 
 	ensureMLXLibraryPath(t)
-	t.Setenv("OLLAMA_CREATE_REMOTE", "1")
+	t.Setenv("SUSAN_CREATE_REMOTE", "1")
 
 	ctx, cancel := context.WithTimeout(t.Context(), 10*time.Minute)
 	defer cancel()
@@ -323,7 +323,7 @@ func runCreateGGUF(t *testing.T) {
 // runCreateGGUFBlobTransfer checks how "ollama create" gets a local GGUF into
 // the server's blob store: written directly when the CLI and server share a
 // models directory, uploaded over HTTP when they do not or when
-// OLLAMA_CREATE_REMOTE is set. The harness-started server's request log is
+// SUSAN_CREATE_REMOTE is set. The harness-started server's request log is
 // the evidence, so an external server cannot be used.
 func runCreateGGUFBlobTransfer(t *testing.T) {
 	if testModel != "" {
@@ -352,7 +352,7 @@ func runCreateGGUFBlobTransfer(t *testing.T) {
 		wantUpload    bool
 	}{
 		{name: "shared store writes directly"},
-		{name: "OLLAMA_CREATE_REMOTE forces upload", env: []string{"OLLAMA_CREATE_REMOTE=1"}, wantUpload: true},
+		{name: "SUSAN_CREATE_REMOTE forces upload", env: []string{"SUSAN_CREATE_REMOTE=1"}, wantUpload: true},
 		{name: "separate store falls back to upload", separateStore: true, wantUpload: true},
 	}
 	for _, tc := range cases {
@@ -375,7 +375,7 @@ func runCreateGGUFBlobTransfer(t *testing.T) {
 			var cliModels string
 			if tc.separateStore {
 				cliModels = t.TempDir()
-				env = append(env, "OLLAMA_MODELS="+cliModels)
+				env = append(env, "SUSAN_MODELS="+cliModels)
 			}
 
 			modelName := createIntegrationModelName("test-gguf-blob-transfer")

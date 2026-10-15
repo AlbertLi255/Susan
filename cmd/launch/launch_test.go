@@ -2542,6 +2542,83 @@ func TestResolveRunModel_SubscriptionModelUnavailableWhoamiAllowsSelection(t *te
 	}
 }
 
+func TestResolveRunModel_SubscriptionModelEmptyPlanAllowsSelection(t *testing.T) {
+	tmpDir := t.TempDir()
+	setLaunchTestHome(t, tmpDir)
+	withLauncherHooks(t)
+
+	var badges []string
+	DefaultSingleSelector = func(title string, items []SelectionItem, current string) (string, error) {
+		for _, item := range items {
+			if item.Name == "kimi-k2.6:cloud" {
+				badges = append(badges, item.AvailabilityBadge)
+			}
+		}
+		return "kimi-k2.6:cloud", nil
+	}
+	DefaultUpgrade = func(modelName, requiredPlan string) (string, error) {
+		t.Fatalf("did not expect upgrade hook when plan is empty")
+		return "", nil
+	}
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/api/experimental/model-recommendations":
+			fmt.Fprint(w, `{"recommendations":[{"model":"kimi-k2.6:cloud","description":"Coding","context_length":262144,"max_output_tokens":262144,"required_plan":"pro"}]}`)
+		case "/api/tags":
+			fmt.Fprint(w, `{"models":[]}`)
+		case "/api/status":
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprint(w, `{"error":"not found"}`)
+		case "/api/show":
+			fmt.Fprint(w, `{"remote_model":"kimi-k2.6"}`)
+		case "/api/me":
+			fmt.Fprint(w, `{"id":"u1","email":"pro@example.com","name":"test-user"}`)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer srv.Close()
+	t.Setenv("SUSAN_HOST", srv.URL)
+
+	model, err := ResolveRunModel(context.Background(), RunModelRequest{ForcePicker: true})
+	if err != nil {
+		t.Fatalf("ResolveRunModel returned error: %v", err)
+	}
+	if model != "kimi-k2.6:cloud" {
+		t.Fatalf("expected selected cloud model, got %q", model)
+	}
+	for _, badge := range badges {
+		if badge == "Upgrade required" {
+			t.Fatalf("empty plan must not show %q badge", badge)
+		}
+	}
+}
+
+func TestLaunchAccountStateEmptyPlanIsUnknown(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/me" {
+			http.NotFound(w, r)
+			return
+		}
+		fmt.Fprint(w, `{"name":"test-user","plan":"  "}`)
+	}))
+	defer srv.Close()
+	t.Setenv("SUSAN_HOST", srv.URL)
+
+	client, err := api.ClientFromEnvironment()
+	if err != nil {
+		t.Fatal(err)
+	}
+	state := launchAccountState(context.Background(), client)
+	if state.Status != accountStateUnknown {
+		t.Fatalf("status = %v, want accountStateUnknown", state.Status)
+	}
+	if got := availabilityBadge(ModelItem{Name: "kimi-k2.6:cloud", RequiredPlan: "pro"}, state); got != "" {
+		t.Fatalf("badge = %q, want none", got)
+	}
+}
+
 func TestLaunchIntegration_EditorForceConfigure(t *testing.T) {
 	tmpDir := t.TempDir()
 	setLaunchTestHome(t, tmpDir)

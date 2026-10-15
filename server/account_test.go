@@ -258,3 +258,63 @@ func TestSignout(t *testing.T) {
 		}
 	})
 }
+
+// AT-5.2-a: profile success and overview returns pro → /api/me plan is pro
+func TestWhoamiPlanFromOverview(t *testing.T) {
+	router, _ := setupAccountTest(t, mockPlatformConfig{
+		profileBody: map[string]any{
+			"id":         "3f6c1d2e-1a2b-4c3d-9e8f-000000000042",
+			"email":      "tester@example.com",
+			"username":   "tester",
+			"created_at": "2026-09-20T08:00:00Z",
+		},
+		overviewBody: map[string]any{
+			"plan": "pro",
+		},
+	})
+
+	srvURL := currentCloudHost(t)
+	writeAccountCredentials(t, srvURL, "ACCESS-1", time.Now().Add(time.Hour))
+
+	rec := postToRouter(t, router, "/api/me", "{}")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200; body: %s", rec.Code, rec.Body.String())
+	}
+
+	body := rec.Body.String()
+	if !strings.Contains(body, `"plan":"pro"`) {
+		t.Errorf("body = %q, want plan: pro", body)
+	}
+}
+
+// AT-5.2-b: overview failure → /api/me still 200, plan is empty
+func TestWhoamiPlanEmptyOnOverviewFailure(t *testing.T) {
+	router, _ := setupAccountTest(t, mockPlatformConfig{
+		profileBody: map[string]any{
+			"id":         "3f6c1d2e-1a2b-4c3d-9e8f-000000000042",
+			"email":      "tester@example.com",
+			"username":   "tester",
+			"created_at": "2026-09-20T08:00:00Z",
+		},
+		overviewStatus: http.StatusNotFound,
+	})
+
+	srvURL := currentCloudHost(t)
+	writeAccountCredentials(t, srvURL, "ACCESS-1", time.Now().Add(time.Hour))
+
+	rec := postToRouter(t, router, "/api/me", "{}")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200; body: %s", rec.Code, rec.Body.String())
+	}
+
+	body := rec.Body.String()
+	// Plan should be empty string, not "free"
+	if strings.Contains(body, `"plan":"free"`) {
+		t.Errorf("body = %q, want plan to be empty, not 'free'", body)
+	}
+	// Plan field should be present but empty (or omitted if empty)
+	// Since JSON omitempty is used, empty string fields may be omitted
+	if strings.Contains(body, `"plan":"`) && !strings.Contains(body, `"plan":""`) {
+		t.Errorf("body = %q, want plan to be empty or omitted", body)
+	}
+}

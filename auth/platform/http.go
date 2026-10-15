@@ -209,3 +209,31 @@ func (s *Session) GetProfile(ctx context.Context) (*Profile, error) {
 	}
 	return &profile, nil
 }
+
+// GetOverview fetches the user billing overview from GET /api/billing/overview.
+// If the request fails (e.g., the endpoint does not exist), it returns nil
+// rather than an error, allowing callers to fall back to a default plan.
+func (s *Session) GetOverview(ctx context.Context) (*Overview, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, s.client.BaseURL+"/api/billing/overview", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := s.Do(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode/100 != 2 {
+		// Don't treat overview failure as a hard error; return nil
+		// so the caller can use a default plan.
+		return nil, nil
+	}
+
+	var overview Overview
+	if err := json.NewDecoder(resp.Body).Decode(&overview); err != nil {
+		return nil, err
+	}
+	return &overview, nil
+}

@@ -553,7 +553,7 @@ func cloudAvailabilityBadges(ctx context.Context, client *api.Client, options []
 		}
 		if !signedIn {
 			badges[opt.Name] = "Sign in required"
-		} else if opt.RequiredPlan != "" && !launch.PlanSatisfies(user.Plan, opt.RequiredPlan) {
+		} else if opt.RequiredPlan != "" && strings.TrimSpace(user.Plan) != "" && !launch.PlanSatisfies(user.Plan, opt.RequiredPlan) {
 			badges[opt.Name] = "Upgrade required"
 		}
 	}
@@ -645,7 +645,7 @@ func ensureCloudModelAccess(ctx context.Context, client *api.Client, modelName, 
 		return err
 	}
 	if user != nil && user.Name != "" {
-		if requiredPlan != "" && !launch.PlanSatisfies(user.Plan, requiredPlan) {
+		if requiredPlan != "" && strings.TrimSpace(user.Plan) != "" && !launch.PlanSatisfies(user.Plan, requiredPlan) {
 			return fmt.Errorf("plan upgrade required: %s needs plan %s, you have %s", modelName, requiredPlan, user.Plan)
 		}
 		return nil

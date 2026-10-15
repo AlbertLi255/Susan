@@ -20,7 +20,7 @@ import (
 	"github.com/ollama/ollama/format"
 )
 
-const modelRecommendationsURL = "https://ollama.com/api/experimental/model-recommendations"
+const modelRecommendationsPath = "/api/experimental/model-recommendations"
 
 var (
 	modelRecommendationsRefreshInterval     = 4 * time.Hour
@@ -33,8 +33,29 @@ var (
 		4 * time.Hour,
 	}
 
-	errModelRecommendationsNoCloud = errors.New("cloud disabled")
+	errModelRecommendationsNoCloud      = errors.New("cloud disabled")
+	errModelRecommendationsUnsupported = errors.New("cloud host does not provide model recommendations")
 )
+
+func modelRecommendationsURL() string {
+	return cloudTarget().JoinPath(modelRecommendationsPath).String()
+}
+
+// initialModelRecommendations returns the built-in recommendations. The
+// built-in cloud models are served by ollama.com only, so a configured
+// SUSAN_CLOUD_HOST starts from the local entries until it provides its own.
+func initialModelRecommendations() []api.ModelRecommendation {
+	if !envconfig.CloudHostConfigured() {
+		return cloneModelRecommendations(defaultModelRecommendations)
+	}
+	local := make([]api.ModelRecommendation, 0, len(defaultModelRecommendations))
+	for _, rec := range defaultModelRecommendations {
+		if !isCloudRecommendation(rec.Model) {
+			local = append(local, rec)
+		}
+	}
+	return cloneModelRecommendations(local)
+}
 
 type modelRecommendationsCache struct {
 	mu                   sync.RWMutex
@@ -47,7 +68,7 @@ type modelRecommendationsCache struct {
 
 func newModelRecommendationsCache() *modelRecommendationsCache {
 	return &modelRecommendationsCache{
-		recommendations: cloneModelRecommendations(defaultModelRecommendations),
+		recommendations: initialModelRecommendations(),
 		client:          http.DefaultClient,
 	}
 }
@@ -141,6 +162,8 @@ func (c *modelRecommendationsCache) triggerRefreshOnRead(ctx context.Context) {
 			switch {
 			case errors.Is(err, errModelRecommendationsNoCloud):
 				slog.Debug("skipping model recommendations read refresh because cloud is disabled")
+			case errors.Is(err, errModelRecommendationsUnsupported):
+				slog.Debug("skipping model recommendations read refresh", "reason", err)
 			default:
 				slog.Warn("model recommendations read refresh failed", "error", err)
 			}
@@ -163,6 +186,9 @@ func (c *modelRecommendationsCache) run(ctx context.Context) {
 		case errors.Is(err, errModelRecommendationsNoCloud):
 			failures = 0
 			slog.Debug("skipping model recommendations refresh because cloud is disabled")
+		case errors.Is(err, errModelRecommendationsUnsupported):
+			failures = 0
+			slog.Debug("skipping model recommendations refresh", "reason", err)
 		default:
 			failures++
 			slog.Warn("model recommendations refresh failed", "error", err)
@@ -189,12 +215,13 @@ func (c *modelRecommendationsCache) refresh(ctx context.Context) error {
 	if envconfig.NoCloud() {
 		return errModelRecommendationsNoCloud
 	}
-	slog.Debug("refreshing model recommendations from remote", "url", modelRecommendationsURL)
+	endpoint := modelRecommendationsURL()
+	slog.Debug("refreshing model recommendations from remote", "url", endpoint)
 
 	reqCtx, cancel := context.WithTimeout(ctx, modelRecommendationsFetchTimeout)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, modelRecommendationsURL, nil)
+	req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, endpoint, nil)
 	if err != nil {
 		return err
 	}
@@ -209,6 +236,9 @@ func (c *modelRecommendationsCache) refresh(ctx context.Context) error {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == http.StatusNotFound {
+		return errModelRecommendationsUnsupported
+	}
 	if resp.StatusCode >= http.StatusBadRequest {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))
 		return fmt.Errorf("status %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
@@ -311,7 +341,12 @@ func modelRecommendationsSnapshotPath() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".susan", "cache", "model-recommendations.json"), nil
+	name := "model-recommendations.json"
+	if envconfig.CloudHostConfigured() {
+		host := strings.NewReplacer(":", "_", "[", "", "]", "").Replace(envconfig.CloudHost().Host)
+		name = "model-recommendations-" + host + ".json"
+	}
+	return filepath.Join(home, ".susan", "cache", name), nil
 }
 
 func validateModelRecommendations(recs []api.ModelRecommendation) ([]api.ModelRecommendation, error) {

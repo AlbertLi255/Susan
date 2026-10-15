@@ -24,7 +24,7 @@ import (
 )
 
 func TestEnsureLocalCompatibilityMigrationAppendsToExistingManifestList(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 	registerTestCompatMigrator(t)
 
 	source := model.ParseName("registry.ollama.ai/library/testcompat:latest")
@@ -90,7 +90,7 @@ func TestEnsureLocalCompatibilityMigrationAppendsToExistingManifestList(t *testi
 }
 
 func TestEnsureLocalCompatibilityMigrationUnsupportedFamilyNoop(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	source := model.ParseName("registry.ollama.ai/library/notcompat:latest")
 	writeSourceManifest(t, source, sourceManifestInput{
@@ -129,7 +129,7 @@ func TestEnsureLocalCompatibilityMigrationUnsupportedFamilyNoop(t *testing.T) {
 }
 
 func TestEnsureLocalCompatibilityMigrationSkipsAdapterModels(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 	registerTestCompatMigrator(t)
 
 	source := model.ParseName("registry.ollama.ai/library/testcompat:adapter")
@@ -169,7 +169,7 @@ func TestEnsureLocalCompatibilityMigrationSkipsAdapterModels(t *testing.T) {
 }
 
 func TestEnsureLocalCompatibilityMigrationPreservesPromptMetadata(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 	registerTestCompatMigrator(t)
 
 	source := model.ParseName("registry.ollama.ai/library/testcompat:latest")
@@ -236,7 +236,7 @@ func TestEnsureLocalCompatibilityMigrationPreservesPromptMetadata(t *testing.T) 
 }
 
 func TestEnsureLocalCompatibilityMigrationGemma4(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	source := model.ParseName("registry.ollama.ai/library/gemma4:e4b")
 	writeSourceManifest(t, source, sourceManifestInput{
@@ -384,7 +384,7 @@ func TestEnsureLocalCompatibilityMigrationGemma4(t *testing.T) {
 }
 
 func TestEnsureLocalCompatibilityMigrationGemma4CompatibleCopyNoop(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	source := model.ParseName("registry.ollama.ai/library/gemma4:e4b-llamacpp")
 	writeSourceManifest(t, source, sourceManifestInput{
@@ -466,7 +466,7 @@ func TestDeepseekOCRProjectorTensorName(t *testing.T) {
 }
 
 func TestEnsureLocalCompatibilityMigrationLaguna(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	source := model.ParseName("registry.ollama.ai/library/laguna-xs.2:q4_K_M")
 	writeSourceManifest(t, source, sourceManifestInput{
@@ -553,7 +553,7 @@ func TestEnsureLocalCompatibilityMigrationLaguna(t *testing.T) {
 }
 
 func TestEnsureLocalCompatibilityMigrationSerializesConcurrentCalls(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	source := model.ParseName("registry.ollama.ai/library/testcompat:latest")
 	writeSourceManifest(t, source, sourceManifestInput{
@@ -609,7 +609,7 @@ func TestEnsureLocalCompatibilityMigrationSerializesConcurrentCalls(t *testing.T
 }
 
 func TestEnsureLocalCompatibilityMigrationSkipsWhenDiskIsTooFull(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 	registerTestCompatMigrator(t)
 
 	source := model.ParseName("registry.ollama.ai/library/testcompat:latest")
@@ -1377,7 +1377,7 @@ func putF16(b []byte, v float32) {
 }
 
 func TestEnsureLocalCompatibilityMigrationRepairsDanglingV2Entry(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 	registerTestCompatMigrator(t)
 
 	source := model.ParseName("registry.ollama.ai/library/testcompat:latest")

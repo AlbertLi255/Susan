@@ -56,6 +56,11 @@ type Profile struct {
 	CreatedAt string `json:"created_at"`
 }
 
+// Overview is the Susan platform user billing overview, returned by GET /api/billing/overview.
+type Overview struct {
+	Plan string `json:"plan"`
+}
+
 // Terminal errors returned by the device flow. Callers map them to flow states.
 var (
 	ErrAccessDenied  = errors.New("authorization denied")

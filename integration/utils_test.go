@@ -174,7 +174,7 @@ func GetTestEndpoint() (*api.Client, string) {
 func skipIfRemote(t *testing.T) {
 	t.Helper()
 
-	ollamaHost := os.Getenv("OLLAMA_HOST")
+	ollamaHost := os.Getenv("SUSAN_HOST")
 	if ollamaHost == "" {
 		return
 	}
@@ -183,7 +183,7 @@ func skipIfRemote(t *testing.T) {
 	}
 	u, err := url.Parse(ollamaHost)
 	if err != nil {
-		t.Skipf("skipping local-server test with unparseable OLLAMA_HOST=%q", os.Getenv("OLLAMA_HOST"))
+		t.Skipf("skipping local-server test with unparseable SUSAN_HOST=%q", os.Getenv("SUSAN_HOST"))
 	}
 
 	host := u.Hostname()
@@ -193,7 +193,7 @@ func skipIfRemote(t *testing.T) {
 	if ip := net.ParseIP(host); ip != nil && (ip.IsLoopback() || ip.IsUnspecified()) {
 		return
 	}
-	t.Skipf("skipping local-server test with remote OLLAMA_HOST=%q", os.Getenv("OLLAMA_HOST"))
+	t.Skipf("skipping local-server test with remote SUSAN_HOST=%q", os.Getenv("SUSAN_HOST"))
 }
 
 // Server lifecycle management

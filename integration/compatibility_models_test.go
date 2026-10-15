@@ -55,12 +55,12 @@ func runPublishedCompatibilityModelCase(ctx context.Context, t *testing.T, name 
 
 	if isolatedModelStore {
 		modelsDir := t.TempDir()
-		t.Setenv("OLLAMA_MODELS", modelsDir)
+		t.Setenv("SUSAN_MODELS", modelsDir)
 		t.Logf("%s: using published compatibility model store %s", name, modelsDir)
 	} else {
-		t.Logf("%s: using configured model store %s", name, os.Getenv("OLLAMA_MODELS"))
+		t.Logf("%s: using configured model store %s", name, os.Getenv("SUSAN_MODELS"))
 	}
-	t.Setenv("OLLAMA_DEBUG", "2")
+	t.Setenv("SUSAN_DEBUG", "2")
 
 	t.Logf("%s: starting server with %s=0", name, migrationCompatEnv)
 	t.Setenv(migrationCompatEnv, "0")

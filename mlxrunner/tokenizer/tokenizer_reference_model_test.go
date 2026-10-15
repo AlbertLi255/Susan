@@ -131,7 +131,7 @@ func fetchTokenizerManifest(t testing.TB, ctx context.Context, url, digest strin
 
 func TestTokenizerReferenceFetch(t *testing.T) {
 	root := t.TempDir()
-	t.Setenv("OLLAMA_MODELS", filepath.Join(root, "models"))
+	t.Setenv("SUSAN_MODELS", filepath.Join(root, "models"))
 	t.Setenv("FETCH_TOKENIZERS", "1")
 	t.Setenv("VERIFY_TOKENIZERS", "")
 	work := filepath.Join(root, "work", "tokenizer")

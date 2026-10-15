@@ -9,19 +9,23 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/ollama/ollama/envconfig"
 )
 
 func TestReportingPassthrough(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	t.Setenv("OLLAMA_NO_CLOUD", "false")
+	t.Setenv("SUSAN_NO_CLOUD", "false")
 	testHome := t.TempDir()
 	setTestHome(t, testHome)
-	writeTestOllamaPrivateKey(t, testHome)
+	envconfig.ReloadServerConfig()
+	t.Cleanup(envconfig.ReloadServerConfig)
+	writeTestSusanPrivateKey(t, testHome)
 
-	originalBaseURL, originalSigningHost := cloudProxyBaseURL, cloudProxySigningHost
-	cloudProxySigningHost = "127.0.0.1"
+	originalBaseURL, originalSigningHost := cloudProxyBaseURL, cloudProxySigningHostOverride
+	cloudProxySigningHostOverride = "127.0.0.1"
 	t.Cleanup(func() {
-		cloudProxyBaseURL, cloudProxySigningHost = originalBaseURL, originalSigningHost
+		cloudProxyBaseURL, cloudProxySigningHostOverride = originalBaseURL, originalSigningHost
 	})
 
 	s := &Server{}
@@ -120,7 +124,7 @@ func TestReportingPassthrough(t *testing.T) {
 						t.Errorf("forwarded query = %q, want %q", got, tt.query)
 					}
 				}
-				verifySignedOllamaRequest(t, forwarded)
+				verifySignedSusanRequest(t, forwarded)
 			default:
 				t.Fatal("reporting request was not forwarded")
 			}
@@ -131,6 +135,8 @@ func TestReportingPassthrough(t *testing.T) {
 func TestReportingLocalErrors(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	setTestHome(t, t.TempDir())
+	envconfig.ReloadServerConfig()
+	t.Cleanup(envconfig.ReloadServerConfig)
 
 	originalSignRequest := cloudProxySignRequest
 	t.Cleanup(func() {
@@ -166,7 +172,7 @@ func TestReportingLocalErrors(t *testing.T) {
 				},
 			} {
 				t.Run(tt.name, func(t *testing.T) {
-					t.Setenv("OLLAMA_NO_CLOUD", tt.noCloud)
+					t.Setenv("SUSAN_NO_CLOUD", tt.noCloud)
 					signCalls := 0
 					cloudProxySignRequest = func(_ context.Context, req *http.Request) error {
 						signCalls++

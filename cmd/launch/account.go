@@ -15,6 +15,8 @@ import (
 const (
 	// DefaultUpgradeURL is the fixed destination for subscription upgrades.
 	DefaultUpgradeURL = "https://susan.com/upgrade"
+	// DefaultBillingURL is where paid-plan users top up their balance.
+	DefaultBillingURL = "https://susan.com/settings/billing"
 
 	accountCheckTimeout = 3 * time.Second
 )
@@ -118,9 +120,15 @@ func launchAccountState(ctx context.Context, client *api.Client) AccountState {
 	if user == nil || strings.TrimSpace(user.Name) == "" {
 		return AccountState{Status: accountStateSignedOut}
 	}
+	plan := strings.TrimSpace(user.Plan)
+	if plan == "" {
+		// The daemon leaves plan empty when billing lookup fails; treat it
+		// like an unavailable whoami instead of a free plan.
+		return AccountState{Status: accountStateUnknown}
+	}
 	return AccountState{
 		Status: accountStateSignedIn,
-		Plan:   strings.TrimSpace(user.Plan),
+		Plan:   plan,
 	}
 }
 

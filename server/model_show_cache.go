@@ -136,10 +136,13 @@ func (c *modelShowCache) Start(ctx context.Context) {
 // Start, so cloud requests cannot delay the listener from accepting traffic.
 func (c *modelShowCache) runStartup(ctx context.Context) {
 	if err := c.hydrateCloud(ctx); err != nil {
+		var statusErr api.StatusError
 		switch {
 		case errors.Is(err, context.Canceled):
 		case errors.Is(err, errModelShowNoCloud):
 			slog.Debug("skipping model show cloud cache hydration because cloud is disabled")
+		case errors.As(err, &statusErr) && statusErr.StatusCode == http.StatusNotFound:
+			slog.Debug("skipping model show cloud cache hydration because the cloud host does not list models")
 		default:
 			slog.Warn("model show cloud cache hydration failed", "error", err)
 		}

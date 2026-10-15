@@ -72,9 +72,11 @@ type mockTokenStep struct {
 // mockPlatformConfig scripts the platform mock: token endpoint steps and the
 // profile endpoint response.
 type mockPlatformConfig struct {
-	tokenSteps    []mockTokenStep
-	profileStatus int
-	profileBody   any
+	tokenSteps     []mockTokenStep
+	profileStatus  int
+	profileBody    any
+	overviewStatus int
+	overviewBody   any
 }
 
 // mockPlatformCounters reports how often platform endpoints were hit.
@@ -84,7 +86,8 @@ type mockPlatformCounters struct {
 }
 
 // newMockPlatformForSignin runs a minimal Susan platform mock serving
-// /auth/device, /auth/token (scripted steps) and /api/user/profile.
+// /auth/device, /auth/token (scripted steps), /api/user/profile and
+// /api/billing/overview.
 func newMockPlatformForSignin(t *testing.T, cfg mockPlatformConfig) (*httptest.Server, *mockPlatformCounters) {
 	t.Helper()
 
@@ -139,6 +142,20 @@ func newMockPlatformForSignin(t *testing.T, cfg mockPlatformConfig) (*httptest.S
 
 		w.WriteHeader(cfg.profileStatus)
 		json.NewEncoder(w).Encode(cfg.profileBody)
+	})
+
+	mux.HandleFunc("/api/billing/overview", func(w http.ResponseWriter, r *http.Request) {
+		if cfg.overviewStatus == 0 {
+			cfg.overviewStatus = http.StatusOK
+		}
+		if cfg.overviewBody == nil {
+			cfg.overviewBody = map[string]any{
+				"plan": "free",
+			}
+		}
+
+		w.WriteHeader(cfg.overviewStatus)
+		json.NewEncoder(w).Encode(cfg.overviewBody)
 	})
 
 	server = httptest.NewServer(mux)

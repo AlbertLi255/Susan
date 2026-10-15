@@ -105,7 +105,7 @@ func newFakeDaemon(t *testing.T, f *fakeDaemon) *httptest.Server {
 	return httptest.NewServer(mux)
 }
 
-func captureStdout(fn func() error) (string, error) {
+func captureLoginStdout(fn func() error) (string, error) {
 	r, w, err := os.Pipe()
 	if err != nil {
 		return "", err
@@ -133,7 +133,7 @@ func runLoginCmd(t *testing.T, args ...string) (string, error) {
 	defer cancel()
 	c.SetContext(ctx)
 
-	return captureStdout(c.Execute)
+	return captureLoginStdout(c.Execute)
 }
 
 func runLogoutCmd(t *testing.T, args ...string) (string, error) {
@@ -147,7 +147,7 @@ func runLogoutCmd(t *testing.T, args ...string) (string, error) {
 	defer cancel()
 	c.SetContext(ctx)
 
-	return captureStdout(c.Execute)
+	return captureLoginStdout(c.Execute)
 }
 
 func TestLoginAlreadySignedIn(t *testing.T) {

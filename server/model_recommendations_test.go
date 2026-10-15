@@ -81,8 +81,8 @@ func TestModelRecommendationsCacheRefreshAppliesServerSideChanges(t *testing.T) 
 		if req.Method != http.MethodGet {
 			t.Fatalf("method = %q, want GET", req.Method)
 		}
-		if got := req.URL.Scheme + "://" + req.URL.Host + req.URL.Path; got != modelRecommendationsURL {
-			t.Fatalf("url = %q, want %q", got, modelRecommendationsURL)
+		if got, want := req.URL.Scheme+"://"+req.URL.Host+req.URL.Path, "https://ollama.com/api/experimental/model-recommendations"; got != want {
+			t.Fatalf("url = %q, want %q", got, want)
 		}
 		if query := req.URL.Query(); len(query) != 1 || query.Get("ts") == "" {
 			t.Fatalf("query does not contain only the signed timestamp: %q", req.URL.RawQuery)
@@ -368,8 +368,65 @@ func TestValidateModelRecommendationsDoesNotSynthesizeRequiredPlans(t *testing.T
 	}
 }
 
+func TestModelRecommendationsCustomCloudHost(t *testing.T) {
+	setupModelRecommendationsTestEnv(t, "")
+	t.Setenv("SUSAN_CLOUD_HOST", "http://localhost:8000")
+
+	cache := newModelRecommendationsCache()
+	initial := cache.Get()
+	for _, rec := range initial {
+		if isCloudRecommendation(rec.Model) {
+			t.Fatalf("custom cloud host must not start with ollama.com cloud model %q", rec.Model)
+		}
+	}
+	if len(initial) == 0 {
+		t.Fatal("expected built-in local recommendations")
+	}
+
+	status := http.StatusNotFound
+	var gotURL string
+	cache.client = &http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		gotURL = req.URL.Scheme + "://" + req.URL.Host + req.URL.Path
+		if req.Header.Get("Authorization") == "" {
+			t.Error("request to the configured cloud host must be signed")
+		}
+		if status == http.StatusNotFound {
+			return jsonHTTPResponse(http.StatusNotFound, `{"detail":"Not Found"}`), nil
+		}
+		return jsonHTTPResponse(http.StatusOK, `{"recommendations":[{"model":"susancloud/demo:cloud","context_length":8192,"max_output_tokens":2048,"required_plan":"pro"}]}`), nil
+	})}
+
+	err := cache.refresh(context.Background())
+	if !errors.Is(err, errModelRecommendationsUnsupported) {
+		t.Fatalf("refresh error = %v, want errModelRecommendationsUnsupported", err)
+	}
+	if want := "http://localhost:8000/api/experimental/model-recommendations"; gotURL != want {
+		t.Fatalf("url = %q, want %q", gotURL, want)
+	}
+	if got := cache.Get(); !slices.Equal(got, initial) {
+		t.Fatalf("recommendations changed on 404: got %#v, want %#v", got, initial)
+	}
+
+	status = http.StatusOK
+	if err := cache.refresh(context.Background()); err != nil {
+		t.Fatalf("refresh failed: %v", err)
+	}
+	if got := modelRecommendationNames(cache.Get()); !slices.Equal(got, []string{"susancloud/demo:cloud"}) {
+		t.Fatalf("recommendations = %v, want platform list", got)
+	}
+
+	path, err := modelRecommendationsSnapshotPath()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := filepath.Base(path); got != "model-recommendations-localhost_8000.json" {
+		t.Fatalf("snapshot file = %q, want per-host file", got)
+	}
+}
+
 func TestModelRecommendationsHandlerReturnsDefaults(t *testing.T) {
 	gin.SetMode(gin.TestMode)
+	t.Setenv("SUSAN_CLOUD_HOST", "")
 
 	w := httptest.NewRecorder()
 	ctx, _ := gin.CreateTestContext(w)

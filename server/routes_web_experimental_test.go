@@ -286,7 +286,7 @@ func TestExperimentalWebEndpointSigningFailureReturnsUnauthorized(t *testing.T) 
 	cloudProxySignRequest = func(context.Context, *http.Request) error {
 		return errors.New("ssh: no key found")
 	}
-	cloudProxySigninURL = func() (string, error) {
+	cloudProxySigninURL = func(string) (string, error) {
 		return "https://ollama.com/signin/example", nil
 	}
 	t.Cleanup(func() {
@@ -340,7 +340,7 @@ func TestExperimentalWebEndpointSigningFailureWithoutSigninURL(t *testing.T) {
 	cloudProxySignRequest = func(context.Context, *http.Request) error {
 		return errors.New("ssh: no key found")
 	}
-	cloudProxySigninURL = func() (string, error) {
+	cloudProxySigninURL = func(string) (string, error) {
 		return "", errors.New("key missing")
 	}
 	t.Cleanup(func() {

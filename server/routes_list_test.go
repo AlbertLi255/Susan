@@ -238,7 +238,7 @@ func writeManifestListFixture(t *testing.T, name string, children ...manifestLis
 func TestListShowsPreferredManifestListChild(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	ggufConfig := makeManifestListConfig(t, manifest.FormatGGUF)
 	mlxConfig := makeManifestListConfig(t, manifest.FormatSafetensors)
@@ -346,7 +346,7 @@ func TestListShowsPreferredManifestListChild(t *testing.T) {
 }
 
 func TestBuildModelListSummaryRejectsInvalidRunner(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	cfg := makeManifestListConfig(t, manifest.FormatGGUF)
 	layer, err := manifest.NewLayer(bytes.NewReader([]byte("weights")), "application/vnd.ollama.image.model")
@@ -370,7 +370,7 @@ func TestBuildModelListSummaryRejectsInvalidRunner(t *testing.T) {
 func TestCopyManifestListByNameAndChildDigest(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	ggufConfig := makeManifestListConfig(t, manifest.FormatGGUF)
 	mlxConfig := makeManifestListConfig(t, manifest.FormatSafetensors)
@@ -439,7 +439,7 @@ func TestCopyManifestListByNameAndChildDigest(t *testing.T) {
 
 func TestCopyRejectsExplicitCloudSource(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	createShowCacheModel(t, "copy-cloud", map[string]any{"test.context_length": uint32(1024)})
 

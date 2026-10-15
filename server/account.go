@@ -20,7 +20,7 @@ import (
 func writeUnauthorized(c *gin.Context) {
 	response := gin.H{"error": "unauthorized"}
 
-	if sURL, err := signinURL(); err == nil {
+	if sURL, err := signinURL(signinClientName(c.Request)); err == nil {
 		response["signin_url"] = sURL
 	}
 
@@ -104,11 +104,20 @@ func (s *Server) WhoamiHandler(c *gin.Context) {
 		return
 	}
 
+	// Fetch the billing overview to get the active plan. If this fails,
+	// we return an empty plan rather than "free" to allow the UI to handle
+	// the absence gracefully.
+	plan := ""
+	overview, err := session.GetOverview(c.Request.Context())
+	if err == nil && overview != nil {
+		plan = overview.Plan
+	}
+
 	c.JSON(http.StatusOK, api.UserResponse{
 		ID:    id,
 		Email: profile.Email,
 		Name:  profile.Username,
-		Plan:  "free",
+		Plan:  plan,
 	})
 }
 

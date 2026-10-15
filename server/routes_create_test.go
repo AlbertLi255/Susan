@@ -1050,7 +1050,7 @@ func writeManifestListVariant(t *testing.T, name, modelFormat string) {
 func TestCreateManifestList(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 	var s Server
 
 	writeManifestListVariant(t, "test-gguf", manifest.FormatGGUF)
@@ -1190,7 +1190,7 @@ func TestCreateManifestListRejectsAmbiguousChildren(t *testing.T) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Setenv("OLLAMA_MODELS", t.TempDir())
+			t.Setenv("SUSAN_MODELS", t.TempDir())
 			var s Server
 
 			writeManifestListVariant(t, "test-gguf-a", manifest.FormatGGUF)
@@ -2140,7 +2140,7 @@ func TestDetectModelTypeFromFiles(t *testing.T) {
 
 	t.Run("safetensors file with sidecars", func(t *testing.T) {
 		p := t.TempDir()
-		t.Setenv("OLLAMA_MODELS", p)
+		t.Setenv("SUSAN_MODELS", p)
 
 		configDigest := createTestBlob(t, []byte(`{"model_type":"test"}`))
 		files := map[string]string{
@@ -3315,7 +3315,7 @@ func driftWarnings(t *testing.T, name string, children []model.ConfigV2) []strin
 
 func TestCreateManifestListWarnsOnDrift(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	baseConfig := func(format string) model.ConfigV2 {
 		return model.ConfigV2{
@@ -3391,7 +3391,7 @@ func TestCreateManifestListWarnsOnDrift(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Setenv("OLLAMA_MODELS", t.TempDir())
+			t.Setenv("SUSAN_MODELS", t.TempDir())
 
 			first := baseConfig(manifest.FormatGGUF)
 			second := baseConfig(manifest.FormatSafetensors)
@@ -3408,7 +3408,7 @@ func TestCreateManifestListWarnsOnDrift(t *testing.T) {
 	}
 
 	t.Run("unset fields are not drift", func(t *testing.T) {
-		t.Setenv("OLLAMA_MODELS", t.TempDir())
+		t.Setenv("SUSAN_MODELS", t.TempDir())
 
 		first := baseConfig(manifest.FormatGGUF)
 		second := baseConfig(manifest.FormatSafetensors)
@@ -3425,7 +3425,7 @@ func TestCreateManifestListWarnsOnDrift(t *testing.T) {
 	})
 
 	t.Run("same precision class is not drift", func(t *testing.T) {
-		t.Setenv("OLLAMA_MODELS", t.TempDir())
+		t.Setenv("SUSAN_MODELS", t.TempDir())
 
 		first := baseConfig(manifest.FormatGGUF)
 		second := baseConfig(manifest.FormatSafetensors)
@@ -3440,7 +3440,7 @@ func TestCreateManifestListWarnsOnDrift(t *testing.T) {
 	})
 
 	t.Run("no drift is silent", func(t *testing.T) {
-		t.Setenv("OLLAMA_MODELS", t.TempDir())
+		t.Setenv("SUSAN_MODELS", t.TempDir())
 
 		first := baseConfig(manifest.FormatGGUF)
 		second := baseConfig(manifest.FormatSafetensors)
@@ -3453,7 +3453,7 @@ func TestCreateManifestListWarnsOnDrift(t *testing.T) {
 }
 
 func TestCreateClefDecisionHead(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 	_, digest := createBinFile(t, gguftest.KV{
 		"general.architecture": "qwen35",
 		"qwen35.decision.type": "clef",

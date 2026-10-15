@@ -21,7 +21,7 @@ func runQuantization(t *testing.T) {
 	modelDir := filepath.Join(testdataModelsDir, tinyLlamaModelDir)
 	downloadHFModel(t, tinyLlamaRepo, tinyLlamaRevision, modelDir)
 	ensureMLXLibraryPath(t)
-	t.Setenv("OLLAMA_CREATE_REMOTE", "false")
+	t.Setenv("SUSAN_CREATE_REMOTE", "false")
 
 	ctx, cancel := context.WithTimeout(t.Context(), 10*time.Minute)
 	defer cancel()

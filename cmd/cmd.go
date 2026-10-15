@@ -16,6 +16,7 @@ import (
 	"math"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"path"
@@ -135,7 +136,18 @@ func convertSelectionItemUpdates(updates <-chan []launch.SelectionItem) <-chan [
 	return out
 }
 
-const ConnectInstructions = "If your browser did not open, navigate to:\n    %s\n\n"
+// printSigninInstructions prints the device flow link from a 401. The link
+// may be opened on another device (e.g. over SSH), so the verification code is
+// shown separately for the user to compare on the authorization page.
+func printSigninInstructions(signinURL string) {
+	fmt.Printf("Open this link to sign in, then run the command again:\n    %s\n", signinURL)
+	if u, err := url.Parse(signinURL); err == nil {
+		if code := u.Query().Get("user_code"); code != "" {
+			fmt.Printf("Verification code: %s\n", code)
+		}
+	}
+	fmt.Println()
+}
 
 // ensureThinkingSupport emits a warning if the model does not advertise thinking support
 func ensureThinkingSupport(ctx context.Context, client *api.Client, name, runner string) {
@@ -769,7 +781,7 @@ func handleCloudAuthorizationError(err error) bool {
 	if errors.As(err, &authErr) && authErr.StatusCode == http.StatusUnauthorized {
 		fmt.Printf("You need to be signed in to Susan to run Cloud models.\n\n")
 		if authErr.SigninURL != "" {
-			fmt.Printf(ConnectInstructions, authErr.SigninURL)
+			printSigninInstructions(authErr.SigninURL)
 		}
 		return true
 	}
@@ -808,6 +820,12 @@ func ensureCloudStub(ctx context.Context, client *api.Client, modelName string) 
 		return nil
 	})
 	if err != nil {
+		// The registry only hosts stubs for ollama.com cloud models; a missing
+		// stub does not affect inference, so keep it out of the user's terminal.
+		if strings.Contains(err.Error(), "file does not exist") {
+			slog.Debug("cloud stub not available", "model", modelName, "error", err)
+			return
+		}
 		slog.Warn("failed to pull cloud stub", "model", modelName, "error", err)
 	}
 }
@@ -1023,11 +1041,11 @@ func RunHandler(cmd *cobra.Command, args []string) error {
 				fmt.Printf("You need to be signed in to Susan to run Cloud models.\n\n")
 
 				if sErr.SigninURL != "" {
-					fmt.Printf(ConnectInstructions, sErr.SigninURL)
+					printSigninInstructions(sErr.SigninURL)
 				}
 				return nil
 			}
-			return err
+			return withCloudUpgradeHint(cmd.Context(), err)
 		}
 
 		for _, msg := range info.Messages {
@@ -1048,7 +1066,7 @@ func RunHandler(cmd *cobra.Command, args []string) error {
 		if handleCloudAuthorizationError(err) {
 			return nil
 		}
-		return err
+		return withCloudUpgradeHint(cmd.Context(), err)
 	}
 	return nil
 }
@@ -1074,7 +1092,7 @@ func PushHandler(cmd *cobra.Command, args []string) error {
 				fmt.Println()
 
 				if aErr.SigninURL != "" {
-					fmt.Printf(ConnectInstructions, aErr.SigninURL)
+					printSigninInstructions(aErr.SigninURL)
 				}
 				return nil
 			}
