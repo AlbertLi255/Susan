@@ -18,7 +18,7 @@ func TestCreateCapabilities(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	for _, format := range []string{"gguf", "safetensors"} {
 		t.Run(format, func(t *testing.T) {
-			t.Setenv("OLLAMA_MODELS", t.TempDir())
+			t.Setenv("SUSAN_MODELS", t.TempDir())
 			var s Server
 			baseCaps := []string{"completion", "vision"}
 			if format == "safetensors" {
@@ -121,7 +121,7 @@ func TestDecisionPublicCapabilities(t *testing.T) {
 				name += "-vision"
 			}
 			t.Run(name, func(t *testing.T) {
-				t.Setenv("OLLAMA_MODELS", t.TempDir())
+				t.Setenv("SUSAN_MODELS", t.TempDir())
 				cfg := model.ConfigV2{ModelFormat: format, Parser: "qwen3.5", Capabilities: []string{"decision"}}
 				want := []model.Capability{model.CapabilityDecision}
 				if declaredVision {

@@ -35,7 +35,7 @@ import (
 )
 
 func TestGetExistingName(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 	for _, name := range []string{"MyOrg/MyModel:Q4", "OtherOrg/OtherModel:Q8", "DefaultModel:latest", "localhost:12345/MyOrg/MyModel:Q4"} {
 		if err := manifest.WriteManifestData(model.ParseName(name), []byte(`{}`)); err != nil {
 			t.Fatal(err)
@@ -82,7 +82,7 @@ func BenchmarkGetExistingName(b *testing.B) {
 	}
 	for _, models := range []int{1, 10, 100} {
 		b.Run(fmt.Sprintf("models=%d", models), func(b *testing.B) {
-			b.Setenv("OLLAMA_MODELS", b.TempDir())
+			b.Setenv("SUSAN_MODELS", b.TempDir())
 			for i := range models {
 				name := model.ParseName(fmt.Sprintf("Test/Model%d:Latest", i))
 				if err := manifest.WriteManifestData(name, data); err != nil {
@@ -248,7 +248,7 @@ func TestRouteHandlersRejectUnknownRunner(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Setenv("OLLAMA_MODELS", t.TempDir())
+			t.Setenv("SUSAN_MODELS", t.TempDir())
 			var s Server
 
 			w := createRequest(t, tt.handler(&s), tt.body)
@@ -818,7 +818,7 @@ func TestGetModelInfo_SafetensorsUsesStoredFileType(t *testing.T) {
 }
 
 func TestGetModelInfoSafetensorsTensorInfoRequiresVerbose(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	writeShowManifestVariant(t, "show-safetensors-tensors", manifest.RunnerMLX, manifest.FormatSafetensors, model.ConfigV2{
 		ModelFormat:  manifest.FormatSafetensors,
@@ -1227,7 +1227,7 @@ func writeShowManifestVariant(t *testing.T, name, runner, format string, cfg mod
 }
 
 func TestShowAllManifestsNonListReturnsSingleManifest(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	var s Server
 
@@ -1265,7 +1265,7 @@ func TestShowAllManifestsNonListReturnsSingleManifest(t *testing.T) {
 }
 
 func TestShowAllManifestsManifestListDedupesLicenses(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	licenseLayer, err := manifest.NewLayer(bytes.NewReader([]byte("Apache-2.0")), "application/vnd.ollama.image.license")
 	if err != nil {
@@ -1372,7 +1372,7 @@ func TestShowAllManifestsManifestListDedupesLicenses(t *testing.T) {
 }
 
 func TestShowManifestListIncludesChildSummaries(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	writeShowManifestVariant(t, "show-mlx", manifest.RunnerMLX, manifest.FormatSafetensors, model.ConfigV2{
 		ModelFormat: manifest.FormatSafetensors,
@@ -1446,7 +1446,7 @@ func TestShowManifestListIncludesChildSummaries(t *testing.T) {
 }
 
 func TestShowManifestListRejectsInvalidChildRunner(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	writeShowManifestVariant(t, "show-good", manifest.RunnerGGML, manifest.FormatGGUF, model.ConfigV2{
 		ModelFormat: manifest.FormatGGUF,
@@ -1882,7 +1882,7 @@ func TestWaitForStream(t *testing.T) {
 }
 
 func TestShowOmitsNonFiniteGGUFValues(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	var s Server
 

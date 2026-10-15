@@ -641,7 +641,7 @@ func TestListRunningHandlerShowsRunner(t *testing.T) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}))
-	t.Setenv("OLLAMA_HOST", mockServer.URL)
+	t.Setenv("SUSAN_HOST", mockServer.URL)
 	t.Cleanup(mockServer.Close)
 
 	cmd := &cobra.Command{}
@@ -699,7 +699,7 @@ func TestRunHandlerRunnerFlag(t *testing.T) {
 			http.NotFound(w, r)
 		}
 	}))
-	t.Setenv("OLLAMA_HOST", mockServer.URL)
+	t.Setenv("SUSAN_HOST", mockServer.URL)
 	t.Cleanup(mockServer.Close)
 
 	cmd := &cobra.Command{}
@@ -2156,7 +2156,7 @@ func TestCreateHandlerManifestList(t *testing.T) {
 		}
 		w.(http.Flusher).Flush()
 	}))
-	t.Setenv("OLLAMA_HOST", mockServer.URL)
+	t.Setenv("SUSAN_HOST", mockServer.URL)
 	t.Cleanup(mockServer.Close)
 
 	cmd := &cobra.Command{}

@@ -290,14 +290,33 @@ func (s *Server) scheduleRunnerForModel(ctx context.Context, m *Model, caps []mo
 	return runner.llama, m, &opts, nil
 }
 
-func signinURL() (string, error) {
-	// Desktop flows carry a client name so the Susan platform can deep-link
-	// back through susan:// after authorization.
-	status, err := platform.DefaultManager().Start(context.Background(), "Susan Desktop", false)
+// signinURL returns the device flow link for the client that hit a 401. The
+// client name is shown on the platform's authorization page, and "Susan
+// Desktop" also makes the page deep-link back through susan://. A pending
+// flow is reused whichever client started it: the daemon is shared, so
+// approving it signs in every client on this machine.
+func signinURL(clientName string) (string, error) {
+	status, err := platform.DefaultManager().Start(context.Background(), clientName, false)
 	if err != nil {
 		return "", err
 	}
 	return status.VerificationURIComplete, nil
+}
+
+// signinClientName tells the Desktop app (explicit header), the CLI (api
+// client User-Agent) and anything else apart, so CLI users on machines
+// without the Desktop app are not sent back to it after authorizing.
+func signinClientName(r *http.Request) string {
+	if r == nil {
+		return "Susan"
+	}
+	if strings.EqualFold(strings.TrimSpace(r.Header.Get(api.ClientKindHeader)), "desktop") {
+		return "Susan Desktop"
+	}
+	if strings.HasPrefix(r.UserAgent(), "susan/") {
+		return "Susan CLI"
+	}
+	return "Susan"
 }
 
 func (s *Server) GenerateHandler(c *gin.Context) {
@@ -459,7 +478,7 @@ func (s *Server) GenerateHandler(c *gin.Context) {
 		if err != nil {
 			var authError api.AuthorizationError
 			if errors.As(err, &authError) {
-				sURL, sErr := signinURL()
+				sURL, sErr := signinURL(signinClientName(c.Request))
 				if sErr != nil {
 					slog.Error(sErr.Error())
 					c.JSON(http.StatusInternalServerError, gin.H{"error": "error getting authorization details"})
@@ -2359,7 +2378,7 @@ func (s *Server) GenerateRoutes() (http.Handler, error) {
 }
 
 func (s *Server) ModelRecommendationsExperimentalHandler(c *gin.Context) {
-	recs := defaultModelRecommendations
+	recs := initialModelRecommendations()
 	source := "default"
 	if s.modelCaches != nil && s.modelCaches.recommendations != nil {
 		ctx := context.Background()
@@ -3001,7 +3020,7 @@ func (s *Server) ChatHandler(c *gin.Context) {
 		if err != nil {
 			var authError api.AuthorizationError
 			if errors.As(err, &authError) {
-				sURL, sErr := signinURL()
+				sURL, sErr := signinURL(signinClientName(c.Request))
 				if sErr != nil {
 					slog.Error(sErr.Error())
 					c.JSON(http.StatusInternalServerError, gin.H{"error": "error getting authorization details"})

@@ -167,6 +167,10 @@ func (s *Server) ollamaProxy() http.Handler {
 				s.log().Info("configuring ollama proxy", "target", target.String())
 
 				newProxy := httputil.NewSingleHostReverseProxy(target)
+				// Route all proxied requests through userAgentTransport so that
+				// User-Agent and X-Susan-Client:desktop headers are injected on
+				// every outbound HTTP request, regardless of code path.
+				newProxy.Transport = &userAgentTransport{base: http.DefaultTransport}
 
 				originalDirector := newProxy.Director
 				newProxy.Director = func(req *http.Request) {
@@ -423,6 +427,7 @@ func (t *userAgentTransport) RoundTrip(req *http.Request) (*http.Response, error
 	// Clone the request to avoid mutating the original
 	r := req.Clone(req.Context())
 	r.Header.Set("User-Agent", userAgent())
+	r.Header.Set(api.ClientKindHeader, "desktop")
 	return t.base.RoundTrip(r)
 }
 
@@ -470,10 +475,7 @@ func (s *Server) doSelfSigned(ctx context.Context, method, path string) (*http.R
 // endpoint. The daemon holds the platform credentials, so the Desktop never
 // talks to the platform directly.
 func (s *Server) UserData(ctx context.Context) (*api.UserResponse, error) {
-	client, err := api.ClientFromEnvironment()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create susan client: %w", err)
-	}
+	client := api.NewClient(envconfig.Host(), s.httpClient())
 
 	user, err := client.Whoami(ctx)
 	if err != nil {
@@ -638,13 +640,15 @@ func (s *Server) getError(err error) responses.ErrorEvent {
 
 	errStr := err.Error()
 
-	switch {
-	case strings.Contains(errStr, "402"):
+	if api.UsageLimitHit(err) != "" {
 		return responses.ErrorEvent{
 			EventName: "error",
 			Error:     "You've reached your usage limit, please upgrade to continue",
 			Code:      "usage_limit_upgrade",
 		}
+	}
+
+	switch {
 	case strings.HasPrefix(errStr, "pull model manifest") && isNetworkError(errStr):
 		return responses.ErrorEvent{
 			EventName: "error",
@@ -840,6 +844,16 @@ func (s *Server) chat(w http.ResponseWriter, r *http.Request) error {
 	// TODO (jmorganca): skip this round trip and instead just act
 	// on a 404 error on chat
 	_, err = c.Show(ctx, &api.ShowRequest{Model: req.Model})
+	var showErr api.StatusError
+	if err != nil && !req.ForceUpdate && (!errors.As(err, &showErr) || showErr.StatusCode != http.StatusNotFound) {
+		// Only a missing model should trigger a pull; 401/402/403/429/5xx
+		// must surface as-is so the usage-limit banner and auth errors work.
+		json.NewEncoder(w).Encode(s.getError(err))
+		flusher.Flush()
+		cancelLoading()
+		s.log().Error("failed to show model", "error", err, "model", req.Model)
+		return nil
+	}
 	if err != nil || req.ForceUpdate {
 		// Create an empty assistant message to store the model information
 		// This will be overwritten when the model responds

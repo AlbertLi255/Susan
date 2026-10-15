@@ -636,7 +636,7 @@ func createSafetensorsManifestForRunner(t *testing.T, name, runner, tensorName s
 }
 
 func TestGetSafetensorsTensorInfoForRunnerSelectsChildManifest(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	mlxManifest := createSafetensorsManifestForRunner(t, "runner-mlx", manifest.RunnerMLX, "mlx.weight")
 	ggmlManifest := createSafetensorsManifestForRunner(t, "runner-ggml", manifest.RunnerGGML, "ggml.weight")

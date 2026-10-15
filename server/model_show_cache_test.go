@@ -119,7 +119,7 @@ func TestModelShowCacheLocalVerboseVariantsAreSeparate(t *testing.T) {
 
 func TestModelShowCacheLocalKeyUsesRunnerSelectionAndParentDigest(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	writeShowManifestVariant(t, "show-cache-mlx", manifest.RunnerMLX, manifest.FormatSafetensors, modelpkg.ConfigV2{
 		ModelFormat:  manifest.FormatSafetensors,

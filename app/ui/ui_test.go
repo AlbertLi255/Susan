@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -21,6 +22,29 @@ import (
 	"github.com/ollama/ollama/app/updater"
 	"github.com/ollama/ollama/cmd/launch"
 )
+
+func TestDesktopRequestsIdentifyClient(t *testing.T) {
+	var gotKind, gotUA string
+	daemon := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotKind = r.Header.Get(api.ClientKindHeader)
+		gotUA = r.UserAgent()
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer daemon.Close()
+
+	resp, err := userAgentHTTPClient(0).Get(daemon.URL + "/api/me")
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+
+	if gotKind != "desktop" {
+		t.Fatalf("%s = %q, want %q", api.ClientKindHeader, gotKind, "desktop")
+	}
+	if !strings.HasPrefix(gotUA, "susan/") {
+		t.Fatalf("User-Agent = %q, want susan/ prefix", gotUA)
+	}
+}
 
 func TestHandlePostApiSettings(t *testing.T) {
 	tests := []struct {
@@ -702,13 +726,178 @@ func TestSupportsBrowserTools(t *testing.T) {
 		{"qwen3", false},
 		{"deepseek-v3", false},
 		{"llama3.3", false},
-		{"", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.model, func(t *testing.T) {
+			got := supportsBrowserTools(tt.model)
+			if got != tt.want {
+				t.Errorf("supportsBrowserTools(%q) = %v, want %v", tt.model, got, tt.want)
+			}
+		})
+	}
+}
+
+// AT-5.4-a: 402 error → usage_limit_upgrade
+func TestGetError402ReturnsUsageLimitUpgrade(t *testing.T) {
+	server := &Server{}
+	err := api.StatusError{
+		StatusCode:   http.StatusPaymentRequired,
+		Status:       "402 Payment Required",
+		ErrorMessage: "Insufficient credit balance / 余额不足，请充值",
+	}
+	got := server.getError(err)
+	if got.Code != "usage_limit_upgrade" {
+		t.Errorf("getError(402) code = %q, want usage_limit_upgrade", got.Code)
+	}
+}
+
+// AT-5.4-b: susancloud 403 → usage_limit_upgrade
+func TestGetErrorSusancloud403ReturnsUsageLimitUpgrade(t *testing.T) {
+	server := &Server{}
+	err := api.StatusError{
+		StatusCode:   http.StatusForbidden,
+		Status:       "403 Forbidden",
+		ErrorMessage: "Pro plan required for susancloud models / susancloud 模型需 Pro 档",
+	}
+	got := server.getError(err)
+	if got.Code != "usage_limit_upgrade" {
+		t.Errorf("getError(susancloud 403) code = %q, want usage_limit_upgrade", got.Code)
+	}
+}
+
+// AT-5.4-a/b fallback: non-StatusError errors still hit the string-matching branches
+func TestGetErrorStringFallbackReturnsUsageLimitUpgrade(t *testing.T) {
+	server := &Server{}
+	tests := []struct {
+		name string
+		err  error
+	}{
+		{"402 in message", errors.New("payment required 402")},
+		{"403 susancloud in message", errors.New("403 Forbidden: Pro plan required for susancloud models")},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := server.getError(tt.err)
+			if got.Code != "usage_limit_upgrade" {
+				t.Errorf("getError(%q) code = %q, want usage_limit_upgrade", tt.err, got.Code)
+			}
+		})
+	}
+}
+
+// AT-5.4-c: 429, reserved push 403, cloud shutdown 403 → not usage_limit_upgrade
+func TestGetErrorOther403DoesNotReturnUsageLimitUpgrade(t *testing.T) {
+	server := &Server{}
+	tests := []struct {
+		name string
+		err  error
+	}{
+		{"429 rate limit", errors.New("too many requests 429")},
+		{"reserved susancloud namespace 403", errors.New(`403 Forbidden: namespace "susancloud" is reserved`)},
+		{"cloud shutdown 403", errors.New("cloud service unavailable 403")},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := server.getError(tt.err)
+			if got.Code == "usage_limit_upgrade" {
+				t.Errorf("getError(%q) code = usage_limit_upgrade, want different code", tt.err)
+			}
+		})
+	}
+}
+
+func TestChatShowErrorOnlyPullsOnNotFound(t *testing.T) {
+	tests := []struct {
+		name       string
+		showStatus int
+		showBody   string
+		wantPull   bool
+		wantCode   string
+		wantError  string
+	}{
+		{
+			name:       "susancloud 403 shows upgrade banner without pulling",
+			showStatus: http.StatusForbidden,
+			showBody:   `{"error":"Pro plan required for susancloud models / susancloud 模型需 Pro 档"}`,
+			wantCode:   "usage_limit_upgrade",
+		},
+		{
+			name:       "402 shows upgrade banner without pulling",
+			showStatus: http.StatusPaymentRequired,
+			showBody:   `{"error":"Insufficient credit balance / 余额不足，请充值"}`,
+			wantCode:   "usage_limit_upgrade",
+		},
+		{
+			name:       "429 shows platform message without pulling",
+			showStatus: http.StatusTooManyRequests,
+			showBody:   `{"error":"Rate limit exceeded / 请求过于频繁"}`,
+			wantError:  "Rate limit exceeded",
+		},
+		{
+			name:       "404 still pulls",
+			showStatus: http.StatusNotFound,
+			showBody:   `{"error":"model 'qwen3:0.6b' not found"}`,
+			wantPull:   true,
+		},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.model, func(t *testing.T) {
-			if got := supportsBrowserTools(tt.model); got != tt.want {
-				t.Errorf("supportsBrowserTools(%q) = %v, want %v", tt.model, got, tt.want)
+		t.Run(tt.name, func(t *testing.T) {
+			var pulled atomic.Bool
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				switch r.URL.Path {
+				case "/api/show":
+					w.WriteHeader(tt.showStatus)
+					w.Write([]byte(tt.showBody))
+				case "/api/pull":
+					pulled.Store(true)
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(`{"error":"pull model manifest: file does not exist"}`))
+				default:
+					t.Errorf("unexpected request %s %s", r.Method, r.URL.Path)
+					w.WriteHeader(http.StatusNotFound)
+				}
+			}))
+			defer ts.Close()
+			t.Setenv("SUSAN_HOST", ts.URL)
+
+			testStore := &store.Store{DBPath: filepath.Join(t.TempDir(), "db.sqlite")}
+			defer testStore.Close()
+			server := &Server{Store: testStore}
+
+			body := `{"model":"susancloud/demo:cloud","prompt":"hi"}`
+			req := httptest.NewRequest(http.MethodPost, "/api/v1/chat/new", strings.NewReader(body))
+			req.SetPathValue("id", "new")
+			rr := httptest.NewRecorder()
+			_ = server.chat(rr, req)
+
+			if got := pulled.Load(); got != tt.wantPull {
+				t.Fatalf("pull called = %v, want %v", got, tt.wantPull)
+			}
+			if tt.wantPull {
+				return
+			}
+
+			var errEvent *responses.ErrorEvent
+			dec := json.NewDecoder(rr.Body)
+			for dec.More() {
+				var ev responses.ErrorEvent
+				if err := dec.Decode(&ev); err != nil {
+					t.Fatalf("decode stream: %v", err)
+				}
+				if ev.EventName == "error" {
+					errEvent = &ev
+				}
+			}
+			if errEvent == nil {
+				t.Fatalf("no error event in stream: %s", rr.Body.String())
+			}
+			if errEvent.Code != tt.wantCode {
+				t.Errorf("error code = %q, want %q", errEvent.Code, tt.wantCode)
+			}
+			if tt.wantError != "" && !strings.Contains(errEvent.Error, tt.wantError) {
+				t.Errorf("error = %q, want it to contain %q", errEvent.Error, tt.wantError)
 			}
 		})
 	}

@@ -97,6 +97,8 @@
 
 ## 阶段 2：Cloud 后端（MVP 必做）
 
+Susan 客户端如何接上已完成的平台推理，见执行批次里的**批次 5**。平台侧 Cloud 后端本身见**批次 6**（已在 susan-platform 交付）。
+
 ### 8. D1-D3 云代理改造
 - [server/cloud_proxy.go:28-33](file:///d:/projects/susanAssist/susanPlatform/Susan/server/cloud_proxy.go#L28-L33)：`https://ollama.com:443` → `https://api.susan.com:443`（占位）
 - 签名 host `ollama.com` → `susan.com`
@@ -294,13 +296,13 @@
 
 ---
 
-#### 3.3 Susan 客户端对接 Susan 平台（对比表 B0～B2 中 Susan 仓的任务）
+#### 3.3 Susan 客户端对接 Susan 平台（对比表 B0～B2 中 Susan 仓的任务）（**已完成**）
 
 > **这一节给谁看**：负责改 Susan（本仓库，Go + Desktop 前端）的人。读完本节 + 下文各 3.3.x 细则就能动手。
 >
 > **Susan 平台是什么**：账号、设备授权、Model Hub 所在的云端后端和官网。仓库 `susan-platform`（对比表亦称 `susan_web`）：`backend/`（FastAPI）+ `web/`（Next.js）。
 >
-> **现状**：平台侧 B0～B2（注册登录、Device Flow、`/account/devices`、撤设备令牌失效）**已完成并有测试**。Susan 侧对接 **未做**（仍连 `ollama.com`）。
+> **现状（2026-10-14）**：平台 B0～B2（注册登录、Device Flow、设备页）以及 B4～B6（云端推理、套餐余额、原生 `/api/show` `/api/chat` `/api/generate`、设备签名）已完成。Susan 侧登录对接（3.3.1～3.3.7）已做。`:cloud` 联调与 `/api/me` 的套餐字段在**批次 5 已完成**。
 >
 > 平台接口以平台对比表第七章 + `auth_device.py` 为准；平台改接口时必须同步更新本节。
 
@@ -359,7 +361,7 @@ npm run dev
 
 | 编号 | 任务 | 说明 | 状态 |
 |---|---|---|---|
-| 3.3.8 | B2 控制面用 Bearer；设备签名细节 → B4 | 对比表方案一；本批无额外实现工作 | 已决策 |
+| 3.3.8 | B2 控制面用 Bearer；`:cloud` 设备签名见批次 5 | 对比表方案一；本批无额外实现工作 | 已决策 |
 | **3.3.9** | 端到端联调验收 | **以总览 §F + §G 为准**（G.2 = 手工 E2E 全文）；下文「3.3.9」为同表副本 | **E2E 通过（2026-09-27）**：允许/拒绝/过期/logout/devices；G.1 全绿；Desktop 已肉眼打开（旧 susan-app 包） |
 
 ###### 建议顺序（不可跳过 3.3.0 / 不可合并砍掉 3.3.4 本地 API）
@@ -427,7 +429,7 @@ Susan daemon  ──POST/GET /api/signin/device──►（内部）──►  s
 ###### 约束（仍有效）
 
 - Cloud ≠ Registry；`SUSAN_CLOUD_HOST` 设在 **daemon 进程**环境
-- 3.3.8：B2 控制面 Bearer；设备签名细节 → B4
+- 3.3.8：B2 控制面 Bearer；`:cloud` 设备签名见批次 5
 - B1（官网 Hub 只读）在平台仓，Susan 无 B1 任务
 
 ###### E. 批次 3 总 Scope
@@ -451,12 +453,12 @@ Susan daemon  ──POST/GET /api/signin/device──►（内部）──►  s
 | 不包含 | 归属 |
 |---|---|
 | 改 susan-platform 业务代码 / Web 页面 | 平台仓已完成 B0～B2 |
-| 云端推理 `:cloud`、`/v1` 契约、GPU Runtime | 对比表 B3 / B4；本仓后续批次 |
-| `SUSAN_REGISTRY_HOST`、自建 `registry.susan.com`、迁 manifests 目录 | 阶段 3 H3 |
-| 开放用户 Push / `/account/models` 写入 | 对比表 B7 |
-| Web Chat `chat.susan.com` | 对比表 B6 |
-| Redis、多节点 Key 缓存 | 对比表 B5-2 |
-| 设备签名进 `Authorization` / `X-Susan-Signature` 细节 | 延到 B4（见 3.3.8） |
+| 云端推理 `:cloud`、`/api/me` 套餐字段、402/403 升级条 | **批次 5** |
+| `SUSAN_REGISTRY_HOST`、自建 `registry.susan.com`、迁 manifests 目录 | 阶段 3 H3；Push 见批次 10 |
+| 开放用户 Push / `/account/models` 写入 | 批次 10 |
+| Web Chat | 批次 9（平台 B6 已完成，本仓无任务） |
+| Redis 多节点 | 批次 8（平台单机限流已完成，本仓无任务） |
+| 改 `:cloud` 的设备签名 / 引入 `X-Susan-Signature` | 批次 5 保持现有设备签名 |
 | `SUSAN_HOME` 重定向 | 已决策：本节不做 |
 
 ###### F. 批次 3 验收标准（整批通过条件）
@@ -1020,7 +1022,7 @@ Susan 需要调用的平台接口（其余平台接口只给 Web 页面用，Sus
 
 ---
 
-##### 3.3.8 云端请求的鉴权方式（方案一：设备签名还是 Bearer）——已决策
+##### 3.3.8 云端请求的鉴权方式（方案一：设备签名还是 Bearer）——已决策（**批次 5 已完成**）
 
 **背景**：Susan 现有的云端请求用设备私钥签名，平台目前只认 Bearer 令牌，两边格式对不上：
 
@@ -1041,7 +1043,9 @@ Susan 需要调用的平台接口（其余平台接口只给 Web 页面用，Sus
   - `Authorization` 头继续只放 Bearer 令牌；
   - 设备签名改放在自定义请求头（例如 `X-Susan-Signature`），不再占用 `Authorization`；
   - 签名内容、时间窗口等细节在 B4 前与平台一起定。
-- 对本节的影响：本地 daemon 发往 Susan 平台的请求（3.3.4 的平台客户端、`server/cloud_proxy.go`）一律带 Bearer，**不再**把设备签名放进 `Authorization`。令牌只在本地 daemon 手里，CLI 不直接请求 Susan 平台。发往 `ollama.com`（默认值）的请求保持现有行为不变。
+- 对本节的影响：本地 daemon 的控制面（3.3.4 的平台客户端、`/api/me`）用 Bearer。令牌只在本地 daemon 手里，CLI 不直接请求 Susan 平台。发往 `ollama.com`（默认值）的请求保持现有设备签名。
+
+**后续（批次 5 已完成）**：平台 B6-27 已按 Susan `auth.Sign` 接受 `:cloud` 转发的设备签名（`Authorization: <公钥>:<签名>`，签名内容 `METHOD,RequestURI`）。批次 5 保持这条签名，不改成 Bearer，也不引入 `X-Susan-Signature`。控制面仍用 Bearer。
 
 ---
 
@@ -1078,15 +1082,16 @@ Susan 需要调用的平台接口（其余平台接口只给 Web 页面用，Sus
 3. **`SUSAN_CLOUD_HOST` 的默认值**：域名上线前保持 `https://ollama.com`（现网行为不变，符合对比表 B0"不改默认 Host"）。此时 Device Flow 不可用（ollama.com 没有这些接口），`susan login` 和 `signin_url` 生成直接提示"请设置 SUSAN_CLOUD_HOST 指向 Susan 平台"，不再走 ollama.com 的 connect 流程。域名上线后把默认值改为 `https://api.susan.com`（一行改动）。
 4. **命令名**：`login` 为主命令，`signin` 为别名；`logout` 为主命令，`signout` 为别名（对比表写的是 `susan login`）。
 5. **未登录时 `/api/me` 是否自动发起 Device Flow**：有进行中的就复用，没有就新发起。有问题再收紧为"只在用户主动登录时发起"。
-6. **云端请求鉴权**：B2 只用 Bearer；B4 如启用设备签名，放在 `X-Susan-Signature` 等自定义头，`Authorization` 继续只放 Bearer。见 3.3.8。
+6. **云端请求鉴权**：本批控制面用 Bearer。`:cloud` 转发保持设备签名，见批次 5 与 3.3.8 的后续说明。不引入 `X-Susan-Signature`。
 7. **`SUSAN_HOME`**：本节不做，需要时单独排期。
 
 ##### 不在本节范围
 
 - Web 页面、平台后端的任何改动（平台 B0～B2 已完成）。
-- 云端推理的 `:cloud` 路由、`/v1` 接口契约测试（对比表 B3 / B4）。
-- 自建 `registry.susan.com` 与 `SUSAN_REGISTRY_HOST`（阶段 3 的 H3）。
-- 开放用户 push（对比表 B7）。
+- 云端推理 `:cloud`、`/api/me` 套餐、402/403 升级条（批次 5）。
+- 自建 `registry.susan.com` 与 `SUSAN_REGISTRY_HOST`（阶段 3 的 H3；Push 为批次 10）。
+- 开放用户 push（批次 10）。
+- Web Chat（批次 9）、Redis 多节点（批次 8）。
 
 ---
 
@@ -1095,45 +1100,178 @@ Susan 需要调用的平台接口（其余平台接口只给 Web 页面用，Sus
 - G：构建脚本产物名、iss 内容、install.ps1、Dockerfile、CI 镜像名已联动。ldflags 的 module 路径不改。
 - I：`OLLAMA_HOST=http://localhost:11434` → `SUSAN_HOST=http://localhost:14343`。合上游时这里会有冲突。
 
-### 批次 5：Cloud 后端
-- D1-D3：cloud_proxy.go URL 替换（Cloud Host 可配置，见对比表 P0-a）
-- H4：自建云推理代理服务
-- 路由边界：直连 `api.susan.com` 不强制 `model` 带 `:cloud`；`:cloud` 仅用于本机 Daemon 转发（见对比表 8.7.2）
-- Usage MVP：进程内累计 + 断开强制结算 + PostgreSQL；**本批次不引入 Redis**
+### 批次 5：Susan 对接已完成的云端账号与 `:cloud`（5.1～5.5 已完成；追加 5.6～5.15 已完成）
 
-### 批次 6：官网 + Model Hub（新仓库 susan_web）
+平台 B4（推理、用量）、B5（套餐、余额、402/403、限流）、B6（`/api/show`、`/api/chat`、`/api/generate`，以及设备签名）已在 susan-platform 完成。本批只改 Susan 本仓，把这些结果接到现有 Desktop。
+
+前置：批次 3 的登录、`SUSAN_CLOUD_HOST`、设备密钥。批次 4（构建脚本）无功能依赖。不阻塞后面的官网（批次 7）：升级链接仍写死，页面由批次 7 提供。
+
+环境变量仍是两个。`SUSAN_HOST` 是本机 daemon；`SUSAN_CLOUD_HOST` 是云端 API。不新增 `SUSAN_WEB_HOST`。升级页继续用常量 `https://susan.com/upgrade` 与 `https://susan.com/settings/billing`。
+
+提示语言沿用 Desktop 现有英文。429 显示平台返回的原文。
+
+| 编号 | 内容 | 状态 |
+|---|---|---|
+| 5.1 | 已登录、`SUSAN_CLOUD_HOST` 指向平台时，`susan run <模型>:cloud` 走现有设备签名。交互到 `/api/chat`，带一句提示到 `/api/generate`，两者都先过 `/api/show`。 | **已完成**（现有实现已满足） |
+| 5.2 | `/api/me` 的 `plan` 改为平台的生效套餐（Pro 过期为 free）。计费接口失败时仍返回 200，`plan` 留空，不再写死 `"free"`。 | **已完成** |
+| 5.3 | 设置页不改布局。`plan` 正确后，现有 Upgrade 按钮自行显示或隐藏。 | **已完成** |
+| 5.4 | 云端推理的 402，以及 `susancloud/*` 的 403，进现有的 `usage_limit_upgrade` 升级条（英文文案、现有两个链接）。429 显示平台原文。Push 保留字、云端关闭等其它 403 保持原错误。Desktop 只在 `/api/show` 返回 404 时才拉取模型，其它错误直接显示，不依赖平台 show 是否检查套餐。 | **已完成** |
+| 5.5 | 回写本文：批次 3 现状、3.3.8、以及后面顺延的批次说明。 | 已完成 |
+
+**Scope（包含）**
+
+- 5.1～5.5
+- 下面的自动化用例与手工验收
+
+**Scope（不包含）**
+
+- 改平台业务代码、新增 `SUSAN_WEB_HOST`、把升级链接改成 `/account/billing`
+- 改 `cloud_proxy.go` 的设备签名、改默认 Cloud Host、改 Registry
+- 设置页余额、本地用户缓存表
+- Redis（批次 8）、网页对话（批次 9）、桌面同步、Admin、用户 Push（批次 10）
+- 把 Desktop 文案改成中文
+
+**自动化**
+
+| 编号 | 行为 |
+|---|---|
+| AT-5.2-a | profile 成功且 overview 返回 `pro` → `/api/me` 的 `plan` 为 `pro` |
+| AT-5.2-b | overview 失败 → `/api/me` 仍 200，`plan` 为空 |
+| AT-5.4-a | 推理错误状态码 402（正文里可以没有数字 402）→ `usage_limit_upgrade` |
+| AT-5.4-b | `susancloud/*` 的 403 → 同一升级条 |
+| AT-5.4-c | 429、保留字 Push 403、云端关闭 403 → 不进升级条 |
+
+**手工验收（全部通过才算本批完成）**
+
+| 编号 | 操作 | 期望 |
+|---|---|---|
+| E2E-5.1 | 已登录，`susan run <模型>:cloud` | 先 show，再出回复 |
+| E2E-5.2 | 余额用尽后再跑 | Desktop 出现英文升级条；free 链到 `https://susan.com/upgrade`，pro 链到 `https://susan.com/settings/billing` |
+| E2E-5.3 | 非 Pro 跑 `susancloud/*` | 同一条升级条 |
+| E2E-5.4 | 打满限流 | 显示平台原文，没有升级条 |
+| E2E-5.5 | 对照网页 Billing 看设置页 | free 有 Upgrade，pro 没有；与 `/api/me` 的 `plan` 一致 |
+
+本批没有「部分通过」：上表五条手工验收和五条自动化都要通过。
+
+**验收结果（2026-10-14）**：五条自动化与五条手工验收全部通过，见 `test/reports/acceptance-report-2026-10-14-batch5.md`。
+
+#### 批次 5 追加：CLI 补齐（2026-10-15）
+
+> **进度（2026-10-15）**：5.6～5.15 全部完成。`go test ./cmd/... ./app/ui/ ./auth/platform/ ./envconfig/ ./manifest/ ./compatmigrate/ ./server/` 通过；E2E-5.6～5.11 全部通过（E2E-5.7 只跑了 free 分支，Pro 分支由单测覆盖）。详见 `test/reports/acceptance-report-2026-10-14-batch5.md` 第六节。
+
+5.1～5.5 验收时只覆盖了 Desktop。复查 CLI 后发现几处与批次 5 的决策不一致，或仍指向 ollama.com。本节在同一分支补齐，只改 Susan 本仓。
+
+| 编号 | 内容 | 状态 |
+|---|---|---|
+| 5.6 | 修 `cmd` 包测试编译：`cmd_test.go` 与 `login_test.go` 都定义了 `captureStdout`，CLI 单测无法运行。 | 已完成 |
+| 5.7 | 套餐为空按「未知」放行。5.2 规定计费接口失败时 `plan` 留空，但 CLI 的 `PlanSatisfies` 把空值当成不满足，Pro 用户会被要求升级。涉及 `launch` 的账号状态（`susan run` 选择器、`susan launch`、对话界面切模型）和 agent 界面的徽标与模型检查。 | 代码完成，单测通过；待手工验收 |
+| 5.8 | 模型推荐列表跟随 `SUSAN_CLOUD_HOST`。请求地址改为云端地址下的 `/api/experimental/model-recommendations`。配置了 `SUSAN_CLOUD_HOST` 时，初始值和兜底只用内置推荐里的本地模型，快照按主机分文件，不再显示 Ollama 的云端模型。平台返回 404 视为「平台未提供」：只记调试日志，不进入失败退避。未配置时行为与上游一致。 | 已完成：E2E-5.11 通过 |
+| 5.9 | 云端模型列表 `/api/tags` 返回 404 时（平台未提供），daemon 启动预热只记调试日志。 | 已完成：E2E-5.11 通过 |
+| 5.10 | `:cloud` 占位清单（cloud stub）在 Registry 上不存在时只记调试日志，不再在 CLI 打 WARN；网络错误等其它失败仍打 WARN。（CLI 进程通常没有 `SUSAN_CLOUD_HOST`，所以按错误类型判断，而不按环境变量。） | 已完成：E2E-5.6 通过 |
+| 5.11 | CLI 遇到 402 或 `susancloud/*` 的 403：保留平台原文，再追加一行升级链接，文案与链接同 Desktop（402 时 Pro 用户指向 `https://susan.com/settings/billing`，其余指向 `https://susan.com/upgrade`）。429、保留字 Push 403 等保持原样。 | 已完成：E2E-5.7（free）、E2E-5.8、E2E-5.10 通过 |
+| 5.12 | 补测 CLI：未登录跑 `:cloud` 的登录提示；429 的显示。 | 已完成：E2E-5.9、E2E-5.10 通过（E2E-5.9 发现 5.14 的问题，修复后复验） |
+| 5.13 | 测试里残留的 `OLLAMA_*` 环境变量改为 `SUSAN_*`（`MODELS`、`HOST`、`DEBUG`、`GO_TEMPLATE`、`CREATE_REMOTE`、`LIBRARY_PATH`），避免测试写进真实的 `~/.susan/models` 或连到真实的 daemon。`TestHostIgnoresOllamaHost` 保留。 | 已完成：`./server/` 整包、`./manifest/`、`./compatmigrate/` 通过，模型目录不受影响 |
+| 5.14 | 未登录跑 `:cloud` 时 CLI 要有登录链接。平台的 401 不带 `signin_url`，daemon 的转发代理原样转出去，CLI 就只能打印「需要登录」。改为：上游 401 自带 `signin_url` 时原样转发，否则由 daemon 发起设备授权，补上链接。 | 已完成：`TestCloudPassthroughUpstreamUnauthorizedAddsSigninURL` 通过，E2E-5.9 复验通过 |
+| 5.15 | 被动登录链接区分客户端。原先 daemon 在所有 401 里生成的登录链接，客户端名都写死为「Susan Desktop」，平台确认页会让 CLI 用户（尤其是没有 Desktop 的 Linux 终端）「返回 Susan Desktop」。改为：Desktop 发往 daemon 的请求统一带 `X-Susan-Client: desktop`；daemon 按「带此请求头 → Susan Desktop；User-Agent 以 `susan/` 开头 → Susan CLI；其它 → Susan」选名字；进行中的流程仍跨客户端复用（daemon 共用，确认一次所有客户端都登录，也避免 Desktop 轮询 `/api/me` 时让 CLI 打印的链接失效）。CLI 提示改为「Open this link to sign in, then run the command again」，并单独打印验证码。 | 已完成：`TestSigninClientName`、`TestDesktopRequestsIdentifyClient`、`TestPrintSigninInstructions` 通过；E2E 实测 CLI 先发起时平台记录 `client_name=Susan CLI`，Desktop 先发起时记录 `Susan Desktop` |
+| 5.16 | **集中 usage limit 判定 helper**。Desktop（`app/ui/ui.go:getError`）和 CLI（`cmd/cloud_upgrade.go:cloudUpgradeURL`）各自维护了一份 402/403+susancloud+!is-reserved 判定表，且实现不同步：Desktop 有字符串兜底分支，CLI 只认 `StatusError`，未来平台加新错误码时容易漏判。改为：在 `api/errors.go` 新增 `UsageLimitHit(err) UsageUpgradeClass` + 表驱动的 `classifyUsageLimit`，两边调用同一个 helper。顺带对齐：CLI 现在也对字符串形式的 "402" 错误返回升级提示（`errors.New("402 Payment Required")` 之前被 CLI 忽略，Desktop 能识别）。 | 已完成：`TestUsageLimitHit`（8 条）、`TestCloudUpgradeURL`、`TestGetError*`、`TestChatShowErrorOnlyPullsOnNotFound` 全 PASS；`./api`、`./cmd`、`./app/ui`、`./server` 回归全绿 |
+| 5.17 | **统一 ClientKindHeader 注入路径**。Desktop 有两条出站 HTTP 路径：`httputil.ReverseProxy`（用于 `/api/*` 代理）和 `api.Client`（通过 `userAgentHTTPClient` 构造）。原来两条路径各自设 ClientKindHeader——proxy 在 `Director` 里 `req.Header.Set`，transport 也 `RoundTrip` 里 `req.Header.Set`。两者都能工作，但风格不统一，以后新增 HTTP client 容易漏设。改为：把 `ReverseProxy.Transport` 也换成 `userAgentTransport` 实例，proxy 的 `Director` 里删掉重复 Set。所有 Desktop 出站 HTTP 统一经 `userAgentTransport.RoundTrip` 注入 `User-Agent` 和 `X-Susan-Client: desktop`。 | 已完成：`TestDesktopRequestsIdentifyClient` 通过；`./app/ui` 回归全绿 |
+
+**Scope（包含）**：5.6～5.17，以及下面的自动化用例与手工验收。
+
+**Scope（不包含）**
+
+- 平台接口（见下方「平台依赖」），本仓不施工
+- 改 Registry、`susan ls` 显示云端模型（随批次 7 自建 Registry）
+- CLI 文案改中文
+
+**平台依赖（susan-platform 待办，本仓不施工）**
+
+| 编号 | 内容 | 解决什么 |
+|---|---|---|
+| P-5.1 | `GET /api/experimental/model-recommendations`，按 `api.ModelRecommendationsResponse` 返回平台实际提供的云端模型。云端模型必须带 `context_length`、`max_output_tokens`；`susancloud/*` 标 `required_plan: "pro"`。 | 选择器里出现平台的云端模型；CLI 能提前知道 `susancloud/*` 需要 Pro（事先弹升级，而不是推理时才报 403） |
+| P-5.2 | `GET /api/tags`，设备签名，列出 `is_cloud_supported` 的模型。 | daemon 预热云端模型信息；Desktop 云端模型列表 |
+
+平台补上后，Susan 无需再改：5.8、5.9 会自动用上平台数据。
+
+**后续批次（不在本批）**
+
+| 编号 | 内容 | 依据 |
+|---|---|---|
+| 后续-登录-1 | 无人值守 / CI：直连平台时用 `SUSAN_API_KEY`（Bearer `sk-susan-…`），不经本地 daemon。平台已支持 API Key（`/account/keys`、`get_principal`），Susan 本仓只需文档与示例。本地 daemon 的 `:cloud` 仍走 Device Flow（与 Ollama 一致：`OLLAMA_API_KEY` 只用于直连 ollama.com，本地 daemon 不读它）。 | 对比表第七章 3.1 路径 (3)；Ollama 官方文档与实践 |
+
+**自动化**
+
+| 编号 | 行为 |
+|---|---|
+| AT-5.6 | `go test ./cmd/...` 可以编译运行 |
+| AT-5.7-a | `/api/me` 返回 200 但 `plan` 为空 → 账号状态为未知，不弹升级、不显示 Upgrade required |
+| AT-5.7-b | agent 界面：`plan` 为空 → 不显示 Upgrade required，模型检查放行 |
+| AT-5.8-a | 配置 `SUSAN_CLOUD_HOST` → 推荐请求发往该主机，初始推荐不含云端模型 |
+| AT-5.8-b | 平台返回 404 → 视为未提供，当前推荐不变，不计失败 |
+| AT-5.8-c | 未配置 → 地址仍是 `https://ollama.com/...`，初始推荐与上游一致 |
+| AT-5.11-a | 402 → 追加升级链接；free 为 `/upgrade`，pro 为 `/settings/billing` |
+| AT-5.11-b | `susancloud/*` 的 403 → 追加 `/upgrade` |
+| AT-5.11-c | 429、保留字 Push 403、其它错误 → 不追加 |
+
+**手工验收（全部通过才算追加项完成）**
+
+| 编号 | 操作 | 期望 |
+|---|---|---|
+| E2E-5.6 | `susan run <模型>:cloud`（Registry 上没有该占位清单） | 正常回复，没有 cloud stub 的 WARN |
+| E2E-5.7 | 余额为 0 再跑 | 平台原文 + 升级链接（free 为 `/upgrade`，pro 为 `/settings/billing`） |
+| E2E-5.8 | 非 Pro 跑 `susancloud/*` | 平台原文 + `/upgrade` |
+| E2E-5.9 | 未登录跑 `<模型>:cloud` | 提示登录，并给出登录链接 |
+| E2E-5.10 | 打满限流后在 CLI 跑 | 平台原文，没有升级链接 |
+| E2E-5.11 | 已配置云端地址，查看推荐列表 | 不再出现 Ollama 的云端模型 |
+
+### 批次 6：Cloud 后端（平台已交付）
+
+原批次 5，顺延。与批次 5 的分工：本批是平台上的云端服务；批次 5 是 Susan 客户端去接它。
+
+- D1-D3：Cloud Host 可配置已在批次 3.3.1 完成，默认仍是 `https://ollama.com`。
+- H4 推理代理、路由边界（直连不强制 `:cloud`；`:cloud` 只用于本机 daemon 转发）、用量与计费，已在 susan-platform 的 B4/B5 交付。
+- 本仓不再施工。客户端接线见批次 5。
+- Redis：平台 B5 已做单机限流，故障时回退进程内。多节点增强见批次 8。
+
+### 批次 7：官网 + Model Hub（新仓库 susan_web）
+
+原批次 6，顺延。与批次 5 无代码依赖，可并行。批次 5 的 Upgrade 链接写死为 `https://susan.com/upgrade` 与 `https://susan.com/settings/billing`，对应页面由本批官网提供；批次 5 不改这些常量。
+
 - H1、H2、H5、H6
-- H3 Registry 后端延后（先用 ollama registry）
+- H3 Registry 后端仍后置（先用 `registry.ollama.ai`）。自建分发就绪后再做批次 10 的用户 Push。
 
-### 批次 7+ / 对齐对比表 B5-2（后续）：Redis 与多节点增强
-触发条件：第二台 API 节点，或需要跨实例计费/限流/Key 撤销广播时。
-（对比表第一部分编号：B5-2；第二部分【批次 5】5-2）
-- Redis 基础设施
+### 批次 8+ / 对齐对比表 B5-2（后续）：Redis 与多节点增强
+
+原批次 7，顺延。平台 B5 已完成单机 Redis 限流（连接失败时熔断，回退进程内）。本批只在第二台 API 节点，或需要跨实例计费、限流、Key 撤销广播时做。Susan 本仓无任务，不阻塞批次 5。
+
+（对比表第一部分编号：B5-2；第二部分【批次 5】5-2。此处「批次 5」是对比表编号，不是本文的批次 5。）
+
 - 流式用量分桶增量上报（对比表第十五章）
 - API Key 二级缓存 + Pub/Sub 撤销
 - （可选）网关限流跨节点聚合
 
-**MVP / B0～B4 明确不做 Redis。**
+### 批次 9+ / 对齐对比表 B6（后续）：Susan Web Chat（chat.susan.com）
 
-### 批次 8+ / 对齐对比表 B6（后续）：Susan Web Chat（chat.susan.com）
-对标 DeepSeek 式网页云端对话 + 可分享会话链接。
-触发条件：B2 登录 + B4 推理 + B4-3 Usage 可用之后。
+原批次 8，顺延。平台 B6 已完成（`/chat`，会话与分享，第一期不与 Desktop 双向同步）。Susan 本仓无任务。批次 5 不改 Desktop 会话，与此一致。
+
 （对比表第一部分编号：B6-1～B6-6；第二部分【批次 6】）
-- 子域 `chat.susan.com`
+
+- 子域 `chat.susan.com`（开发期为本地 `/chat`）
 - 会话 URL：`/c/{uuid}`；分享：`/s/{shareId}`
-- 调用 `api.susan.com` 流式推理；第一期不与 Desktop 双向同步
+- 调用平台云端推理；不与 Desktop 同步
 
-**B1 明确不做 Web Chat。**
+### 批次 10+ / 对齐对比表 B7（后续）：模型 Push / 发布管理
 
-### 批次 9+ / 对齐对比表 B7（后续）：模型 Push / 发布管理
-触发条件：自建 `registry.susan.com` 写入端就绪 + B2 登录可用。
+原批次 9，顺延。前置是批次 7 的自建 `registry.susan.com` 写入端，加上批次 3 的登录。与批次 5 的 `:cloud` 联调无关。
+
 （对比表第一部分编号：B7-1～B7-5；第二部分【批次 7】）
+
 - CLI `susan push` 开放写入
 - Web `/account/models`：我发布的模型列表、下架、改元数据
 - License / 可见性 / Hub 收录联动
 - 一期大文件仍以 CLI 为主；网页辅助上传可选二期
 
-**B0～B6 明确不做真实用户 Push。**
+**批次 10 之前不做真实用户 Push。**
 
 ---
 

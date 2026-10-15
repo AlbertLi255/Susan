@@ -34,6 +34,11 @@ import (
 	"github.com/ollama/ollama/version"
 )
 
+// ClientKindHeader identifies which Susan client sent a request to the local
+// daemon. The Desktop app sets it to "desktop" so sign-in links name the
+// right client on the platform's device authorization page.
+const ClientKindHeader = "X-Susan-Client"
+
 // Client encapsulates client state for interacting with the ollama
 // service. Use [ClientFromEnvironment] to create new Clients.
 type Client struct {

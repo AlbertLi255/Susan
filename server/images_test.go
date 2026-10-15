@@ -269,8 +269,8 @@ func TestGetModelTemplateMetadata(t *testing.T) {
 	})
 
 	t.Run("prefers Mistral chat template with tool call IDs", func(t *testing.T) {
-		t.Setenv("OLLAMA_MODELS", t.TempDir())
-		t.Setenv("OLLAMA_GO_TEMPLATE", "")
+		t.Setenv("SUSAN_MODELS", t.TempDir())
+		t.Setenv("SUSAN_GO_TEMPLATE", "")
 
 		_, digest := createBinFile(t, map[string]any{
 			"general.architecture": "llama",
@@ -413,7 +413,7 @@ func loadTestMetadata(t *testing.T, m *Model) {
 }
 
 func TestPushLayersForManifestListIncludesChildManifests(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	writeChild := func(name, runner, formatName, layerMediaType string) (manifest.Manifest, manifest.Layer, manifest.Layer) {
 		t.Helper()
@@ -484,7 +484,7 @@ func TestPushLayersForManifestListIncludesChildManifests(t *testing.T) {
 }
 
 func TestCopyModelNarrowsManifestListToLocalChildren(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 
 	writeChild := func(name, runner, formatName string) manifest.Manifest {
 		t.Helper()
@@ -594,7 +594,7 @@ func TestCopyModelNarrowsManifestListToLocalChildren(t *testing.T) {
 }
 
 func TestPullModelManifestListDownloadsSelectedChildOnly(t *testing.T) {
-	t.Setenv("OLLAMA_MODELS", t.TempDir())
+	t.Setenv("SUSAN_MODELS", t.TempDir())
 	oldVersion := version.Version
 	t.Cleanup(func() { version.Version = oldVersion })
 	version.Version = "0.40.0-rc0"

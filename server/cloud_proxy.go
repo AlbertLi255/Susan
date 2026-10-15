@@ -273,6 +273,11 @@ func proxyCloudRequestWithPath(c *gin.Context, body []byte, path string, disable
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == http.StatusUnauthorized {
+		writeUpstreamCloudUnauthorized(c, resp)
+		return
+	}
+
 	copyProxyResponseHeaders(c.Writer.Header(), resp.Header)
 	c.Status(resp.StatusCode)
 
@@ -409,13 +414,30 @@ func hasWebSearchTool(path string, body []byte) bool {
 }
 
 func writeCloudUnauthorized(c *gin.Context) {
-	signinURL, err := cloudProxySigninURL()
+	signinURL, err := cloudProxySigninURL(signinClientName(c.Request))
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
 	c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized", "signin_url": signinURL})
+}
+
+// writeUpstreamCloudUnauthorized forwards an upstream 401 that already carries
+// a signin_url. The Susan platform does not include one, so otherwise the
+// daemon starts its own device flow to give the client a sign-in link.
+func writeUpstreamCloudUnauthorized(c *gin.Context, resp *http.Response) {
+	body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	var payload struct {
+		SigninURL string `json:"signin_url"`
+	}
+	if json.Unmarshal(body, &payload) == nil && payload.SigninURL != "" {
+		copyProxyResponseHeaders(c.Writer.Header(), resp.Header)
+		c.Status(resp.StatusCode)
+		_, _ = c.Writer.Write(body)
+		return
+	}
+	writeCloudUnauthorized(c)
 }
 
 func signCloudProxyRequest(ctx context.Context, req *http.Request) error {

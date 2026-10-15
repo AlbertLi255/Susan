@@ -1211,7 +1211,7 @@ func TestCloudPassthroughSigningFailureReturnsUnauthorized(t *testing.T) {
 	cloudProxySignRequest = func(context.Context, *http.Request) error {
 		return errors.New("ssh: no key found")
 	}
-	cloudProxySigninURL = func() (string, error) {
+	cloudProxySigninURL = func(string) (string, error) {
 		return "https://ollama.com/signin/example", nil
 	}
 	t.Cleanup(func() {
@@ -1269,7 +1269,7 @@ func TestCloudPassthroughSigningFailureWithoutSigninURL(t *testing.T) {
 	cloudProxySignRequest = func(context.Context, *http.Request) error {
 		return errors.New("ssh: no key found")
 	}
-	cloudProxySigninURL = func() (string, error) {
+	cloudProxySigninURL = func(string) (string, error) {
 		return "", errors.New("key missing")
 	}
 	t.Cleanup(func() {
@@ -1315,5 +1315,137 @@ func TestCloudPassthroughSigningFailureWithoutSigninURL(t *testing.T) {
 
 	if _, ok := got["signin_url"]; ok {
 		t.Fatalf("did not expect signin_url when helper fails, got %v", got["signin_url"])
+	}
+}
+
+func TestSigninClientName(t *testing.T) {
+	cases := []struct {
+		name      string
+		header    string
+		userAgent string
+		want      string
+	}{
+		{name: "desktop header", header: "desktop", userAgent: "susan/0.0.0 (amd64 windows) app/v0.0.0 Go/go1.24", want: "Susan Desktop"},
+		{name: "desktop header from webview", header: "Desktop", userAgent: "Mozilla/5.0", want: "Susan Desktop"},
+		{name: "cli user agent", userAgent: "susan/0.0.0 (amd64 linux) Go/go1.24", want: "Susan CLI"},
+		{name: "third party", userAgent: "curl/8.4.0", want: "Susan"},
+		{name: "no user agent", want: "Susan"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPost, "/api/me", nil)
+			req.Header.Del("User-Agent")
+			if tc.userAgent != "" {
+				req.Header.Set("User-Agent", tc.userAgent)
+			}
+			if tc.header != "" {
+				req.Header.Set(api.ClientKindHeader, tc.header)
+			}
+			if got := signinClientName(req); got != tc.want {
+				t.Fatalf("signinClientName() = %q, want %q", got, tc.want)
+			}
+		})
+	}
+
+	t.Run("nil request", func(t *testing.T) {
+		if got := signinClientName(nil); got != "Susan" {
+			t.Fatalf("signinClientName(nil) = %q, want %q", got, "Susan")
+		}
+	})
+}
+
+func TestCloudPassthroughUpstreamUnauthorizedAddsSigninURL(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	setTestHome(t, t.TempDir())
+
+	cases := []struct {
+		name         string
+		upstreamBody string
+		wantSignin   string
+	}{
+		{
+			name:         "platform 401 without signin_url",
+			upstreamBody: `{"error":"unauthorized"}`,
+			wantSignin:   "http://localhost:3000/device?user_code=ABCD-EFGH",
+		},
+		{
+			name:         "upstream signin_url is kept",
+			upstreamBody: `{"error":"unauthorized","signin_url":"https://ollama.com/connect?key=x"}`,
+			wantSignin:   "https://ollama.com/connect?key=x",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(tc.upstreamBody))
+			}))
+			defer upstream.Close()
+
+			origBaseURL := cloudProxyBaseURL
+			origSignRequest := cloudProxySignRequest
+			origSigninURL := cloudProxySigninURL
+			cloudProxyBaseURL = upstream.URL
+			cloudProxySignRequest = func(context.Context, *http.Request) error { return nil }
+			var gotClientName string
+			cloudProxySigninURL = func(clientName string) (string, error) {
+				gotClientName = clientName
+				return "http://localhost:3000/device?user_code=ABCD-EFGH", nil
+			}
+			t.Cleanup(func() {
+				cloudProxyBaseURL = origBaseURL
+				cloudProxySignRequest = origSignRequest
+				cloudProxySigninURL = origSigninURL
+			})
+
+			s := &Server{}
+			router, err := s.GenerateRoutes()
+			if err != nil {
+				t.Fatal(err)
+			}
+			local := httptest.NewServer(router)
+			defer local.Close()
+
+			reqBody := `{"model":"kimi-k2.5:cloud","prompt":"hello","stream":false}`
+			req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, local.URL+"/api/generate", bytes.NewBufferString(reqBody))
+			if err != nil {
+				t.Fatal(err)
+			}
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("User-Agent", "susan/0.0.0 (amd64 linux) Go/go1.24")
+
+			resp, err := local.Client().Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer resp.Body.Close()
+
+			body, _ := io.ReadAll(resp.Body)
+			if resp.StatusCode != http.StatusUnauthorized {
+				t.Fatalf("expected status 401, got %d (%s)", resp.StatusCode, string(body))
+			}
+
+			var got map[string]any
+			if err := json.Unmarshal(body, &got); err != nil {
+				t.Fatalf("expected json error body, got: %q", string(body))
+			}
+			if got["error"] != "unauthorized" {
+				t.Fatalf("unexpected error message: %v", got["error"])
+			}
+			if got["signin_url"] != tc.wantSignin {
+				t.Fatalf("signin_url = %v, want %q", got["signin_url"], tc.wantSignin)
+			}
+
+			wantClientName := "Susan CLI"
+			if strings.Contains(tc.upstreamBody, "signin_url") {
+				wantClientName = ""
+			}
+			if gotClientName != wantClientName {
+				t.Fatalf("signin client name = %q, want %q", gotClientName, wantClientName)
+			}
+		})
 	}
 }

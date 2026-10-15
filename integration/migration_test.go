@@ -64,12 +64,12 @@ func TestLocalCompatibilityMigration(t *testing.T) {
 func runLocalCompatibilityMigrationCase(t *testing.T, name string) {
 	t.Helper()
 
-	modelsDir := os.Getenv("OLLAMA_MODELS")
+	modelsDir := os.Getenv("SUSAN_MODELS")
 	if testModel == "" || modelsDir == "" {
 		modelsDir = t.TempDir()
-		t.Setenv("OLLAMA_MODELS", modelsDir)
+		t.Setenv("SUSAN_MODELS", modelsDir)
 	}
-	t.Setenv("OLLAMA_DEBUG", "2")
+	t.Setenv("SUSAN_DEBUG", "2")
 	t.Logf("%s: using migration model store %s", name, modelsDir)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Minute)

@@ -535,7 +535,7 @@ func generateInteractive(cmd *cobra.Command, opts runOptions) error {
 					sb.Reset()
 					continue
 				}
-				return err
+				return withCloudUpgradeHint(cmd.Context(), err)
 			}
 			if assistant != nil {
 				opts.Messages = append(opts.Messages, *assistant)
